@@ -9,15 +9,17 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
 import { Input } from '@/components/ui/input';
-import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import { useToast } from '@/hooks/use-toast';
 import { Loader2 } from 'lucide-react';
 import Logo from '@/components/logo';
+import { auth } from '@/lib/firebase/config';
+import { signInWithEmailAndPassword } from 'firebase/auth';
+import { getVolunteerByEmail } from '@/lib/firebase/firestore';
+
 
 const loginSchema = z.object({
   email: z.string().email({ message: 'الرجاء إدخال بريد إلكتروني صحيح.' }),
   password: z.string().min(6, { message: 'يجب أن تكون كلمة المرور 6 أحرف على الأقل.' }),
-  role: z.enum(['admin', 'volunteer'], { required_error: 'الرجاء اختيار دور.' }),
 });
 
 export default function LoginPage() {
@@ -27,30 +29,38 @@ export default function LoginPage() {
 
   const form = useForm<z.infer<typeof loginSchema>>({
     resolver: zodResolver(loginSchema),
-    defaultValues: { email: '', password: '', role: 'volunteer' },
+    defaultValues: { email: '', password: '' },
   });
 
   const onSubmit = async (values: z.infer<typeof loginSchema>) => {
     setIsSubmitting(true);
     
-    // In a real app, you'd have actual authentication logic here.
-    // For this prototype, we'll simulate a login.
-    setTimeout(() => {
-        if (values.role === 'admin') {
-            if (values.email === 'admin@awni.sd' && values.password === 'password') {
-                toast({ title: 'تم تسجيل الدخول بنجاح' });
-                router.push('/admin/dashboard');
-            } else {
-                toast({ variant: 'destructive', title: 'فشل تسجيل الدخول', description: 'البريد الإلكتروني أو كلمة المرور غير صحيحة.' });
-            }
-        } else {
-            // For volunteers, we'll just log them in successfully for the demo
-             toast({ title: 'تم تسجيل الدخول بنجاح' });
-             // We'll pass a mock volunteer ID
-             router.push('/volunteer/dashboard?id=1');
-        }
+    // Admin Login (Hardcoded for prototype)
+    if (values.email === 'admin@awni.sd' && values.password === 'password') {
+        toast({ title: 'تم تسجيل دخول المسؤول بنجاح' });
+        router.push('/admin/dashboard');
         setIsSubmitting(false);
-    }, 1000);
+        return;
+    }
+
+    // Volunteer Login (Firebase Auth)
+    try {
+        const userCredential = await signInWithEmailAndPassword(auth, values.email, values.password);
+        const user = userCredential.user;
+        
+        // Fetch volunteer data from Firestore to get the ID
+        const volunteer = await getVolunteerByEmail(user.email!);
+        if (volunteer) {
+          toast({ title: 'تم تسجيل الدخول بنجاح' });
+          router.push(`/volunteer/dashboard?id=${volunteer.id}`);
+        } else {
+          toast({ variant: 'destructive', title: 'فشل تسجيل الدخول', description: 'لم يتم العثور على حساب متطوع مطابق.' });
+        }
+    } catch (error) {
+        toast({ variant: 'destructive', title: 'فشل تسجيل الدخول', description: 'البريد الإلكتروني أو كلمة المرور غير صحيحة.' });
+    } finally {
+        setIsSubmitting(false);
+    }
   };
 
   return (
@@ -92,36 +102,6 @@ export default function LoginPage() {
                   </FormItem>
                 )}
               />
-               <FormField
-                control={form.control}
-                name="role"
-                render={({ field }) => (
-                  <FormItem className="space-y-3">
-                    <FormLabel>تسجيل الدخول كـ</FormLabel>
-                    <FormControl>
-                      <RadioGroup
-                        onValueChange={field.onChange}
-                        defaultValue={field.value}
-                        className="flex flex-row space-x-4"
-                      >
-                        <FormItem className="flex items-center space-x-2 space-y-0">
-                          <FormControl>
-                            <RadioGroupItem value="volunteer" />
-                          </FormControl>
-                          <FormLabel className="font-normal">متطوع</FormLabel>
-                        </FormItem>
-                        <FormItem className="flex items-center space-x-2 space-y-0">
-                          <FormControl>
-                            <RadioGroupItem value="admin" />
-                          </FormControl>
-                          <FormLabel className="font-normal">مسؤول</FormLabel>
-                        </FormItem>
-                      </RadioGroup>
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-                />
               <Button type="submit" className="w-full" disabled={isSubmitting}>
                 {isSubmitting && <Loader2 className="ml-2 h-4 w-4 animate-spin" />}
                 تسجيل الدخول

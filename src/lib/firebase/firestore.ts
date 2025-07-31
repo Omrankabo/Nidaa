@@ -8,7 +8,10 @@ import {
   getDocs,
   updateDoc,
   doc,
-  serverTimestamp
+  serverTimestamp,
+  deleteDoc,
+  getDoc,
+  setDoc,
 } from "firebase/firestore";
 import { db } from "./config";
 import type { EmergencyRequest, Volunteer } from "../types";
@@ -27,11 +30,15 @@ export function getRequests(
     setLoading: (loading: boolean) => void
 ) {
     const q = query(collection(db, REQUESTS_COLLECTION), orderBy('timestamp', 'desc'));
-    return onSnapshot(q, (querySnapshot) => {
+    const unsubscribe = onSnapshot(q, (querySnapshot) => {
         const requests = querySnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as EmergencyRequest));
         callback(requests);
         setLoading(false);
+    }, (error) => {
+        console.error("Error fetching requests:", error);
+        setLoading(false);
     });
+    return unsubscribe;
 }
 
 export async function updateRequest(id: string, data: Partial<EmergencyRequest>) {
@@ -46,8 +53,9 @@ export async function updateRequestStatus(id: string, status: EmergencyRequest['
 
 
 // Volunteers
-export async function addVolunteer(volunteer: Omit<Volunteer, 'id'>) {
-    await addDoc(collection(db, VOLUNTEERS_COLLECTION), {
+export async function addVolunteer(volunteer: Volunteer) {
+    const docRef = doc(db, VOLUNTEERS_COLLECTION, volunteer.id);
+    await setDoc(docRef, {
         ...volunteer,
         createdAt: serverTimestamp()
     });
@@ -58,11 +66,15 @@ export function getVolunteers(
     setLoading: (loading: boolean) => void
 ) {
     const q = query(collection(db, VOLUNTEERS_COLLECTION), orderBy('createdAt', 'desc'));
-    return onSnapshot(q, (querySnapshot) => {
+    const unsubscribe = onSnapshot(q, (querySnapshot) => {
         const volunteers = querySnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as Volunteer));
         callback(volunteers);
         setLoading(false);
+    }, (error) => {
+        console.error("Error fetching volunteers:", error);
+        setLoading(false);
     });
+    return unsubscribe;
 }
 
 export async function getVerifiedVolunteers(): Promise<Volunteer[]> {
@@ -71,10 +83,27 @@ export async function getVerifiedVolunteers(): Promise<Volunteer[]> {
     return querySnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as Volunteer));
 }
 
+export async function getVolunteerByEmail(email: string): Promise<Volunteer | null> {
+    const q = query(collection(db, VOLUNTEERS_COLLECTION), where("email", "==", email));
+    const querySnapshot = await getDocs(q);
+    if (querySnapshot.empty) {
+        return null;
+    }
+    const doc = querySnapshot.docs[0];
+    return { id: doc.id, ...doc.data() } as Volunteer;
+}
+
+
 export async function updateVolunteerStatus(id: string, status: Volunteer['status']) {
     const docRef = doc(db, VOLUNTEERS_COLLECTION, id);
     await updateDoc(docRef, { status });
 }
+
+export async function deleteVolunteer(id: string) {
+    const docRef = doc(db, VOLUNTEERS_COLLECTION, id);
+    await deleteDoc(docRef);
+}
+
 
 // Volunteer Dashboard
 export function getVolunteerRequests(
@@ -88,4 +117,20 @@ export function getVolunteerRequests(
         const history = allRequests.filter(r => r.status !== 'تم التعيين');
         callback(assigned, history);
     });
+}
+
+export function getVolunteerById(volunteerId: string, callback: (volunteer: Volunteer | null) => void) {
+    const docRef = doc(db, VOLUNTEERS_COLLECTION, volunteerId);
+    return onSnapshot(docRef, (docSnap) => {
+        if (docSnap.exists()) {
+            callback({ id: docSnap.id, ...docSnap.data() } as Volunteer);
+        } else {
+            callback(null);
+        }
+    });
+}
+
+export async function updateVolunteerProfile(id: string, data: Partial<Pick<Volunteer, 'profession' | 'region'>>) {
+    const docRef = doc(db, VOLUNTEERS_COLLECTION, id);
+    await updateDoc(docRef, data);
 }

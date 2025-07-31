@@ -195,31 +195,19 @@ export default function Home() {
 
         <section className="w-full py-12 md:py-24 lg:py-32">
           <div className="container px-4 md:px-6">
-            <div className="grid gap-6 lg:grid-cols-[1fr_400px] lg:gap-12 xl:grid-cols-[1fr_600px]">
-              <div className="flex flex-col justify-center space-y-4">
-                <div className="space-y-2">
-                  <h2 className="text-3xl font-bold tracking-tighter sm:text-5xl xl:text-6xl/none font-headline">
-                    نداء: شريان حياة في أوقات الشدة
-                  </h2>
-                  <p className="max-w-[600px] text-foreground/80 md:text-xl">
-                    نظام استجابة للطوارئ بسيط وسهل الوصول يربط المجتمعات السودانية بالمساعدة الطبية الموثوقة عبر الرسائل القصيرة والصوت، دون الحاجة إلى الإنترنت.
-                  </p>
-                </div>
-                <div className="flex flex-col gap-2 min-[400px]:flex-row">
-                  <Button asChild size="lg">
-                    <Link href="/register">التسجيل كمتطوع</Link>
-                  </Button>
-                </div>
+            <div className="flex flex-col justify-center space-y-4 text-center">
+              <div className="space-y-2">
+                <h2 className="text-3xl font-bold tracking-tighter sm:text-5xl xl:text-6xl/none font-headline">
+                  نداء: شريان حياة في أوقات الشدة
+                </h2>
+                <p className="max-w-[600px] mx-auto text-foreground/80 md:text-xl">
+                  نظام استجابة للطوارئ بسيط وسهل الوصول يربط المجتمعات السودانية بالمساعدة الطبية الموثوقة عبر الرسائل القصيرة والصوت، دون الحاجة إلى الإنترنت.
+                </p>
               </div>
-              <div className="flex items-center justify-center">
-                 <img
-                  src="https://placehold.co/600x400.png"
-                  alt="أيادي المساعدة"
-                  width="600"
-                  height="400"
-                  data-ai-hint="community help"
-                  className="mx-auto aspect-video overflow-hidden rounded-xl object-cover sm:w-full lg:order-last"
-                />
+              <div className="flex flex-col gap-2 min-[400px]:flex-row justify-center">
+                <Button asChild size="lg">
+                  <Link href="/register">التسجيل كمتطوع</Link>
+                </Button>
               </div>
             </div>
           </div>

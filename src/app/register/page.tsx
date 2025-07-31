@@ -13,19 +13,21 @@ import Logo from '@/components/logo';
 import { addVolunteer } from '@/lib/firebase/firestore';
 import { useToast } from '@/hooks/use-toast';
 import { useRouter } from 'next/navigation';
+import { createUserWithEmailAndPassword } from 'firebase/auth';
+import { auth } from '@/lib/firebase/config';
+import { Loader2 } from 'lucide-react';
 
 const registrationSchema = z.object({
   fullName: z.string().min(2, { message: 'يجب أن يتكون الاسم الكامل من حرفين على الأقل.' }),
+  email: z.string().email({ message: 'الرجاء إدخال بريد إلكتروني صحيح.' }),
+  password: z.string().min(6, { message: 'يجب أن تكون كلمة المرور 6 أحرف على الأقل.' }),
   gender: z.enum(['male', 'female', 'other'], { errorMap: () => ({ message: "الرجاء اختيار النوع" }) }),
   region: z.string().min(1, { message: 'الرجاء اختيار منطقة.' }),
   city: z.string().min(1, { message: 'الرجاء إدخال مدينة.' }),
   profession: z.string().min(2, { message: 'يجب أن تكون المهنة من حرفين على الأقل.' }),
   phoneNumber: z.string().regex(/^\+?[0-9\s-]{7,20}$/, { message: 'الرجاء إدخال رقم هاتف صحيح.' }),
-  // For simplicity, we are not handling file uploads in this prototype.
-  // photoId: z.any().refine((files) => files?.length == 1, 'بطاقة الهوية المصورة مطلوبة.'),
 });
 
-// Mock data
 const regions = ['الخرطوم', 'شمال كردفان', 'البحر الأحمر', 'الجزيرة', 'كسلا', 'النيل الأزرق'];
 
 export default function RegisterPage() {
@@ -35,6 +37,8 @@ export default function RegisterPage() {
     resolver: zodResolver(registrationSchema),
     defaultValues: {
       fullName: '',
+      email: '',
+      password: '',
       region: '',
       city: '',
       profession: '',
@@ -44,10 +48,17 @@ export default function RegisterPage() {
 
   async function onSubmit(values: z.infer<typeof registrationSchema>) {
     try {
-      // In a real app, you would handle file upload here. We'll pass a placeholder URL.
+      const userCredential = await createUserWithEmailAndPassword(auth, values.email, values.password);
+      
       await addVolunteer({
-        ...values,
+        id: userCredential.user.uid,
+        fullName: values.fullName,
+        email: values.email,
         gender: values.gender === 'male' ? 'ذكر' : 'أنثى',
+        region: values.region,
+        city: values.city,
+        profession: values.profession,
+        phoneNumber: values.phoneNumber,
         status: 'قيد الانتظار',
         photoIdUrl: 'https://placehold.co/200x200.png'
       });
@@ -55,12 +66,14 @@ export default function RegisterPage() {
         title: 'تم تقديم طلب التسجيل بنجاح!',
         description: 'سيقوم المسؤول بمراجعة طلبك قريبًا.',
       });
-      router.push('/');
-    } catch (error) {
+      router.push('/login');
+    } catch (error: any) {
       toast({
         variant: 'destructive',
         title: 'حدث خطأ',
-        description: 'فشل إرسال طلب التسجيل. الرجاء المحاولة مرة أخرى.',
+        description: error.code === 'auth/email-already-in-use' 
+            ? 'هذا البريد الإلكتروني مسجل بالفعل.' 
+            : 'فشل إرسال طلب التسجيل. الرجاء المحاولة مرة أخرى.',
       });
     }
   }
@@ -94,7 +107,7 @@ export default function RegisterPage() {
                     </FormItem>
                   )}
                 />
-                <FormField
+                 <FormField
                   control={form.control}
                   name="gender"
                   render={({ field }) => (
@@ -112,6 +125,34 @@ export default function RegisterPage() {
                           <SelectItem value="other">آخر</SelectItem>
                         </SelectContent>
                       </Select>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+              </div>
+               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <FormField
+                  control={form.control}
+                  name="email"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>البريد الإلكتروني</FormLabel>
+                      <FormControl>
+                        <Input type="email" placeholder="you@example.com" {...field} />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+                 <FormField
+                  control={form.control}
+                  name="password"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>كلمة المرور</FormLabel>
+                      <FormControl>
+                        <Input type="password" placeholder="••••••••" {...field} />
+                      </FormControl>
                       <FormMessage />
                     </FormItem>
                   )}
@@ -182,19 +223,6 @@ export default function RegisterPage() {
                   )}
                 />
               </div>
-               {/* <FormField
-                  control={form.control}
-                  name="photoId"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>تحميل بطاقة الهوية المصورة</FormLabel>
-                      <FormControl>
-                        <Input type="file" accept="image/*,.pdf" onChange={(e) => field.onChange(e.target.files)} />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                /> */}
               <Button type="submit" className="w-full" size="lg" disabled={form.formState.isSubmitting}>
                 {form.formState.isSubmitting && <Loader2 className="ml-2 h-4 w-4 animate-spin" />}
                 إرسال للتحقق

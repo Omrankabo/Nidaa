@@ -3,6 +3,7 @@ import type { PrioritizeEmergencyRequestOutput } from '@/ai/flows/prioritize-eme
 export interface Volunteer {
   id: string;
   fullName: string;
+  email: string;
   gender: 'ذكر' | 'أنثى' | 'آخر';
   region: string;
   city: string;
