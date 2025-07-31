@@ -1,3 +1,4 @@
+
 import {
   ref,
   set,
@@ -30,7 +31,7 @@ export async function addRequest(request: Omit<EmergencyRequest, 'id' | 'timesta
 
 export function getRequests(
     callback: (requests: EmergencyRequest[]) => void, 
-    setLoading: (loading: boolean) => void
+    setLoading?: (loading: boolean) => void
 ) {
     const requestsRef = query(ref(db, REQUESTS_PATH), orderByChild('timestamp'));
     const unsubscribe = onValue(requestsRef, (snapshot) => {
@@ -45,10 +46,10 @@ export function getRequests(
         } else {
             callback([]);
         }
-        setLoading(false);
+        if (setLoading) setLoading(false);
     }, (error) => {
         console.error("Error fetching requests:", error);
-        setLoading(false);
+        if (setLoading) setLoading(false);
     });
     return unsubscribe;
 }
@@ -94,7 +95,7 @@ export async function addVolunteer(volunteer: Volunteer) {
 
 export function getVolunteers(
     callback: (volunteers: Volunteer[]) => void,
-    setLoading: (loading: boolean) => void
+    setLoading?: (loading: boolean) => void
 ) {
     const volunteersRef = query(ref(db, VOLUNTEERS_PATH), orderByChild('createdAt'));
     const unsubscribe = onValue(volunteersRef, (snapshot) => {
@@ -108,10 +109,10 @@ export function getVolunteers(
         } else {
             callback([]);
         }
-        setLoading(false);
+        if (setLoading) setLoading(false);
     }, (error) => {
         console.error("Error fetching volunteers:", error);
-        setLoading(false);
+        if (setLoading) setLoading(false);
     });
     return unsubscribe;
 }
