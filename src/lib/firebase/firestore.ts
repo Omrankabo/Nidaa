@@ -89,7 +89,9 @@ export async function updateRequestStatus(id: string, status: EmergencyRequest['
 // Volunteers
 
 export async function addVolunteer(id: string, volunteer: Omit<Volunteer, 'id'>) {
-    const volunteersRef = ref(db, `${VOLUNTEERS_PATH}/${id}`);
+    // Use email as key since we removed firebase auth UIDs
+    const safeEmailKey = id.replace(/[.#$[\]]/g, "_");
+    const volunteersRef = ref(db, `${VOLUNTEERS_PATH}/${safeEmailKey}`);
     await set(volunteersRef, volunteer);
 }
 
@@ -130,12 +132,11 @@ export async function getVerifiedVolunteers(): Promise<Volunteer[]> {
 }
 
 export async function getVolunteerByEmail(email: string): Promise<Volunteer | null> {
-    const volunteersRef = query(ref(db, VOLUNTEERS_PATH), orderByChild("email"), equalTo(email));
-    const snapshot = await get(volunteersRef);
+    const safeEmailKey = email.replace(/[.#$[\]]/g, "_");
+    const volunteerRef = ref(db, `${VOLUNTEERS_PATH}/${safeEmailKey}`);
+    const snapshot = await get(volunteerRef);
     if (snapshot.exists()) {
-        const volunteersData = snapshot.val();
-        const key = Object.keys(volunteersData)[0];
-        return { id: key, ...volunteersData[key] };
+        return { id: snapshot.key, ...snapshot.val() };
     }
     return null;
 }

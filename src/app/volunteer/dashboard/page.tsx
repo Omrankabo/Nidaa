@@ -6,15 +6,13 @@ import { useSearchParams, useRouter } from 'next/navigation';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { getVolunteerRequests, getVolunteerById, updateVolunteerProfile, deleteVolunteer, updateRequestStatus, updateRequest } from '@/lib/firebase/firestore';
+import { getVolunteerRequests, getVolunteerById, updateVolunteerProfile, deleteVolunteer, updateRequest } from '@/lib/firebase/firestore';
 import type { EmergencyRequest, Volunteer } from '@/lib/types';
 import { AlertCircle, CheckCircle, Clock, Loader2, MapPin, Phone, User, Edit, Trash2, FileText, Send, Check, X, LogOut, ArrowLeft } from 'lucide-react';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { useToast } from '@/hooks/use-toast';
-import { signOut, deleteUser, onAuthStateChanged } from 'firebase/auth';
-import { auth } from '@/lib/firebase/config';
 import { Textarea } from '@/components/ui/textarea';
 import { requestForToken } from '@/lib/firebase/messaging';
 import { ThemeToggle } from '@/components/theme-toggle';
@@ -29,6 +27,8 @@ export default function VolunteerDashboard() {
   const searchParams = useSearchParams();
   const router = useRouter();
   const { toast } = useToast();
+  // Since we are not using auth, we'll get the volunteer id from search params
+  // In a real app with auth, you'd get this from the user's session
   const volunteerId = searchParams.get('id');
   
   const [volunteer, setVolunteer] = useState<Volunteer | null>(null);
@@ -40,44 +40,38 @@ export default function VolunteerDashboard() {
   const [reportText, setReportText] = useState('');
 
   useEffect(() => {
-    const unsubscribeAuth = onAuthStateChanged(auth, (currentUser) => {
-        if (!currentUser || !volunteerId) {
+    if (!volunteerId) {
+        router.push('/login');
+        return;
+    }
+
+    const unsubscribeVolunteer = getVolunteerById(volunteerId, (data) => {
+        if (data) {
+            setVolunteer(data);
+            setEditForm({ profession: data.profession, region: data.region });
+            requestForToken(volunteerId); // Register for notifications
+        } else {
              router.push('/login');
-             return;
         }
-
-        const unsubscribeVolunteer = getVolunteerById(volunteerId, (data) => {
-            if (data && data.email === currentUser.email) {
-                setVolunteer(data);
-                if (data) {
-                    setEditForm({ profession: data.profession, region: data.region });
-                    requestForToken(volunteerId); // Register for notifications
-                }
-            } else {
-                 router.push('/login');
-            }
-            setLoading(false);
-        });
-
-        const unsubscribeRequests = getVolunteerRequests(volunteerId, (assigned, history) => {
-            setAssignedRequests(assigned);
-            setHistoryRequests(history);
-        });
-
-        return () => {
-            unsubscribeVolunteer();
-            if (unsubscribeRequests) {
-              unsubscribeRequests();
-            }
-        };
+        setLoading(false);
     });
 
-     return () => unsubscribeAuth();
+    const unsubscribeRequests = getVolunteerRequests(volunteerId, (assigned, history) => {
+        setAssignedRequests(assigned);
+        setHistoryRequests(history);
+    });
+
+    return () => {
+        unsubscribeVolunteer();
+        if (unsubscribeRequests) {
+          unsubscribeRequests();
+        }
+    };
 
   }, [volunteerId, router]);
 
   const handleStatusUpdate = async (requestId: string, status: EmergencyRequest['status']) => {
-    await updateRequestStatus(requestId, status);
+    await updateRequest(requestId, { status });
     toast({ title: `تم تحديث حالة الطلب إلى "${status}"`});
   };
   
@@ -90,16 +84,15 @@ export default function VolunteerDashboard() {
   };
   
   const handleAccountDelete = async () => {
-    if (!volunteerId || !auth.currentUser) return;
+    if (!volunteerId) return;
     if (window.confirm('هل أنت متأكد؟ سيتم حذف حسابك وجميع بياناتك بشكل دائم.')) {
         try {
-            await deleteVolunteer(volunteerId); // Deletes from RTDB
-            await deleteUser(auth.currentUser); // Deletes from Firebase Auth
+            await deleteVolunteer(volunteerId);
             toast({ title: 'تم حذف الحساب بنجاح' });
             router.push('/');
         } catch (error) {
             console.error("Error deleting account: ", error);
-            toast({ variant: 'destructive', title: 'خطأ', description: 'فشل حذف الحساب. قد تحتاج إلى تسجيل الدخول مرة أخرى للمتابعة.' });
+            toast({ variant: 'destructive', title: 'خطأ', description: 'فشل حذف الحساب. يرجى المحاولة مرة أخرى.' });
         }
     }
   };
@@ -115,7 +108,6 @@ export default function VolunteerDashboard() {
   }
   
   const handleLogout = () => {
-    signOut(auth);
     router.push('/login');
   }
 

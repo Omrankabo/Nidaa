@@ -8,7 +8,7 @@ import { Badge } from '@/components/ui/badge';
 import type { EmergencyRequest, Volunteer } from '@/lib/types';
 import { AlertCircle, UserPlus, CheckCircle, Clock, Trash2, Info, MoreHorizontal, UserCheck } from 'lucide-react';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
-import { getRequests, getVolunteers, updateRequest, updateVolunteerStatus, deleteRequest } from '@/lib/firebase/firestore';
+import { getRequests, getVolunteers, updateRequest, updateVolunteerStatus, deleteRequest, deleteVolunteer } from '@/lib/firebase/firestore';
 import { findAndAssignVolunteer } from '@/lib/actions';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Button } from '@/components/ui/button';
@@ -98,6 +98,12 @@ export default function DashboardPage() {
       await deleteRequest(requestId);
   };
 
+  const handleVolunteerDelete = async (id: string) => {
+    if (window.confirm('هل أنت متأكد أنك تريد حذف هذا المتطوع؟')) {
+        await deleteVolunteer(id);
+    }
+  };
+
 
   const getPriorityBadgeVariant = (priority: EmergencyRequest['priorityLevel']) => {
     switch (priority) {
@@ -128,7 +134,7 @@ export default function DashboardPage() {
     }
   };
 
-  const pendingVolunteers = volunteers.filter(v => v.status === 'قيد الانتظار');
+  const pendingVolunteers = volunteers.filter(v => v.status !== 'تم التحقق');
   const regions = [...new Set(requests.map(r => r.location.split(',')[0].trim()))];
   const filteredRequests = regionFilter === 'all' ? requests : requests.filter(r => r.location.startsWith(regionFilter));
   
@@ -171,7 +177,7 @@ export default function DashboardPage() {
                                     <TableCell>{v.city}, {v.region}</TableCell>
                                     <TableCell className="flex gap-2">
                                         <Button size="sm" variant="outline" onClick={() => updateVolunteerStatus(v.id, 'تم التحقق')}>الموافقة</Button>
-                                        <Button size="sm" variant="destructive" onClick={() => updateVolunteerStatus(v.id, 'مرفوض')}>الرفض</Button>
+                                        <Button size="sm" variant="destructive" onClick={() => handleVolunteerDelete(v.id)}>الرفض</Button>
                                     </TableCell>
                                 </TableRow>
                             ))}

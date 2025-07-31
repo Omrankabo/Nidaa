@@ -14,6 +14,7 @@ import { useToast } from '@/hooks/use-toast';
 import { Loader2, ArrowLeft } from 'lucide-react';
 import Logo from '@/components/logo';
 import { ThemeToggle } from '@/components/theme-toggle';
+import { getVolunteerByEmail } from '@/lib/firebase/firestore';
 
 
 const loginSchema = z.object({
@@ -38,18 +39,29 @@ export default function LoginPage() {
     if (values.email === 'admin@awni.sd' && values.password === 'password') {
       toast({ title: 'تم تسجيل الدخول بنجاح' });
       router.push('/admin/dashboard');
-    } else {
-      // For now, any other login attempt is treated as a volunteer placeholder or invalid
-      // In a real scenario, you'd have a proper check for volunteers
-      const isVolunteerAttempt = values.email !== 'admin@awni.sd';
-
-      if (isVolunteerAttempt) {
-        toast({ variant: 'destructive', title: 'فشل تسجيل الدخول', description: 'تسجيل دخول المتطوعين معطل مؤقتًا.' });
-      } else {
-        toast({ variant: 'destructive', title: 'فشل تسجيل الدخول', description: 'البريد الإلكتروني أو كلمة المرور غير صحيحة.' });
-      }
-      setIsSubmitting(false);
+      return;
     }
+
+    // Volunteer login check
+    try {
+        const volunteer = await getVolunteerByEmail(values.email);
+        if (volunteer) {
+            if (volunteer.status === 'تم التحقق') {
+                toast({ title: 'تم تسجيل الدخول بنجاح' });
+                // Pass volunteer id to the dashboard
+                router.push(`/volunteer/dashboard?id=${volunteer.id}`);
+            } else {
+                 toast({ variant: 'destructive', title: 'فشل تسجيل الدخول', description: 'حسابك قيد المراجعة أو تم رفضه.' });
+            }
+        } else {
+            toast({ variant: 'destructive', title: 'فشل تسجيل الدخول', description: 'البريد الإلكتروني أو كلمة المرور غير صحيحة.' });
+        }
+    } catch (error) {
+        console.error("Login error", error);
+        toast({ variant: 'destructive', title: 'خطأ', description: 'حدث خطأ أثناء محاولة تسجيل الدخول.' });
+    }
+
+    setIsSubmitting(false);
   };
 
   return (

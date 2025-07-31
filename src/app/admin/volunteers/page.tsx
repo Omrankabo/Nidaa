@@ -21,8 +21,13 @@ export default function VolunteersPage() {
     const { toast } = useToast();
 
     useEffect(() => {
-        const unsubscribeVolunteers = getVolunteers(setVolunteers, setLoading);
-        const unsubscribeRequests = getRequests(setRequests);
+        const unsubscribeVolunteers = getVolunteers((data) => {
+            setVolunteers(data);
+            setLoading(false);
+        });
+        const unsubscribeRequests = getRequests((data) => {
+            setRequests(data);
+        });
         return () => {
             unsubscribeVolunteers();
             unsubscribeRequests();

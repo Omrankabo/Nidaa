@@ -64,17 +64,7 @@ export default function RegisterPage() {
       router.push('/login');
     } else {
         let description = result.error || 'فشل إرسال طلب التسجيل. الرجاء المحاولة مرة أخرى.';
-        if (result.error?.includes('auth/email-already-in-use')) {
-             description = 'هذا البريد الإلكتروني مسجل بالفعل. يرجى استخدام بريد إلكتروني آخر أو تسجيل الدخول.';
-             form.setError('email', { type: 'manual', message: 'هذا البريد الإلكتروني مسجل بالفعل.' });
-        } else if (result.error?.includes('auth/weak-password')) {
-            description = 'كلمة المرور ضعيفة جدا. الرجاء اختيار كلمة مرور أقوى.';
-            form.setError('password', { type: 'manual', message: 'كلمة المرور يجب أن تكون 6 أحرف على الأقل.' });
-        } else if (result.error?.includes('auth/invalid-email')) {
-            description = 'البريد الإلكتروني الذي أدخلته غير صالح.';
-            form.setError('email', { type: 'manual', message: 'الرجاء إدخال بريد إلكتروني صحيح.' });
-        }
-
+        
         toast({
             variant: 'destructive',
             title: 'حدث خطأ',

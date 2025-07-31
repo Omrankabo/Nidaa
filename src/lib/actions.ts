@@ -3,11 +3,7 @@
 
 import { addRequest, addVolunteer, getVerifiedVolunteers, getAdminDeviceTokens, sendNotificationToVolunteer } from './firebase/firestore';
 import type { EmergencyRequest, Volunteer } from './types';
-import { auth } from './firebase/config';
-import { createUserWithEmailAndPassword } from 'firebase/auth';
 import type { RegistrationFormValues } from '@/app/register/page';
-import { getMessaging, getToken } from 'firebase/messaging';
-import { app } from './firebase/config';
 
 
 export async function createRequestAction(requestText: string, location: string, contactPhone: string) {
@@ -40,8 +36,6 @@ export async function createRequestAction(requestText: string, location: string,
 
 export async function createVolunteerAction(values: RegistrationFormValues) {
     try {
-        const userCredential = await createUserWithEmailAndPassword(auth, values.email, values.password);
-        
         const volunteerData: Omit<Volunteer, 'id'> = {
             fullName: values.fullName,
             email: values.email,
@@ -54,7 +48,7 @@ export async function createVolunteerAction(values: RegistrationFormValues) {
             createdAt: Date.now()
         };
 
-        await addVolunteer(userCredential.user.uid, volunteerData);
+        await addVolunteer(values.email, volunteerData);
 
         return { success: true };
 
