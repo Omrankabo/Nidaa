@@ -1,3 +1,4 @@
+
 'use client';
 
 import {
@@ -77,14 +78,16 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
         </SidebarFooter>
       </Sidebar>
       <SidebarInset>
-        <header className="flex items-center justify-between p-4 border-b bg-card">
-          <div/>
-          <h1 className="text-xl font-semibold font-headline text-center">
-            {getHeaderTitle()}
-          </h1>
-          <SidebarTrigger />
-        </header>
-        <main className="p-4 sm:p-6 lg:p-8 bg-background/50 flex-grow">{children}</main>
+        <div className="flex flex-col min-h-screen">
+          <header className="flex items-center justify-between p-4 border-b bg-card shrink-0">
+            <div/>
+            <h1 className="text-xl font-semibold font-headline text-center">
+              {getHeaderTitle()}
+            </h1>
+            <SidebarTrigger />
+          </header>
+          <main className="p-4 sm:p-6 lg:p-8 bg-background/50 flex-grow">{children}</main>
+        </div>
       </SidebarInset>
     </SidebarProvider>
   );
