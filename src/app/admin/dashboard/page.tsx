@@ -188,13 +188,13 @@ export default function DashboardPage() {
       
       <Card>
         <CardHeader>
-            <div className="flex justify-between items-start">
+            <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
                 <div>
                     <CardTitle className="font-headline">جميع طلبات الطوارئ</CardTitle>
                     <CardDescription>قائمة بجميع الطلبات الواردة، مرتبة حسب الوقت.</CardDescription>
                 </div>
                 <Select value={regionFilter} onValueChange={setRegionFilter}>
-                    <SelectTrigger className="w-[180px]">
+                    <SelectTrigger className="w-full sm:w-[180px]">
                         <SelectValue placeholder="تصفية حسب المنطقة" />
                     </SelectTrigger>
                     <SelectContent>
@@ -206,11 +206,11 @@ export default function DashboardPage() {
         </CardHeader>
         <CardContent>
         {filteredRequests.length > 0 ? (
-            <div className="max-h-[calc(100vh-20rem)] overflow-y-auto">
-                <Table>
+            <div className="w-full overflow-x-auto">
+                <Table className="min-w-full">
                     <TableHeader>
                     <TableRow>
-                        <TableHead>تفاصيل الطلب</TableHead>
+                        <TableHead className="min-w-[300px]">تفاصيل الطلب</TableHead>
                         <TableHead className="w-[150px] text-center">الأولوية</TableHead>
                         <TableHead className="w-[170px] text-center hidden sm:table-cell">الحالة</TableHead>
                          <TableHead className="w-[180px] text-center hidden md:table-cell">المتطوع المعين</TableHead>
@@ -269,17 +269,17 @@ export default function DashboardPage() {
                                     <DialogTrigger asChild>
                                         <Button variant="outline" size="icon"><Info className="h-4 w-4" /></Button>
                                     </DialogTrigger>
-                                    <DialogContent>
+                                    <DialogContent className="sm:max-w-md">
                                         <DialogHeader>
                                             <DialogTitle>تفاصيل الطلب الكاملة</DialogTitle>
                                             <DialogDescription>
                                                 معرف الطلب: {req.id}
                                             </DialogDescription>
                                         </DialogHeader>
-                                        <div className="space-y-4 max-h-[60vh] overflow-y-auto">
+                                        <div className="space-y-4 max-h-[60vh] overflow-y-auto p-1">
                                             <div>
                                                 <h4 className="font-semibold">نص الطلب:</h4>
-                                                <p className="p-2 bg-muted rounded-md whitespace-pre-wrap">{req.requestText}</p>
+                                                <p className="p-2 bg-muted rounded-md whitespace-pre-wrap break-words">{req.requestText}</p>
                                             </div>
                                             <div>
                                                 <h4 className="font-semibold">الموقع:</h4>
@@ -331,3 +331,5 @@ export default function DashboardPage() {
     </div>
   );
 }
+
+    
