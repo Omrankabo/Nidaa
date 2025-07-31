@@ -8,7 +8,6 @@ import { Button } from '@/components/ui/button';
 import { useToast } from '@/hooks/use-toast';
 import { requestForToken } from '@/lib/firebase/messaging';
 import { auth } from '@/lib/firebase/config';
-import { onAuthStateChanged } from 'firebase/auth';
 import { LayoutDashboard, Users, LogOut, ArrowLeft } from 'lucide-react';
 import Logo from '@/components/logo';
 import { ThemeToggle } from '@/components/theme-toggle';
@@ -19,30 +18,18 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
   const pathname = usePathname();
   const router = useRouter();
   const { toast } = useToast();
-  const [user, setUser] = useState<any>(null);
-  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    const unsubscribe = onAuthStateChanged(auth, (currentUser) => {
-      // A simple check for admin. In a real app, you'd use custom claims.
-      if (!currentUser || currentUser.email !== 'admin@awni.sd') {
-        router.push('/login');
-      } else {
-        setUser(currentUser);
-        setLoading(false);
-        requestForToken().then(token => {
-            if (token) {
-                console.log('FCM Token:', token);
-                toast({ title: 'تمكين الإشعارات', description: 'ستتلقى إشعارات للحالات الطارئة الجديدة.' });
-            } else {
-                 toast({ variant: 'destructive', title: 'لم يتم تمكين الإشعارات', description: 'لن تتلقى تحديثات في الوقت الفعلي. يرجى تمكين الإشعارات في متصفحك.' });
-            }
-        });
-      }
+    // Request notification permission on mount
+    requestForToken().then(token => {
+        if (token) {
+            console.log('FCM Token:', token);
+            toast({ title: 'تمكين الإشعارات', description: 'ستتلقى إشعارات للحالات الطارئة الجديدة.' });
+        } else {
+             toast({ variant: 'destructive', title: 'لم يتم تمكين الإشعارات', description: 'لن تتلقى تحديثات في الوقت الفعلي. يرجى تمكين الإشعارات في متصفحك.' });
+        }
     });
-
-    return () => unsubscribe();
-  }, [router, toast]);
+  }, [toast]);
   
   const handleLogout = () => {
     auth.signOut();
@@ -53,10 +40,6 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
     if (pathname.includes('/dashboard')) return 'dashboard';
     if (pathname.includes('/volunteers')) return 'volunteers';
     return 'dashboard';
-  }
-
-  if (loading) {
-      return <div className="flex justify-center items-center h-screen">Loading...</div>
   }
 
   return (

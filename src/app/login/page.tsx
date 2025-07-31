@@ -26,29 +26,18 @@ const loginSchema = z.object({
 
 export default function LoginPage() {
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [loading, setLoading] = useState(true);
   const router = useRouter();
   const { toast } = useToast();
 
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, (user) => {
       if (user) {
-        // User is signed in, redirect them.
-        if (user.email === 'admin@awni.sd') {
-          router.push('/admin/dashboard');
-        } else {
-          getVolunteerByEmail(user.email!).then(volunteer => {
+        // If user is signed in, check if they are a volunteer
+        getVolunteerByEmail(user.email!).then(volunteer => {
             if (volunteer) {
               router.push(`/volunteer/dashboard?id=${volunteer.id}`);
-            } else {
-                // Not a volunteer, maybe still loading or an edge case.
-                setLoading(false);
             }
-          });
-        }
-      } else {
-        // User is signed out.
-        setLoading(false);
+        });
       }
     });
     return () => unsubscribe();
@@ -64,8 +53,18 @@ export default function LoginPage() {
     setIsSubmitting(true);
     
     try {
-        await signInWithEmailAndPassword(auth, values.email, values.password);
-        // onAuthStateChanged will handle the redirect
+        const userCredential = await signInWithEmailAndPassword(auth, values.email, values.password);
+        
+        if (values.email === 'admin@awni.sd') {
+          router.push('/admin/dashboard');
+        } else {
+          // onAuthStateChanged will handle redirect for volunteers
+          const volunteer = await getVolunteerByEmail(userCredential.user.email!);
+          if (!volunteer) {
+             toast({ variant: 'destructive', title: 'فشل تسجيل الدخول', description: 'لم يتم العثور على حساب متطوع مطابق.' });
+             auth.signOut();
+          }
+        }
         toast({ title: 'تم تسجيل الدخول بنجاح' });
     } catch (error: any) {
         let errorMessage = 'البريد الإلكتروني أو كلمة المرور غير صحيحة.';
@@ -84,13 +83,10 @@ export default function LoginPage() {
           }
         }
         toast({ variant: 'destructive', title: 'فشل تسجيل الدخول', description: errorMessage });
+    } finally {
         setIsSubmitting(false);
     }
   };
-  
-  if (loading) {
-    return <div className="flex justify-center items-center h-screen"><Loader2 className="h-8 w-8 animate-spin" /></div>
-  }
 
   return (
     <div className="flex flex-col items-center justify-center min-h-screen p-4 bg-background/50">
