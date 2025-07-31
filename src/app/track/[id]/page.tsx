@@ -2,7 +2,7 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import { useParams, useRouter } from 'next/navigation';
+import { useRouter } from 'next/navigation';
 import { updateRequest, deleteRequest, getRequestById } from '@/lib/firebase/firestore';
 import type { EmergencyRequest } from '@/lib/types';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
@@ -14,10 +14,9 @@ import { Loader2, AlertCircle, CheckCircle, Clock, Edit, Trash2, UserCheck, Time
 import Logo from '@/components/logo';
 import { ThemeToggle } from '@/components/theme-toggle';
 
-export default function TrackRequestPage() {
-  const params = useParams();
+export default function TrackRequestPage({ params }: { params: { id: string } }) {
   const router = useRouter();
-  const id = params.id as string;
+  const id = params.id;
   
   const [request, setRequest] = useState<EmergencyRequest | null>(null);
   const [loading, setLoading] = useState(true);
