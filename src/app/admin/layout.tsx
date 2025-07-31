@@ -1,38 +1,21 @@
 
 'use client';
 
-import { useEffect, useState } from 'react';
-import { usePathname, useRouter } from 'next/navigation';
+import { useRouter, usePathname } from 'next/navigation';
 import Link from 'next/link';
 import { Button } from '@/components/ui/button';
-import { useToast } from '@/hooks/use-toast';
-import { requestForToken } from '@/lib/firebase/messaging';
-import { auth } from '@/lib/firebase/config';
 import { LayoutDashboard, Users, LogOut, ArrowLeft } from 'lucide-react';
 import Logo from '@/components/logo';
 import { ThemeToggle } from '@/components/theme-toggle';
-import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs"
+import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 
 
 export default function AdminLayout({ children }: { children: React.ReactNode }) {
-  const pathname = usePathname();
   const router = useRouter();
-  const { toast } = useToast();
-
-  useEffect(() => {
-    // Request notification permission on mount
-    requestForToken().then(token => {
-        if (token) {
-            console.log('FCM Token:', token);
-            toast({ title: 'تمكين الإشعارات', description: 'ستتلقى إشعارات للحالات الطارئة الجديدة.' });
-        } else {
-             toast({ variant: 'destructive', title: 'لم يتم تمكين الإشعارات', description: 'لن تتلقى تحديثات في الوقت الفعلي. يرجى تمكين الإشعارات في متصفحك.' });
-        }
-    });
-  }, [toast]);
+  const pathname = usePathname();
   
   const handleLogout = () => {
-    auth.signOut();
+    // Since we are not using Firebase auth, just redirect to login
     router.push('/login');
   }
 

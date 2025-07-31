@@ -1,7 +1,7 @@
 
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
@@ -13,36 +13,18 @@ import { Input } from '@/components/ui/input';
 import { useToast } from '@/hooks/use-toast';
 import { Loader2, ArrowLeft } from 'lucide-react';
 import Logo from '@/components/logo';
-import { auth } from '@/lib/firebase/config';
-import { signInWithEmailAndPassword, onAuthStateChanged } from 'firebase/auth';
-import { getVolunteerByEmail } from '@/lib/firebase/firestore';
 import { ThemeToggle } from '@/components/theme-toggle';
 
 
 const loginSchema = z.object({
   email: z.string().email({ message: 'الرجاء إدخال بريد إلكتروني صحيح.' }),
-  password: z.string().min(6, { message: 'يجب أن تكون كلمة المرور 6 أحرف على الأقل.' }),
+  password: z.string().min(1, { message: 'الرجاء إدخال كلمة المرور.' }),
 });
 
 export default function LoginPage() {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const router = useRouter();
   const { toast } = useToast();
-
-  useEffect(() => {
-    const unsubscribe = onAuthStateChanged(auth, (user) => {
-      if (user) {
-        // If user is signed in, check if they are a volunteer
-        getVolunteerByEmail(user.email!).then(volunteer => {
-            if (volunteer) {
-              router.push(`/volunteer/dashboard?id=${volunteer.id}`);
-            }
-        });
-      }
-    });
-    return () => unsubscribe();
-  }, [router]);
-
 
   const form = useForm<z.infer<typeof loginSchema>>({
     resolver: zodResolver(loginSchema),
@@ -52,39 +34,21 @@ export default function LoginPage() {
   const onSubmit = async (values: z.infer<typeof loginSchema>) => {
     setIsSubmitting(true);
     
-    try {
-        const userCredential = await signInWithEmailAndPassword(auth, values.email, values.password);
-        
-        if (values.email === 'admin@awni.sd') {
-          router.push('/admin/dashboard');
-        } else {
-          // onAuthStateChanged will handle redirect for volunteers
-          const volunteer = await getVolunteerByEmail(userCredential.user.email!);
-          if (!volunteer) {
-             toast({ variant: 'destructive', title: 'فشل تسجيل الدخول', description: 'لم يتم العثور على حساب متطوع مطابق.' });
-             auth.signOut();
-          }
-        }
-        toast({ title: 'تم تسجيل الدخول بنجاح' });
-    } catch (error: any) {
-        let errorMessage = 'البريد الإلكتروني أو كلمة المرور غير صحيحة.';
-        if (error.code) {
-          switch (error.code) {
-            case 'auth/user-not-found':
-            case 'auth/wrong-password':
-            case 'auth/invalid-credential':
-              errorMessage = 'البريد الإلكتروني أو كلمة المرور التي أدخلتها غير صحيحة.';
-              break;
-            case 'auth/too-many-requests':
-              errorMessage = 'تم حظر الوصول إلى هذا الحساب مؤقتًا بسبب كثرة محاولات تسجيل الدخول الفاشلة.';
-              break;
-            default:
-               errorMessage = 'حدث خطأ غير متوقع. يرجى المحاولة مرة أخرى.';
-          }
-        }
-        toast({ variant: 'destructive', title: 'فشل تسجيل الدخول', description: errorMessage });
-    } finally {
-        setIsSubmitting(false);
+    // Hardcoded credentials for admin
+    if (values.email === 'admin@awni.sd' && values.password === 'password') {
+      toast({ title: 'تم تسجيل الدخول بنجاح' });
+      router.push('/admin/dashboard');
+    } else {
+      // For now, any other login attempt is treated as a volunteer placeholder or invalid
+      // In a real scenario, you'd have a proper check for volunteers
+      const isVolunteerAttempt = values.email !== 'admin@awni.sd';
+
+      if (isVolunteerAttempt) {
+        toast({ variant: 'destructive', title: 'فشل تسجيل الدخول', description: 'تسجيل دخول المتطوعين معطل مؤقتًا.' });
+      } else {
+        toast({ variant: 'destructive', title: 'فشل تسجيل الدخول', description: 'البريد الإلكتروني أو كلمة المرور غير صحيحة.' });
+      }
+      setIsSubmitting(false);
     }
   };
 
@@ -114,7 +78,7 @@ export default function LoginPage() {
                   <FormItem>
                     <FormLabel>البريد الإلكتروني</FormLabel>
                     <FormControl>
-                      <Input type="email" placeholder="you@example.com" {...field} />
+                      <Input type="email" placeholder="admin@awni.sd" {...field} />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
