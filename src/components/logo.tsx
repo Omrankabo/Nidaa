@@ -5,7 +5,7 @@ export default function Logo() {
   return (
     <Link href="/" className="flex items-center gap-2 text-xl font-bold text-primary">
       <HandHeart className="h-6 w-6" />
-      <span className="font-headline text-foreground">عوني السودان</span>
+      <span className="font-headline text-foreground">نداء</span>
     </Link>
   );
 }
