@@ -1,4 +1,5 @@
 import { config } from 'dotenv';
 config();
 
-import '@/ai/flows/prioritize-emergency-requests.ts';
+// Intentionally left empty as no flows are needed for startup.
+// Keeping the file for potential future use.

@@ -1,4 +1,3 @@
-import type { PrioritizeEmergencyRequestOutput } from '@/ai/flows/prioritize-emergency-requests';
 
 export interface Volunteer {
   id: string;
@@ -13,8 +12,10 @@ export interface Volunteer {
   photoIdUrl?: string; // URL to the uploaded ID photo
 }
 
-export type EmergencyRequest = PrioritizeEmergencyRequestOutput & {
+export interface EmergencyRequest {
   id: string;
+  priorityLevel: 'critical' | 'high' | 'medium' | 'low';
+  reason: string;
   requestText: string;
   location: string;
   contactPhone: string;

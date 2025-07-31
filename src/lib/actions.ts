@@ -1,15 +1,13 @@
 'use server';
 
-import { prioritizeEmergencyRequest } from '@/ai/flows/prioritize-emergency-requests';
 import { addRequest, getVerifiedVolunteers } from './firebase/firestore';
-import type { EmergencyRequest, Volunteer } from './types';
+import type { EmergencyRequest } from './types';
 
-export async function prioritizeRequestAction(requestText: string, location: string, contactPhone: string) {
+export async function createRequestAction(requestText: string, location: string, contactPhone: string) {
   try {
-    const priorityResult = await prioritizeEmergencyRequest({ requestText });
-    
     const newRequest: Omit<EmergencyRequest, 'id'> = {
-        ...priorityResult,
+        priorityLevel: 'medium', // Default priority
+        reason: 'New request, priority not yet triaged by admin.', // Default reason
         requestText,
         location,
         contactPhone,
@@ -21,7 +19,7 @@ export async function prioritizeRequestAction(requestText: string, location: str
     return { success: true, data: { ...newRequest, id } };
   } catch (error) {
     console.error(error);
-    return { success: false, error: 'فشل تحديد أولوية الطلب.' };
+    return { success: false, error: 'Failed to create request.' };
   }
 }
 

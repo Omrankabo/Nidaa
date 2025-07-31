@@ -11,6 +11,7 @@ import { getRequests, getVolunteers, updateRequest, updateVolunteerStatus } from
 import { findAndAssignVolunteer } from '@/lib/actions';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Button } from '@/components/ui/button';
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
 
 const FormattedDate = ({ timestamp }: { timestamp: string }) => {
     const [isMounted, setIsMounted] = useState(false);
@@ -58,6 +59,11 @@ export default function DashboardPage() {
       }
     }
   };
+
+  const handlePriorityChange = async (requestId: string, priorityLevel: EmergencyRequest['priorityLevel']) => {
+    await updateRequest(requestId, { priorityLevel });
+  };
+
 
   const getPriorityBadgeVariant = (priority: EmergencyRequest['priorityLevel']) => {
     switch (priority) {
@@ -184,7 +190,7 @@ export default function DashboardPage() {
                     <TableHeader>
                     <TableRow>
                         <TableHead>تفاصيل الطلب</TableHead>
-                        <TableHead className="w-[120px] text-center">الأولوية</TableHead>
+                        <TableHead className="w-[150px] text-center">الأولوية</TableHead>
                         <TableHead className="w-[120px] text-center hidden sm:table-cell">الحالة</TableHead>
                          <TableHead className="w-[180px] text-center hidden md:table-cell">المتطوع المعين</TableHead>
                         <TableHead className="w-[200px] text-center">الإجراء</TableHead>
@@ -195,17 +201,24 @@ export default function DashboardPage() {
                         <TableRow key={req.id}>
                         <TableCell>
                             <p className="font-medium">{req.requestText}</p>
-                            <p className="text-sm text-muted-foreground mt-1">
-                            <span className="font-semibold">السبب:</span> {req.reason}
-                            </p>
                             <p className="text-xs text-muted-foreground mt-2">
                                 <FormattedDate timestamp={req.timestamp} />
                             </p>
                         </TableCell>
                         <TableCell className="text-center">
-                            <Badge variant={getPriorityBadgeVariant(req.priorityLevel)}>
-                            {getPriorityText(req.priorityLevel)}
-                            </Badge>
+                            <DropdownMenu>
+                                <DropdownMenuTrigger asChild>
+                                     <Button variant={getPriorityBadgeVariant(req.priorityLevel)} className="w-24">
+                                        {getPriorityText(req.priorityLevel)}
+                                    </Button>
+                                </DropdownMenuTrigger>
+                                <DropdownMenuContent>
+                                    <DropdownMenuItem onClick={() => handlePriorityChange(req.id, 'critical')}>حرج</DropdownMenuItem>
+                                    <DropdownMenuItem onClick={() => handlePriorityChange(req.id, 'high')}>عالي</DropdownMenuItem>
+                                    <DropdownMenuItem onClick={() => handlePriorityChange(req.id, 'medium')}>متوسط</DropdownMenuItem>
+                                    <DropdownMenuItem onClick={() => handlePriorityChange(req.id, 'low')}>منخفض</DropdownMenuItem>
+                                </DropdownMenuContent>
+                            </DropdownMenu>
                         </TableCell>
                         <TableCell className="text-center hidden sm:table-cell">{getStatusBadge(req.status)}</TableCell>
                          <TableCell className="text-center hidden md:table-cell">{req.assignedVolunteer || 'غير معين'}</TableCell>

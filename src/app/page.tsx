@@ -9,7 +9,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
 import { Textarea } from '@/components/ui/textarea';
 import { useToast } from '@/hooks/use-toast';
-import { prioritizeRequestAction } from '@/lib/actions';
+import { createRequestAction } from '@/lib/actions';
 import { Loader2, HandHeart, ShieldCheck, AlertCircle, Copy } from 'lucide-react';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import Link from 'next/link';
@@ -35,7 +35,7 @@ export default function Home() {
   const onSubmit = async (values: z.infer<typeof requestSchema>) => {
     setIsSubmitting(true);
     setSubmissionResult(null);
-    const result = await prioritizeRequestAction(values.requestText, values.location, values.contactPhone);
+    const result = await createRequestAction(values.requestText, values.location, values.contactPhone);
     setSubmissionResult(result);
 
     if (result.success) {
@@ -154,8 +154,7 @@ export default function Home() {
                                         <AlertTitle>تم استلام طلبك بنجاح!</AlertTitle>
                                         <AlertDescription>
                                             <p className="mb-4">
-                                                لقد تم تحديد أولويته على أنه <span className="font-bold">{getPriorityText(submissionResult.data.priorityLevel)}</span>.
-                                                نحن نعمل على تعيين مستجيب في أسرع وقت ممكن.
+                                                سيقوم فريقنا بمراجعة طلبك وتحديد أولويته في أقرب وقت ممكن.
                                             </p>
                                             <div className="flex items-center justify-between rounded-md bg-muted p-3">
                                                <div>
@@ -262,12 +261,3 @@ export default function Home() {
     </div>
   );
 }
-
-function getPriorityText(priority: 'critical' | 'high' | 'medium' | 'low') {
-    switch (priority) {
-        case 'critical': return 'حرج';
-        case 'high': return 'عالي';
-        case 'medium': return 'متوسط';
-        case 'low': return 'منخفض';
-    }
-  }
