@@ -1,22 +1,23 @@
+
 'use client';
 
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useForm } from 'react-hook-form';
 import * as z from 'zod';
-import Link from 'next/link';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
 import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import Logo from '@/components/logo';
-import { addVolunteer } from '@/lib/firebase/firestore';
 import { useToast } from '@/hooks/use-toast';
 import { useRouter } from 'next/navigation';
 import { createUserWithEmailAndPassword } from 'firebase/auth';
 import { auth } from '@/lib/firebase/config';
 import { Loader2 } from 'lucide-react';
 import { useState } from 'react';
+import axios from 'axios';
+import type { Volunteer } from '@/lib/types';
 
 const registrationSchema = z.object({
   fullName: z.string().min(2, { message: 'يجب أن يتكون الاسم الكامل من حرفين على الأقل.' }),
@@ -30,11 +31,13 @@ const registrationSchema = z.object({
 });
 
 const regions = ['الخرطوم', 'شمال كردفان', 'البحر الأحمر', 'الجزيرة', 'كسلا', 'النيل الأزرق'];
+const DB_URL = "https://awni-sudan-default-rtdb.europe-west1.firebasedatabase.app/volunteers.json";
 
 export default function RegisterPage() {
   const { toast } = useToast();
   const router = useRouter();
   const [isSubmitting, setIsSubmitting] = useState(false);
+
   const form = useForm<z.infer<typeof registrationSchema>>({
     resolver: zodResolver(registrationSchema),
     defaultValues: {
@@ -51,11 +54,12 @@ export default function RegisterPage() {
   async function onSubmit(values: z.infer<typeof registrationSchema>) {
     setIsSubmitting(true);
     form.clearErrors();
+
     try {
       const userCredential = await createUserWithEmailAndPassword(auth, values.email, values.password);
-      
-      await addVolunteer({
-        id: userCredential.user.uid,
+      const { user } = userCredential;
+
+      const volunteerData: Omit<Volunteer, 'id'> = {
         fullName: values.fullName,
         email: values.email,
         gender: values.gender === 'male' ? 'ذكر' : 'أنثى',
@@ -64,14 +68,18 @@ export default function RegisterPage() {
         profession: values.profession,
         phoneNumber: values.phoneNumber,
         status: 'قيد الانتظار',
-        photoIdUrl: '..' // Placeholder
-      });
+        photoIdUrl: '..', // Placeholder
+        createdAt: Date.now()
+      };
+
+      await axios.put(`${process.env.NEXT_PUBLIC_FIREBASE_DATABASE_URL}/volunteers/${user.uid}.json`, volunteerData);
 
       toast({
         title: 'تم تقديم طلب التسجيل بنجاح!',
         description: 'سيقوم المسؤول بمراجعة طلبك قريبًا.',
       });
       router.push('/login');
+
     } catch (error: any) {
       console.error("Registration error:", error);
       let description = 'فشل إرسال طلب التسجيل. الرجاء المحاولة مرة أخرى.';
@@ -85,6 +93,8 @@ export default function RegisterPage() {
       } else if (error.code === 'auth/invalid-email') {
          description = 'البريد الإلكتروني الذي أدخلته غير صالح.';
          form.setError('email', { type: 'manual', message: 'الرجاء إدخال بريد إلكتروني صحيح.' });
+      } else if (axios.isAxiosError(error)) {
+        description = `فشل حفظ بيانات المتطوع: ${error.message}`;
       }
       
       toast({

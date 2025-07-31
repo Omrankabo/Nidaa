@@ -85,14 +85,6 @@ export async function updateRequestStatus(id: string, status: EmergencyRequest['
 }
 
 // Volunteers
-export async function addVolunteer(volunteer: Volunteer) {
-    const volunteerRef = ref(db, `${VOLUNTEERS_PATH}/${volunteer.id}`);
-    await set(volunteerRef, {
-        ...volunteer,
-        createdAt: serverTimestamp()
-    });
-}
-
 export function getVolunteers(
     callback: (volunteers: Volunteer[]) => void,
     setLoading?: (loading: boolean) => void
