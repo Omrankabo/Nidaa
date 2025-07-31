@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
@@ -36,6 +36,20 @@ const initialRequests: EmergencyRequest[] = [
         status: 'قيد الانتظار',
     }
 ];
+
+const FormattedDate = ({ timestamp }: { timestamp: string }) => {
+    const [isMounted, setIsMounted] = useState(false);
+  
+    useEffect(() => {
+      setIsMounted(true);
+    }, []);
+  
+    if (!isMounted) {
+      return null;
+    }
+  
+    return <>{new Date(timestamp).toLocaleString('ar-EG')}</>;
+};
 
 export default function DashboardPage() {
   const [requests, setRequests] = useState<EmergencyRequest[]>(initialRequests);
@@ -109,7 +123,7 @@ export default function DashboardPage() {
                             <span className="font-semibold">السبب:</span> {req.reason}
                             </p>
                             <p className="text-xs text-muted-foreground mt-2">
-                            {new Date(req.timestamp).toLocaleString('ar-EG')}
+                                <FormattedDate timestamp={req.timestamp} />
                             </p>
                         </TableCell>
                         <TableCell className="text-center">
