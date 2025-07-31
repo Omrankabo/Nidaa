@@ -9,7 +9,6 @@ import type { EmergencyRequest, Volunteer } from '@/lib/types';
 import { AlertCircle, UserPlus, CheckCircle, Clock, Trash2, Info, MoreHorizontal, UserCheck } from 'lucide-react';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { getRequests, getVolunteers, updateRequest, updateVolunteerStatus, deleteRequest, deleteVolunteer } from '@/lib/firebase/firestore';
-import { findAndAssignVolunteer } from '@/lib/actions';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Button } from '@/components/ui/button';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
@@ -53,37 +52,15 @@ export default function DashboardPage() {
         unsubscribeVolunteers();
     };
   }, []);
-
-  const handleAutoMatch = async (requestId: string) => {
-    const requestToMatch = requests.find(r => r.id === requestId);
-    if (requestToMatch) {
-      const result = await findAndAssignVolunteer(requestToMatch);
-      if (result.success && result.volunteer) {
-        // Mock ETA for now
-        const eta = `${Math.floor(Math.random() * 10) + 5}-${Math.floor(Math.random() * 5) + 15} دقائق`;
-        await updateRequest(requestId, { 
-            status: 'تم التعيين', 
-            assignedVolunteer: result.volunteer.fullName, 
-            volunteerId: result.volunteer.id,
-            eta: eta
-        });
-      } else {
-        alert(result.error || 'لم يتم العثور على متطوع مطابق.');
-      }
-    }
-  };
-
-  const handleReassign = async (requestId: string, volunteerId: string) => {
-    const volunteer = volunteers.find(v => v.id === volunteerId);
-    if (volunteer) {
-        const eta = `${Math.floor(Math.random() * 10) + 5}-${Math.floor(Math.random() * 5) + 15} دقائق`;
-        await updateRequest(requestId, {
-            status: 'تم التعيين',
-            assignedVolunteer: volunteer.fullName,
-            volunteerId: volunteer.id,
-            eta: eta,
-        });
-    }
+  
+  const handleAssign = async (requestId: string, volunteer: Volunteer) => {
+    const eta = `${Math.floor(Math.random() * 10) + 5}-${Math.floor(Math.random() * 5) + 15} دقائق`;
+    await updateRequest(requestId, {
+        status: 'تم التعيين',
+        assignedVolunteer: volunteer.fullName,
+        volunteerId: volunteer.id,
+        eta: eta,
+    });
   };
 
   const handlePriorityChange = async (requestId: string, priorityLevel: EmergencyRequest['priorityLevel']) => {
@@ -145,6 +122,7 @@ export default function DashboardPage() {
   }, {} as Record<string, number>);
   
   const verifiedVolunteers = volunteers.filter(v => v.status === 'تم التحقق');
+  const khartoumVolunteers = verifiedVolunteers.filter(v => v.region === 'الخرطوم');
 
   if (loading) {
     return <div className="flex justify-center items-center h-full"><AlertCircle className="h-8 w-8 animate-spin" /></div>
@@ -281,27 +259,58 @@ export default function DashboardPage() {
                         <TableCell className="text-center">
                             <div className="flex justify-center items-center gap-1">
                                 {req.status === 'قيد الانتظار' && (
-                                    <Button size="sm" onClick={() => handleAutoMatch(req.id)}>
-                                        <UserPlus className="ml-2 h-4 w-4" />
-                                        مطابقة
-                                    </Button>
+                                    <Dialog>
+                                        <DialogTrigger asChild>
+                                            <Button size="sm"><UserPlus className="ml-2 h-4 w-4" />مطابقة</Button>
+                                        </DialogTrigger>
+                                        <DialogContent>
+                                            <DialogHeader>
+                                                <DialogTitle>اختر متطوعًا</DialogTitle>
+                                                <DialogDescription>اختر متطوعًا متاحًا من منطقة الخرطوم.</DialogDescription>
+                                            </DialogHeader>
+                                            <div className="space-y-2 max-h-60 overflow-y-auto">
+                                                {khartoumVolunteers.length > 0 ? khartoumVolunteers.map(v => (
+                                                    <div key={v.id} className="flex justify-between items-center p-2 border rounded-md">
+                                                        <div>
+                                                            <p className="font-semibold">{v.fullName}</p>
+                                                            <p className="text-sm text-muted-foreground">{v.profession}</p>
+                                                        </div>
+                                                        <DialogTrigger asChild>
+                                                            <Button size="sm" onClick={() => handleAssign(req.id, v)}>تعيين</Button>
+                                                        </DialogTrigger>
+                                                    </div>
+                                                )) : <p>لا يوجد متطوعون متاحون في الخرطوم.</p>}
+                                            </div>
+                                        </DialogContent>
+                                    </Dialog>
                                 )}
                                 {req.status === 'تم التعيين' && (
-                                    <DropdownMenu>
-                                        <DropdownMenuTrigger asChild>
-                                            <Button size="sm" variant="outline">
-                                                <UserCheck className="ml-2 h-4 w-4" />
-                                                إعادة تعيين
-                                            </Button>
-                                        </DropdownMenuTrigger>
-                                        <DropdownMenuContent>
-                                            {verifiedVolunteers.map(v => (
-                                                <DropdownMenuItem key={v.id} onClick={() => handleReassign(req.id, v.id)} disabled={v.id === req.volunteerId}>
-                                                    {v.fullName}
-                                                </DropdownMenuItem>
-                                            ))}
-                                        </DropdownMenuContent>
-                                    </DropdownMenu>
+                                    <Dialog>
+                                        <DialogTrigger asChild>
+                                            <Button size="sm" variant="outline"><UserCheck className="ml-2 h-4 w-4" />إعادة تعيين</Button>
+                                        </DialogTrigger>
+                                         <DialogContent>
+                                            <DialogHeader>
+                                                <DialogTitle>إعادة تعيين متطوع</DialogTitle>
+                                                <DialogDescription>اختر متطوعًا مختلفًا لهذا الطلب.</DialogDescription>
+                                            </DialogHeader>
+                                            <div className="space-y-2 max-h-60 overflow-y-auto">
+                                                {verifiedVolunteers.map(v => (
+                                                    <div key={v.id} className="flex justify-between items-center p-2 border rounded-md">
+                                                        <div>
+                                                            <p className="font-semibold">{v.fullName}</p>
+                                                            <p className="text-sm text-muted-foreground">{v.region} - {v.profession}</p>
+                                                        </div>
+                                                         <DialogTrigger asChild>
+                                                            <Button size="sm" onClick={() => handleAssign(req.id, v)} disabled={v.id === req.volunteerId}>
+                                                                {v.id === req.volunteerId ? 'معين حاليًا' : 'تعيين'}
+                                                            </Button>
+                                                        </DialogTrigger>
+                                                    </div>
+                                                ))}
+                                            </div>
+                                        </DialogContent>
+                                    </Dialog>
                                 )}
                                 <Dialog>
                                     <DialogTrigger asChild>
@@ -369,3 +378,5 @@ export default function DashboardPage() {
     </div>
   );
 }
+
+    
