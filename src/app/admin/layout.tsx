@@ -38,19 +38,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
                 </Button>
             </div>
           
-            <div className="flex flex-1 items-center justify-between space-x-2 md:justify-end">
-                <div className="w-full flex-1 md:w-auto md:flex-none">
-                     <Tabs value={getActiveTab()} className="mx-auto w-fit">
-                        <TabsList>
-                            <TabsTrigger value="dashboard" asChild>
-                                <Link href="/admin/dashboard"><LayoutDashboard className="ml-2 h-4 w-4"/>لوحة التحكم</Link>
-                            </TabsTrigger>
-                            <TabsTrigger value="volunteers" asChild>
-                                <Link href="/admin/volunteers"><Users className="ml-2 h-4 w-4"/>المتطوعون</Link>
-                            </TabsTrigger>
-                        </TabsList>
-                    </Tabs>
-                </div>
+            <div className="flex flex-1 items-center justify-end space-x-2">
                 <nav className="flex items-center gap-2">
                     <ThemeToggle />
                      <Button variant="ghost" size="icon" onClick={handleLogout}>
@@ -61,7 +49,19 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
         </div>
       </header>
       <main className="flex-1">
-        <div className="container py-8">{children}</div>
+        <div className="container py-8">
+            <Tabs value={getActiveTab()} className="mb-6">
+                <TabsList className="grid w-full grid-cols-2">
+                    <TabsTrigger value="dashboard" asChild>
+                        <Link href="/admin/dashboard"><LayoutDashboard className="ml-2 h-4 w-4"/>لوحة التحكم</Link>
+                    </TabsTrigger>
+                    <TabsTrigger value="volunteers" asChild>
+                        <Link href="/admin/volunteers"><Users className="ml-2 h-4 w-4"/>المتطوعون</Link>
+                    </TabsTrigger>
+                </TabsList>
+            </Tabs>
+            {children}
+        </div>
       </main>
     </div>
   );
