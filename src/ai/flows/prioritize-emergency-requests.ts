@@ -40,15 +40,15 @@ const prompt = ai.definePrompt({
   name: 'prioritizeEmergencyRequestPrompt',
   input: {schema: PrioritizeEmergencyRequestInputSchema},
   output: {schema: PrioritizeEmergencyRequestOutputSchema},
-  prompt: `You are an emergency response system. Your task is to prioritize emergency requests based on the text of the request.
+  prompt: `You are an emergency response system. Your task is to prioritize emergency requests based on the text of the request. The request will be in Arabic.
 
 Given the following emergency request:
 
 {{requestText}}
 
-Determine the priority level of the request (critical, high, medium, or low) and provide a reason for your decision.
+Determine the priority level of the request (critical, high, medium, or low) and provide a reason for your decision in Arabic.
 
-Consider keywords and phrases that indicate urgency, such as "immediately," "unconscious," "bleeding," etc.
+Consider keywords and phrases that indicate urgency, such as "فورا," "فاقد للوعي," "ينزف," etc.
 
 Ensure that the output is in the correct JSON format.
 `,

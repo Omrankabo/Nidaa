@@ -12,28 +12,28 @@ import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 const initialRequests: EmergencyRequest[] = [
     {
         id: '1',
-        requestText: "A building collapsed in Al-Amarat, many people are trapped under the rubble. We need ambulances and rescue teams urgently.",
+        requestText: "انهار مبنى في العمارات، وهناك الكثير من الناس محاصرون تحت الأنقاض. نحتاج إلى سيارات إسعاف وفرق إنقاذ بشكل عاجل.",
         priorityLevel: 'critical',
-        reason: "The request mentions a collapsed building with multiple people trapped, indicating a mass casualty incident requiring immediate and extensive emergency response.",
+        reason: "يذكر الطلب انهيار مبنى مع وجود عدة أشخاص محاصرين، مما يشير إلى حادثة جماعية تتطلب استجابة طارئة وفورية ومكثفة.",
         timestamp: new Date(Date.now() - 2 * 60 * 1000).toISOString(),
-        status: 'Assigned',
-        assignedVolunteer: 'Fatima Al-Amin',
+        status: 'تم التعيين',
+        assignedVolunteer: 'فاطمة الأمين',
     },
     {
         id: '2',
-        requestText: "There's a car accident on the main road to Bahri. One person is bleeding heavily from the head and seems unconscious.",
+        requestText: "هناك حادث سيارة على الطريق الرئيسي المؤدي إلى بحري. شخص ينزف بغزارة من رأسه ويبدو فاقداً للوعي.",
         priorityLevel: 'high',
-        reason: "The report of a car accident with a person who is unconscious and bleeding heavily indicates a life-threatening injury that requires immediate medical attention.",
+        reason: "الإبلاغ عن حادث سيارة مع شخص فاقد للوعي وينزف بغزارة يشير إلى إصابة خطيرة تهدد الحياة وتتطلب عناية طبية فورية.",
         timestamp: new Date(Date.now() - 15 * 60 * 1000).toISOString(),
-        status: 'Pending',
+        status: 'قيد الانتظار',
     },
     {
         id: '3',
-        requestText: "Reports of a fire at a market stall in Khartoum North. It seems small but needs checking.",
+        requestText: "تقارير عن حريق في كشك بسوق في الخرطوم بحري. يبدو صغيراً ولكنه يحتاج إلى فحص.",
         priorityLevel: 'medium',
-        reason: "A small fire can escalate quickly. It's important to dispatch a team to assess and control the situation.",
+        reason: "الحريق الصغير يمكن أن يتصاعد بسرعة. من المهم إرسال فريق لتقييم الوضع والسيطرة عليه.",
         timestamp: new Date(Date.now() - 45 * 60 * 1000).toISOString(),
-        status: 'Pending',
+        status: 'قيد الانتظار',
     }
 ];
 
@@ -41,9 +41,7 @@ export default function DashboardPage() {
   const [requests, setRequests] = useState<EmergencyRequest[]>(initialRequests);
 
   const handleAutoMatch = (requestId: string) => {
-    // In a real app, this would trigger a backend process to find and assign a suitable volunteer.
-    // For this prototype, we'll just simulate it by assigning a mock volunteer.
-    setRequests(requests.map(r => r.id === requestId ? {...r, status: 'Assigned', assignedVolunteer: 'Ahmed Ibrahim'} : r));
+    setRequests(requests.map(r => r.id === requestId ? {...r, status: 'تم التعيين', assignedVolunteer: 'أحمد إبراهيم'} : r));
   };
 
 
@@ -62,12 +60,21 @@ export default function DashboardPage() {
     }
   };
 
+  const getPriorityText = (priority: EmergencyRequest['priorityLevel']) => {
+    switch (priority) {
+        case 'critical': return 'حرج';
+        case 'high': return 'عالي';
+        case 'medium': return 'متوسط';
+        case 'low': return 'منخفض';
+    }
+  }
+
   const getStatusBadge = (status: EmergencyRequest['status']) => {
     switch (status) {
-      case 'Assigned':
-        return <Badge className="bg-blue-500 hover:bg-blue-600"><CheckCircle className="mr-1 h-3 w-3" />Assigned</Badge>;
-      case 'Pending':
-        return <Badge variant="secondary"><Clock className="mr-1 h-3 w-3" />Pending</Badge>;
+      case 'تم التعيين':
+        return <Badge className="bg-blue-500 hover:bg-blue-600"><CheckCircle className="ml-1 h-3 w-3" />تم التعيين</Badge>;
+      case 'قيد الانتظار':
+        return <Badge variant="secondary"><Clock className="ml-1 h-3 w-3" />قيد الانتظار</Badge>;
       default:
         return <Badge variant="outline">{status}</Badge>;
     }
@@ -76,9 +83,9 @@ export default function DashboardPage() {
   return (
     <Card>
         <CardHeader>
-        <CardTitle className="font-headline">Prioritized Requests Queue</CardTitle>
+        <CardTitle className="font-headline">طلبات الطوارئ ذات الأولوية</CardTitle>
         <CardDescription>
-            List of incoming emergency requests, sorted by priority and time.
+            قائمة بطلبات الطوارئ الواردة، مرتبة حسب الأولوية والوقت.
         </CardDescription>
         </CardHeader>
         <CardContent>
@@ -87,10 +94,10 @@ export default function DashboardPage() {
                 <Table>
                     <TableHeader>
                     <TableRow>
-                        <TableHead>Request Details</TableHead>
-                        <TableHead className="w-[120px] text-center">Priority</TableHead>
-                        <TableHead className="w-[120px] text-center">Status</TableHead>
-                        <TableHead className="w-[200px]">Assigned To</TableHead>
+                        <TableHead>تفاصيل الطلب</TableHead>
+                        <TableHead className="w-[120px] text-center">الأولوية</TableHead>
+                        <TableHead className="w-[120px] text-center hidden sm:table-cell">الحالة</TableHead>
+                        <TableHead className="w-[200px] text-center">الإجراء</TableHead>
                     </TableRow>
                     </TableHeader>
                     <TableBody>
@@ -99,26 +106,29 @@ export default function DashboardPage() {
                         <TableCell>
                             <p className="font-medium">{req.requestText}</p>
                             <p className="text-sm text-muted-foreground mt-1">
-                            <span className="font-semibold">Reason:</span> {req.reason}
+                            <span className="font-semibold">السبب:</span> {req.reason}
                             </p>
                             <p className="text-xs text-muted-foreground mt-2">
-                            {new Date(req.timestamp).toLocaleString()}
+                            {new Date(req.timestamp).toLocaleString('ar-EG')}
                             </p>
                         </TableCell>
                         <TableCell className="text-center">
                             <Badge variant={getPriorityBadgeVariant(req.priorityLevel)}>
-                            {req.priorityLevel}
+                            {getPriorityText(req.priorityLevel)}
                             </Badge>
                         </TableCell>
-                        <TableCell className="text-center">{getStatusBadge(req.status)}</TableCell>
-                        <TableCell>
-                            {req.status === 'Pending' ? (
+                        <TableCell className="text-center hidden sm:table-cell">{getStatusBadge(req.status)}</TableCell>
+                        <TableCell className="text-center">
+                            {req.status === 'قيد الانتظار' ? (
                                 <Button size="sm" onClick={() => handleAutoMatch(req.id)}>
-                                    <UserPlus className="mr-2 h-4 w-4" />
-                                    Auto-match
+                                    <UserPlus className="ml-2 h-4 w-4" />
+                                    مطابقة تلقائية
                                 </Button>
                             ) : (
-                                <span className="font-medium">{req.assignedVolunteer}</span>
+                                <div className="flex flex-col items-center">
+                                    <span className="font-medium">{req.assignedVolunteer}</span>
+                                    <span className="sm:hidden">{getStatusBadge(req.status)}</span>
+                                </div>
                             )}
                         </TableCell>
                         </TableRow>
@@ -129,9 +139,9 @@ export default function DashboardPage() {
         ) : (
             <Alert>
                 <AlertCircle className="h-4 w-4" />
-                <AlertTitle>No Active Requests</AlertTitle>
+                <AlertTitle>لا توجد طلبات نشطة</AlertTitle>
                 <AlertDescription>
-                    The emergency request queue is currently empty. New prioritized requests will appear here.
+                    قائمة طلبات الطوارئ فارغة حاليًا. ستظهر الطلبات الجديدة ذات الأولوية هنا.
                 </AlertDescription>
             </Alert>
         )}

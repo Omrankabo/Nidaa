@@ -3,18 +3,18 @@ import type { PrioritizeEmergencyRequestOutput } from '@/ai/flows/prioritize-eme
 export interface Volunteer {
   id: string;
   fullName: string;
-  gender: 'Male' | 'Female' | 'Other';
+  gender: 'ذكر' | 'أنثى' | 'آخر';
   region: string;
   city: string;
   profession: string;
   phoneNumber: string;
-  status: 'Verified' | 'Pending' | 'Rejected';
+  status: 'تم التحقق' | 'قيد الانتظار' | 'مرفوض';
 }
 
 export type EmergencyRequest = PrioritizeEmergencyRequestOutput & {
   id: string;
   requestText: string;
   timestamp: string;
-  status: 'Pending' | 'Assigned' | 'Resolved' | 'Cancelled';
+  status: 'قيد الانتظار' | 'تم التعيين' | 'تم الحل' | 'تم الإلغاء';
   assignedVolunteer?: string;
 };

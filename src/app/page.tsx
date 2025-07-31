@@ -16,7 +16,7 @@ import Link from 'next/link';
 import Logo from '@/components/logo';
 
 const requestSchema = z.object({
-  requestText: z.string().min(10, { message: 'Request must be at least 10 characters.' }),
+  requestText: z.string().min(10, { message: 'يجب أن يكون الطلب 10 أحرف على الأقل.' }),
 });
 
 export default function Home() {
@@ -37,14 +37,14 @@ export default function Home() {
 
     if (result.success) {
       toast({
-        title: 'Request Submitted',
-        description: 'Your request has been received and is being prioritized.',
+        title: 'تم تقديم الطلب',
+        description: 'تم استلام طلبك ويجري تحديد أولويته.',
       });
       form.reset();
     } else {
       toast({
         variant: 'destructive',
-        title: 'Error',
+        title: 'خطأ',
         description: result.error,
       });
     }
@@ -66,6 +66,15 @@ export default function Home() {
     }
   };
 
+  const getPriorityText = (priority: 'critical' | 'high' | 'medium' | 'low') => {
+    switch (priority) {
+        case 'critical': return 'حرج';
+        case 'high': return 'عالي';
+        case 'medium': return 'متوسط';
+        case 'low': return 'منخفض';
+    }
+  }
+
 
   return (
     <div className="flex flex-col min-h-screen">
@@ -79,25 +88,25 @@ export default function Home() {
               <div className="flex flex-col justify-center space-y-4">
                 <div className="space-y-2">
                   <h1 className="text-3xl font-bold tracking-tighter sm:text-5xl xl:text-6xl/none font-headline">
-                    Awni Sudan: A Lifeline in Times of Need
+                    عوني السودان: شريان حياة في أوقات الشدة
                   </h1>
                   <p className="max-w-[600px] text-foreground/80 md:text-xl">
-                    A simple, accessible emergency response system connecting Sudanese communities with verified medical help via SMS and voice, no internet required.
+                    نظام استجابة للطوارئ بسيط وسهل الوصول يربط المجتمعات السودانية بالمساعدة الطبية الموثوقة عبر الرسائل القصيرة والصوت، دون الحاجة إلى الإنترنت.
                   </p>
                 </div>
                 <div className="flex flex-col gap-2 min-[400px]:flex-row">
                   <Button asChild size="lg">
-                    <Link href="/register">Register as Volunteer</Link>
+                    <Link href="/register">التسجيل كمتطوع</Link>
                   </Button>
                   <Button asChild variant="secondary" size="lg">
-                    <Link href="/admin/dashboard">Admin Dashboard</Link>
+                    <Link href="/admin/dashboard">لوحة تحكم المسؤول</Link>
                   </Button>
                 </div>
               </div>
               <div className="flex items-center justify-center">
                  <img
                   src="https://placehold.co/600x400.png"
-                  alt="Helping hands"
+                  alt="أيادي المساعدة"
                   width="600"
                   height="400"
                   data-ai-hint="community help"
@@ -112,18 +121,18 @@ export default function Home() {
             <div className="container px-4 md:px-6">
                  <div className="flex flex-col items-center justify-center space-y-4 text-center mb-12">
                     <div className="space-y-2">
-                        <h2 className="text-3xl font-bold tracking-tighter sm:text-5xl font-headline">Request Emergency Help</h2>
+                        <h2 className="text-3xl font-bold tracking-tighter sm:text-5xl font-headline">اطلب مساعدة طارئة</h2>
                         <p className="max-w-[900px] text-foreground/80 md:text-xl/relaxed lg:text-base/relaxed xl:text-xl/relaxed">
-                            If you have an emergency, fill out the form below. Your request will be instantly analyzed and sent to the nearest verified responders.
+                            إذا كانت لديك حالة طارئة، فاملأ النموذج أدناه. سيتم تحليل طلبك على الفور وإرساله إلى أقرب المستجيبين المعتمدين.
                         </p>
                     </div>
                 </div>
                 <div className="mx-auto max-w-2xl">
                      <Card>
                         <CardHeader>
-                            <CardTitle className="font-headline">New Emergency Request</CardTitle>
+                            <CardTitle className="font-headline">طلب طوارئ جديد</CardTitle>
                             <CardDescription>
-                            Please describe the emergency in as much detail as possible.
+                            يرجى وصف حالة الطوارئ بأكبر قدر ممكن من التفاصيل.
                             </CardDescription>
                         </CardHeader>
                         <CardContent>
@@ -134,10 +143,10 @@ export default function Home() {
                                 name="requestText"
                                 render={({ field }) => (
                                     <FormItem>
-                                    <FormLabel>Emergency Details</FormLabel>
+                                    <FormLabel>تفاصيل الطوارئ</FormLabel>
                                     <FormControl>
                                         <Textarea
-                                        placeholder="e.g., 'A fire has broken out in a house at Al-Amarat Street 61. Multiple people are inside...'"
+                                        placeholder="مثال: 'اندلع حريق في منزل بشارع العمارات 61. يوجد عدة أشخاص في الداخل...'"
                                         className="min-h-[150px]"
                                         {...field}
                                         />
@@ -147,8 +156,8 @@ export default function Home() {
                                 )}
                                 />
                                 <Button type="submit" className="w-full" disabled={isSubmitting}>
-                                {isSubmitting && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-                                Submit Request
+                                {isSubmitting && <Loader2 className="ml-2 h-4 w-4 animate-spin" />}
+                                إرسال الطلب
                                 </Button>
                             </form>
                             </Form>
@@ -157,7 +166,7 @@ export default function Home() {
                                     {submissionResult.success && submissionResult.data ? (
                                     <Alert variant={getPriorityBadgeVariant(submissionResult.data.priorityLevel)}>
                                         <AlertCircle className="h-4 w-4" />
-                                        <AlertTitle>Request Prioritized: {submissionResult.data.priorityLevel.toUpperCase()}</AlertTitle>
+                                        <AlertTitle>تم تحديد أولوية الطلب: {getPriorityText(submissionResult.data.priorityLevel).toUpperCase()}</AlertTitle>
                                         <AlertDescription>
                                             {submissionResult.data.reason}
                                         </AlertDescription>
@@ -165,9 +174,9 @@ export default function Home() {
                                     ) : (
                                     <Alert variant="destructive">
                                         <AlertCircle className="h-4 w-4" />
-                                        <AlertTitle>Submission Failed</AlertTitle>
+                                        <AlertTitle>فشل الإرسال</AlertTitle>
                                         <AlertDescription>
-                                            {submissionResult.error || 'An unknown error occurred. Please try again.'}
+                                            {submissionResult.error || 'حدث خطأ غير معروف. يرجى المحاولة مرة أخرى.'}
                                         </AlertDescription>
                                     </Alert>
                                     )}
@@ -183,10 +192,10 @@ export default function Home() {
           <div className="container px-4 md:px-6">
             <div className="flex flex-col items-center justify-center space-y-4 text-center">
               <div className="space-y-2">
-                <div className="inline-block rounded-lg bg-secondary px-3 py-1 text-sm">Our Mission</div>
-                <h2 className="text-3xl font-bold tracking-tighter sm:text-5xl font-headline">Bridging the Gap to Emergency Care</h2>
+                <div className="inline-block rounded-lg bg-secondary px-3 py-1 text-sm">مهمتنا</div>
+                <h2 className="text-3xl font-bold tracking-tighter sm:text-5xl font-headline">سد الفجوة للوصول إلى الرعاية الطارئة</h2>
                 <p className="max-w-[900px] text-foreground/80 md:text-xl/relaxed lg:text-base/relaxed xl:text-xl/relaxed">
-                  In a nation with unique challenges, Awni Sudan provides a crucial link between those in crisis and those who can help. Our system is built for resilience, accessibility, and trust.
+                  في بلد يواجه تحديات فريدة، يوفر عوني السودان حلقة وصل حاسمة بين المحتاجين للمساعدة وأولئك القادرين على تقديمها. نظامنا مبني على المرونة وسهولة الوصول والثقة.
                 </p>
               </div>
             </div>
@@ -196,11 +205,11 @@ export default function Home() {
                   <div className="bg-primary/10 p-3 rounded-full">
                     <HandHeart className="h-6 w-6 text-primary" />
                   </div>
-                  <CardTitle className="font-headline">Voice and SMS Based</CardTitle>
+                  <CardTitle className="font-headline">يعتمد على الصوت والرسائل القصيرة</CardTitle>
                 </CardHeader>
                 <CardContent>
                   <CardDescription>
-                    Anyone can request help using a simple voice call or SMS message. We overcome literacy and internet barriers to ensure no call for help goes unanswered.
+                  يمكن لأي شخص طلب المساعدة باستخدام مكالمة صوتية بسيطة أو رسالة نصية قصيرة. نحن نتغلب على حواجز الأمية والإنترنت لضمان عدم ترك أي نداء للمساعدة دون إجابة.
                   </CardDescription>
                 </CardContent>
               </Card>
@@ -209,11 +218,11 @@ export default function Home() {
                   <div className="bg-primary/10 p-3 rounded-full">
                     <ShieldCheck className="h-6 w-6 text-primary" />
                   </div>
-                  <CardTitle className="font-headline">Verified Responders</CardTitle>
+                  <CardTitle className="font-headline">مستجيبون معتمدون</CardTitle>
                 </CardHeader>
                 <CardContent>
                   <CardDescription>
-                    Our network of volunteers and medical entities is manually verified to ensure every response is from a trusted and capable source, building a safe community of care.
+                  يتم التحقق يدويًا من شبكتنا من المتطوعين والكيانات الطبية لضمان أن كل استجابة تأتي من مصدر موثوق وقادر، مما يبني مجتمعًا آمنًا من الرعاية.
                   </CardDescription>
                 </CardContent>
               </Card>
@@ -223,7 +232,7 @@ export default function Home() {
 
       </main>
       <footer className="flex flex-col gap-2 sm:flex-row py-6 w-full shrink-0 items-center px-4 md:px-6 border-t">
-        <p className="text-xs text-foreground/60">&copy; 2024 Awni Sudan. All rights reserved.</p>
+        <p className="text-xs text-foreground/60">&copy; 2024 عوني السودان. جميع الحقوق محفوظة.</p>
       </footer>
     </div>
   );

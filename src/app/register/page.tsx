@@ -12,17 +12,17 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import Logo from '@/components/logo';
 
 const registrationSchema = z.object({
-  fullName: z.string().min(2, { message: 'Full name must be at least 2 characters.' }),
-  gender: z.enum(['male', 'female', 'other']),
-  region: z.string().min(1, { message: 'Please select a region.' }),
-  city: z.string().min(1, { message: 'Please enter a city.' }),
-  profession: z.string().min(2, { message: 'Profession must be at least 2 characters.' }),
-  phoneNumber: z.string().regex(/^\+?[0-9\s-]{7,20}$/, { message: 'Please enter a valid phone number.' }),
-  photoId: z.any().refine((file) => file?.length == 1, 'Photo ID is required.'),
+  fullName: z.string().min(2, { message: 'يجب أن يتكون الاسم الكامل من حرفين على الأقل.' }),
+  gender: z.enum(['male', 'female', 'other'], { errorMap: () => ({ message: "الرجاء اختيار النوع" }) }),
+  region: z.string().min(1, { message: 'الرجاء اختيار منطقة.' }),
+  city: z.string().min(1, { message: 'الرجاء إدخال مدينة.' }),
+  profession: z.string().min(2, { message: 'يجب أن تكون المهنة من حرفين على الأقل.' }),
+  phoneNumber: z.string().regex(/^\+?[0-9\s-]{7,20}$/, { message: 'الرجاء إدخال رقم هاتف صحيح.' }),
+  photoId: z.any().refine((files) => files?.length == 1, 'بطاقة الهوية المصورة مطلوبة.'),
 });
 
 // Mock data
-const regions = ['Khartoum', 'North Kordofan', 'Red Sea', 'Gezira', 'Kassala', 'Blue Nile'];
+const regions = ['الخرطوم', 'شمال كردفان', 'البحر الأحمر', 'الجزيرة', 'كسلا', 'النيل الأزرق'];
 
 export default function RegisterPage() {
   const form = useForm<z.infer<typeof registrationSchema>>({
@@ -39,20 +39,20 @@ export default function RegisterPage() {
   function onSubmit(values: z.infer<typeof registrationSchema>) {
     // In a real app, you would handle file upload and data submission here.
     console.log(values);
-    alert('Registration submitted! An admin will review your application.');
+    alert('تم تقديم طلب التسجيل! سيقوم المسؤول بمراجعة طلبك.');
     form.reset();
   }
 
   return (
     <div className="flex flex-col items-center justify-center min-h-screen p-4 bg-background/50">
-        <div className="absolute top-4 left-4">
+        <div className="absolute top-4 right-4">
             <Logo />
         </div>
       <Card className="w-full max-w-2xl">
         <CardHeader>
-          <CardTitle className="text-2xl font-headline">Become a Verified Responder</CardTitle>
+          <CardTitle className="text-2xl font-headline">كن مستجيباً معتمداً</CardTitle>
           <CardDescription>
-            Join our network of trusted volunteers and medical professionals. Your help can save lives.
+            انضم إلى شبكتنا من المتطوعين والمهنيين الطبيين الموثوق بهم. مساعدتك يمكن أن تنقذ الأرواح.
           </CardDescription>
         </CardHeader>
         <CardContent>
@@ -64,9 +64,9 @@ export default function RegisterPage() {
                   name="fullName"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>Full Name</FormLabel>
+                      <FormLabel>الاسم الكامل</FormLabel>
                       <FormControl>
-                        <Input placeholder="Enter your full name" {...field} />
+                        <Input placeholder="أدخل اسمك الكامل" {...field} />
                       </FormControl>
                       <FormMessage />
                     </FormItem>
@@ -77,17 +77,17 @@ export default function RegisterPage() {
                   name="gender"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>Gender</FormLabel>
+                      <FormLabel>النوع</FormLabel>
                       <Select onValueChange={field.onChange} defaultValue={field.value}>
                         <FormControl>
                           <SelectTrigger>
-                            <SelectValue placeholder="Select your gender" />
+                            <SelectValue placeholder="اختر النوع" />
                           </SelectTrigger>
                         </FormControl>
                         <SelectContent>
-                          <SelectItem value="male">Male</SelectItem>
-                          <SelectItem value="female">Female</SelectItem>
-                          <SelectItem value="other">Other</SelectItem>
+                          <SelectItem value="male">ذكر</SelectItem>
+                          <SelectItem value="female">أنثى</SelectItem>
+                          <SelectItem value="other">آخر</SelectItem>
                         </SelectContent>
                       </Select>
                       <FormMessage />
@@ -101,16 +101,16 @@ export default function RegisterPage() {
                   name="region"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>Region</FormLabel>
+                      <FormLabel>المنطقة</FormLabel>
                        <Select onValueChange={field.onChange} defaultValue={field.value}>
                         <FormControl>
                           <SelectTrigger>
-                            <SelectValue placeholder="Select your region" />
+                            <SelectValue placeholder="اختر منطقتك" />
                           </SelectTrigger>
                         </FormControl>
                         <SelectContent>
                           {regions.map((region) => (
-                            <SelectItem key={region} value={region.toLowerCase()}>{region}</SelectItem>
+                            <SelectItem key={region} value={region}>{region}</SelectItem>
                           ))}
                         </SelectContent>
                       </Select>
@@ -123,9 +123,9 @@ export default function RegisterPage() {
                   name="city"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>City / Town</FormLabel>
+                      <FormLabel>المدينة / البلدة</FormLabel>
                       <FormControl>
-                        <Input placeholder="e.g. Omdurman" {...field} />
+                        <Input placeholder="مثال: أم درمان" {...field} />
                       </FormControl>
                       <FormMessage />
                     </FormItem>
@@ -138,9 +138,9 @@ export default function RegisterPage() {
                   name="profession"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>Profession</FormLabel>
+                      <FormLabel>المهنة</FormLabel>
                       <FormControl>
-                        <Input placeholder="e.g. Doctor, Nurse, Driver" {...field} />
+                        <Input placeholder="مثال: طبيب، ممرض، سائق" {...field} />
                       </FormControl>
                       <FormMessage />
                     </FormItem>
@@ -151,9 +151,9 @@ export default function RegisterPage() {
                   name="phoneNumber"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>Phone Number</FormLabel>
+                      <FormLabel>رقم الهاتف</FormLabel>
                       <FormControl>
-                        <Input placeholder="+249 ..." {...field} />
+                        <Input placeholder="... 249+" {...field} />
                       </FormControl>
                       <FormMessage />
                     </FormItem>
@@ -165,7 +165,7 @@ export default function RegisterPage() {
                   name="photoId"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>Photo ID Upload</FormLabel>
+                      <FormLabel>تحميل بطاقة الهوية المصورة</FormLabel>
                       <FormControl>
                         <Input type="file" accept="image/*,.pdf" onChange={(e) => field.onChange(e.target.files)} />
                       </FormControl>
@@ -173,7 +173,7 @@ export default function RegisterPage() {
                     </FormItem>
                   )}
                 />
-              <Button type="submit" className="w-full" size="lg">Submit for Verification</Button>
+              <Button type="submit" className="w-full" size="lg">إرسال للتحقق</Button>
             </form>
           </Form>
         </CardContent>

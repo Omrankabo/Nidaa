@@ -8,6 +8,6 @@ export async function prioritizeRequestAction(requestText: string) {
     return { success: true, data: result };
   } catch (error) {
     console.error(error);
-    return { success: false, error: 'Failed to prioritize request.' };
+    return { success: false, error: 'فشل تحديد أولوية الطلب.' };
   }
 }

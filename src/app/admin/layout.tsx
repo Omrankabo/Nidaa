@@ -22,27 +22,33 @@ import { Button } from '@/components/ui/button';
 export default function AdminLayout({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
 
+  const getHeaderTitle = () => {
+    if (pathname.includes('/dashboard')) return 'لوحة تحكم الطوارئ';
+    if (pathname.includes('/volunteers')) return 'إدارة المتطوعين';
+    return 'لوحة التحكم';
+  }
+
   return (
     <SidebarProvider>
-      <Sidebar>
+      <Sidebar side="right">
         <SidebarHeader>
           <Logo />
         </SidebarHeader>
         <SidebarContent>
           <SidebarMenu>
             <SidebarMenuItem>
-              <SidebarMenuButton asChild isActive={pathname === '/admin/dashboard'} tooltip="Dashboard">
+              <SidebarMenuButton asChild isActive={pathname === '/admin/dashboard'} tooltip="لوحة التحكم">
                 <Link href="/admin/dashboard">
                   <LayoutDashboard />
-                  <span>Dashboard</span>
+                  <span>لوحة التحكم</span>
                 </Link>
               </SidebarMenuButton>
             </SidebarMenuItem>
             <SidebarMenuItem>
-              <SidebarMenuButton asChild isActive={pathname === '/admin/volunteers'} tooltip="Volunteers">
+              <SidebarMenuButton asChild isActive={pathname === '/admin/volunteers'} tooltip="المتطوعون">
                  <Link href="/admin/volunteers">
                   <Users />
-                  <span>Volunteers</span>
+                  <span>المتطوعون</span>
                 </Link>
               </SidebarMenuButton>
             </SidebarMenuItem>
@@ -52,13 +58,13 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
           <div className="flex items-center gap-2">
             <Avatar className="h-8 w-8">
               <AvatarImage src="https://placehold.co/40x40.png" alt="Admin" data-ai-hint="person avatar" />
-              <AvatarFallback>AD</AvatarFallback>
+              <AvatarFallback>ادمن</AvatarFallback>
             </Avatar>
             <div className="flex flex-col">
-              <span className="text-sm font-semibold">Admin User</span>
+              <span className="text-sm font-semibold">المسؤول</span>
               <span className="text-xs text-foreground/70">admin@awni.sd</span>
             </div>
-            <Button variant="ghost" size="icon" className="ml-auto" asChild>
+            <Button variant="ghost" size="icon" className="mr-auto" asChild>
                 <Link href="/"><LogOut /></Link>
             </Button>
           </div>
@@ -66,11 +72,11 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
       </Sidebar>
       <SidebarInset>
         <header className="flex items-center justify-between p-4 border-b bg-card">
-          <SidebarTrigger />
-          <h1 className="text-xl font-semibold font-headline">
-            {pathname.includes('/dashboard') ? 'Emergency Dashboard' : 'Volunteer Management'}
+          <div/>
+          <h1 className="text-xl font-semibold font-headline text-center">
+            {getHeaderTitle()}
           </h1>
-          <div></div>
+          <SidebarTrigger />
         </header>
         <main className="p-4 sm:p-6 lg:p-8 bg-background/50 flex-grow">{children}</main>
       </SidebarInset>
