@@ -39,7 +39,7 @@ export default function DashboardPage() {
     });
     const unsubscribeVolunteers = getVolunteers((data) => {
         setVolunteers(data);
-    }, () => {});
+    }, () => setLoading(false));
 
     return () => {
         unsubscribeRequests();

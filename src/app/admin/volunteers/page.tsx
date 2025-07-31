@@ -17,7 +17,7 @@ export default function VolunteersPage() {
 
     useEffect(() => {
         const unsubscribeVolunteers = getVolunteers(setVolunteers, setLoading);
-        const unsubscribeRequests = getRequests(setRequests, () => {});
+        const unsubscribeRequests = getRequests(setRequests, setLoading);
         return () => {
             unsubscribeVolunteers();
             unsubscribeRequests();

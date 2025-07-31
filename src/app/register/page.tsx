@@ -47,9 +47,12 @@ export default function RegisterPage() {
   });
 
   async function onSubmit(values: z.infer<typeof registrationSchema>) {
+    form.clearErrors();
     try {
+      // Create user in Firebase Auth
       const userCredential = await createUserWithEmailAndPassword(auth, values.email, values.password);
       
+      // Add volunteer data to Firestore
       await addVolunteer({
         id: userCredential.user.uid,
         fullName: values.fullName,
@@ -62,18 +65,23 @@ export default function RegisterPage() {
         status: 'قيد الانتظار',
         photoIdUrl: 'https://placehold.co/200x200.png'
       });
+
       toast({
         title: 'تم تقديم طلب التسجيل بنجاح!',
         description: 'سيقوم المسؤول بمراجعة طلبك قريبًا.',
       });
       router.push('/login');
     } catch (error: any) {
+      console.error("Registration error:", error);
+      let description = 'فشل إرسال طلب التسجيل. الرجاء المحاولة مرة أخرى.';
+      if (error.code === 'auth/email-already-in-use') {
+        description = 'هذا البريد الإلكتروني مسجل بالفعل.';
+        form.setError('email', { type: 'manual', message: description });
+      }
       toast({
         variant: 'destructive',
         title: 'حدث خطأ',
-        description: error.code === 'auth/email-already-in-use' 
-            ? 'هذا البريد الإلكتروني مسجل بالفعل.' 
-            : 'فشل إرسال طلب التسجيل. الرجاء المحاولة مرة أخرى.',
+        description,
       });
     }
   }
