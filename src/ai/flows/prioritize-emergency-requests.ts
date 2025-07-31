@@ -33,7 +33,15 @@ export type PrioritizeEmergencyRequestOutput = z.infer<
 export async function prioritizeEmergencyRequest(
   input: PrioritizeEmergencyRequestInput
 ): Promise<PrioritizeEmergencyRequestOutput> {
-  return prioritizeEmergencyRequestFlow(input);
+  try {
+    return await prioritizeEmergencyRequestFlow(input);
+  } catch (error) {
+    console.error('AI prioritization failed, using default.', error);
+    return {
+      priorityLevel: 'medium',
+      reason: 'تعذر تحديد الأولوية تلقائيًا. تمت المراجعة بشكل افتراضي.'
+    };
+  }
 }
 
 const prompt = ai.definePrompt({
@@ -44,13 +52,15 @@ const prompt = ai.definePrompt({
 
 Given the following emergency request:
 
-{{requestText}}
+"{{requestText}}"
 
-Determine the priority level of the request (critical, high, medium, or low) and provide a reason for your decision in Arabic.
+Analyze the text for keywords and phrases that indicate urgency. Examples of critical keywords include "حريق", "فاقد للوعي", "نزيف", "حادث سيارة", "صعوبة في التنفس". 
 
-Consider keywords and phrases that indicate urgency, such as "فورا," "فاقد للوعي," "ينزف," etc.
+Assign a priority level from the following options: 'critical', 'high', 'medium', 'low'.
 
-Ensure that the output is in the correct JSON format.
+Provide a brief reason for your decision in Arabic.
+
+Your entire output must be a valid JSON object that conforms to the specified output schema.
 `,
 });
 
@@ -62,6 +72,9 @@ const prioritizeEmergencyRequestFlow = ai.defineFlow(
   },
   async input => {
     const {output} = await prompt(input);
-    return output!;
+    if (!output) {
+      throw new Error('AI returned no output. This is unexpected.');
+    }
+    return output;
   }
 );
