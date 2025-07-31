@@ -115,10 +115,9 @@ export default function TrackRequestPage() {
                     </CardHeader>
                     <CardContent>
                         <p><strong>الاسم:</strong> {request.assignedVolunteer}</p>
-                        {/* In a real app, ETA would be dynamically calculated */}
                         <p className="mt-2 flex items-center gap-2">
                             <Timer className="h-5 w-5" />
-                            <strong>الوقت المقدر للوصول:</strong> {request.eta || '5-10 دقائق'}
+                            <strong>الوقت المقدر للوصول:</strong> {request.eta || 'جارِ التحديد...'}
                         </p>
                     </CardContent>
                 </Card>

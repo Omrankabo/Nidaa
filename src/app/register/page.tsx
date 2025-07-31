@@ -64,7 +64,7 @@ export default function RegisterPage() {
         profession: values.profession,
         phoneNumber: values.phoneNumber,
         status: 'قيد الانتظار',
-        photoIdUrl: '..'
+        photoIdUrl: '..' // Placeholder
       });
 
       toast({

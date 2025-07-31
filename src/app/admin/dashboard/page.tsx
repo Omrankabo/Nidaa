@@ -59,7 +59,14 @@ export default function DashboardPage() {
     if (requestToMatch) {
       const result = await findAndAssignVolunteer(requestToMatch);
       if (result.success && result.volunteer) {
-        await updateRequest(requestId, { status: 'تم التعيين', assignedVolunteer: result.volunteer.fullName, volunteerId: result.volunteer.id });
+        // Mock ETA for now
+        const eta = `${Math.floor(Math.random() * 10) + 5}-${Math.floor(Math.random() * 5) + 15} دقائق`;
+        await updateRequest(requestId, { 
+            status: 'تم التعيين', 
+            assignedVolunteer: result.volunteer.fullName, 
+            volunteerId: result.volunteer.id,
+            eta: eta
+        });
       } else {
         alert(result.error || 'لم يتم العثور على متطوع مطابق.');
       }
@@ -199,7 +206,7 @@ export default function DashboardPage() {
         </CardHeader>
         <CardContent>
         {filteredRequests.length > 0 ? (
-            <div className="max-h-[70vh] overflow-y-auto">
+            <div className="max-h-[calc(100vh-20rem)] overflow-y-auto">
                 <Table>
                     <TableHeader>
                     <TableRow>
@@ -269,7 +276,7 @@ export default function DashboardPage() {
                                                 معرف الطلب: {req.id}
                                             </DialogDescription>
                                         </DialogHeader>
-                                        <div className="space-y-4">
+                                        <div className="space-y-4 max-h-[60vh] overflow-y-auto">
                                             <div>
                                                 <h4 className="font-semibold">نص الطلب:</h4>
                                                 <p className="p-2 bg-muted rounded-md whitespace-pre-wrap">{req.requestText}</p>
