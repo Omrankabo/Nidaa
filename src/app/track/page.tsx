@@ -1,0 +1,49 @@
+'use client';
+
+import { useState } from 'react';
+import { useRouter } from 'next/navigation';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import Logo from '@/components/logo';
+import { Search } from 'lucide-react';
+
+export default function TrackRequestPage() {
+  const [requestId, setRequestId] = useState('');
+  const router = useRouter();
+
+  const handleTrack = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (requestId.trim()) {
+      router.push(`/track/${requestId.trim()}`);
+    }
+  };
+
+  return (
+    <div className="flex flex-col items-center justify-center min-h-screen p-4">
+      <div className="absolute top-4 right-4">
+        <Logo />
+      </div>
+      <Card className="w-full max-w-md">
+        <CardHeader>
+          <CardTitle className="text-2xl font-headline">تتبع حالة طلبك</CardTitle>
+          <CardDescription>أدخل معرف الطلب الخاص بك أدناه لعرض حالته وتفاصيله.</CardDescription>
+        </CardHeader>
+        <CardContent>
+          <form onSubmit={handleTrack} className="flex gap-2">
+            <Input
+              value={requestId}
+              onChange={(e) => setRequestId(e.target.value)}
+              placeholder="أدخل معرف الطلب هنا..."
+              required
+            />
+            <Button type="submit" size="icon">
+              <Search className="h-4 w-4" />
+              <span className="sr-only">تتبع</span>
+            </Button>
+          </form>
+        </CardContent>
+      </Card>
+    </div>
+  );
+}

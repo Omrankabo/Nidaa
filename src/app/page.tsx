@@ -64,8 +64,11 @@ export default function Home() {
     <div className="flex flex-col min-h-screen">
       <header className="container mx-auto px-4 sm:px-6 lg:px-8 py-4 flex items-center justify-between">
         <Logo />
-        <nav className="flex items-center gap-4">
+        <nav className="flex items-center gap-2 sm:gap-4">
             <ThemeToggle />
+             <Button variant="outline" asChild>
+                <Link href="/track">تتبع الطلب</Link>
+            </Button>
             <Button variant="ghost" asChild>
                 <Link href="/login">تسجيل الدخول</Link>
             </Button>
