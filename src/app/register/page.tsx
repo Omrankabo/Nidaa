@@ -16,6 +16,7 @@ import { useRouter } from 'next/navigation';
 import { createUserWithEmailAndPassword } from 'firebase/auth';
 import { auth } from '@/lib/firebase/config';
 import { Loader2 } from 'lucide-react';
+import { useState } from 'react';
 
 const registrationSchema = z.object({
   fullName: z.string().min(2, { message: 'يجب أن يتكون الاسم الكامل من حرفين على الأقل.' }),
@@ -33,6 +34,7 @@ const regions = ['الخرطوم', 'شمال كردفان', 'البحر الأح
 export default function RegisterPage() {
   const { toast } = useToast();
   const router = useRouter();
+  const [isSubmitting, setIsSubmitting] = useState(false);
   const form = useForm<z.infer<typeof registrationSchema>>({
     resolver: zodResolver(registrationSchema),
     defaultValues: {
@@ -47,6 +49,7 @@ export default function RegisterPage() {
   });
 
   async function onSubmit(values: z.infer<typeof registrationSchema>) {
+    setIsSubmitting(true);
     form.clearErrors();
     try {
       // Create user in Firebase Auth
@@ -83,6 +86,8 @@ export default function RegisterPage() {
         title: 'حدث خطأ',
         description,
       });
+    } finally {
+      setIsSubmitting(false);
     }
   }
 
@@ -231,8 +236,8 @@ export default function RegisterPage() {
                   )}
                 />
               </div>
-              <Button type="submit" className="w-full" size="lg" disabled={form.formState.isSubmitting}>
-                {form.formState.isSubmitting && <Loader2 className="ml-2 h-4 w-4 animate-spin" />}
+              <Button type="submit" className="w-full" size="lg" disabled={isSubmitting}>
+                {isSubmitting && <Loader2 className="ml-2 h-4 w-4 animate-spin" />}
                 إرسال للتحقق
               </Button>
             </form>
