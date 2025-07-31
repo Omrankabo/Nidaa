@@ -14,6 +14,7 @@ import { Loader2, HandHeart, ShieldCheck, AlertCircle, Copy } from 'lucide-react
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import Link from 'next/link';
 import Logo from '@/components/logo';
+import { Input } from '@/components/ui/input';
 
 const requestSchema = z.object({
   requestText: z.string().min(10, { message: 'يجب أن يكون الطلب 10 أحرف على الأقل.' }),
@@ -118,7 +119,7 @@ export default function Home() {
                                             <FormItem>
                                             <FormLabel>الموقع</FormLabel>
                                             <FormControl>
-                                                <Textarea placeholder="مثال: الخرطوم، حي الرياض، بالقرب من..." {...field} />
+                                                <Input placeholder="مثال: الخرطوم، حي الرياض، بالقرب من..." {...field} />
                                             </FormControl>
                                             <FormMessage />
                                             </FormItem>
@@ -131,7 +132,7 @@ export default function Home() {
                                             <FormItem>
                                             <FormLabel>رقم هاتف للتواصل</FormLabel>
                                             <FormControl>
-                                                <input {...field} className="input" />
+                                                <Input placeholder="+249..." {...field} />
                                             </FormControl>
                                             <FormMessage />
                                             </FormItem>
