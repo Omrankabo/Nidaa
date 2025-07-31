@@ -1,48 +1,50 @@
 import {
-  collection,
-  addDoc,
-  onSnapshot,
+  ref,
+  set,
+  push,
+  onValue,
   query,
-  orderBy,
-  where,
-  getDocs,
-  updateDoc,
-  doc,
+  orderByChild,
+  equalTo,
+  get,
+  update,
+  remove,
   serverTimestamp,
-  deleteDoc,
-  getDoc,
-  setDoc,
-} from "firebase/firestore";
+} from "firebase/database";
 import { db } from "./config";
 import type { EmergencyRequest, Volunteer } from "../types";
 
-const REQUESTS_COLLECTION = "requests";
-const VOLUNTEERS_COLLECTION = "volunteers";
+const REQUESTS_PATH = "requests";
+const VOLUNTEERS_PATH = "volunteers";
 
 // Requests
-export async function addRequest(request: Omit<EmergencyRequest, 'id' | 'timestamp'>) {
-  const docRef = await addDoc(collection(db, REQUESTS_COLLECTION), {
+export async function addRequest(request: Omit<EmergencyRequest, 'id' | 'timestamp'>): Promise<string> {
+  const requestsRef = ref(db, REQUESTS_PATH);
+  const newRequestRef = push(requestsRef);
+  await set(newRequestRef, {
       ...request,
       timestamp: serverTimestamp()
   });
-  return docRef.id;
+  return newRequestRef.key!;
 }
 
 export function getRequests(
     callback: (requests: EmergencyRequest[]) => void, 
     setLoading: (loading: boolean) => void
 ) {
-    const q = query(collection(db, REQUESTS_COLLECTION), orderBy('timestamp', 'desc'));
-    const unsubscribe = onSnapshot(q, (querySnapshot) => {
-        const requests = querySnapshot.docs.map(doc => {
-            const data = doc.data();
-            return { 
-                id: doc.id, 
-                ...data,
-                timestamp: data.timestamp?.toDate ? data.timestamp.toDate().toISOString() : new Date().toISOString()
-            } as EmergencyRequest
-        });
-        callback(requests);
+    const requestsRef = query(ref(db, REQUESTS_PATH), orderByChild('timestamp'));
+    const unsubscribe = onValue(requestsRef, (snapshot) => {
+        const requestsData = snapshot.val();
+        if (requestsData) {
+            const requests = Object.keys(requestsData).map(key => ({
+                id: key,
+                ...requestsData[key],
+                timestamp: new Date(requestsData[key].timestamp).toISOString()
+            })).reverse();
+            callback(requests);
+        } else {
+            callback([]);
+        }
         setLoading(false);
     }, (error) => {
         console.error("Error fetching requests:", error);
@@ -51,21 +53,40 @@ export function getRequests(
     return unsubscribe;
 }
 
+export async function getRequestById(id: string, callback: (request: EmergencyRequest | null) => void) {
+  const requestRef = ref(db, `${REQUESTS_PATH}/${id}`);
+  const unsubscribe = onValue(requestRef, (snapshot) => {
+    if (snapshot.exists()) {
+        const data = snapshot.val();
+        callback({ id: snapshot.key!, ...data, timestamp: new Date(data.timestamp).toISOString() });
+    } else {
+        callback(null);
+    }
+  }, (error) => {
+      console.error("Error fetching request:", error);
+  });
+  return unsubscribe;
+}
+
+
 export async function updateRequest(id: string, data: Partial<EmergencyRequest>) {
-    const docRef = doc(db, REQUESTS_COLLECTION, id);
-    await updateDoc(docRef, data);
+    const requestRef = ref(db, `${REQUESTS_PATH}/${id}`);
+    await update(requestRef, data);
+}
+
+export async function deleteRequest(id: string) {
+    const requestRef = ref(db, `${REQUESTS_PATH}/${id}`);
+    await remove(requestRef);
 }
 
 export async function updateRequestStatus(id: string, status: EmergencyRequest['status']) {
-    const docRef = doc(db, REQUESTS_COLLECTION, id);
-    await updateDoc(docRef, { status });
+    await updateRequest(id, { status });
 }
-
 
 // Volunteers
 export async function addVolunteer(volunteer: Volunteer) {
-    const docRef = doc(db, VOLUNTEERS_COLLECTION, volunteer.id);
-    await setDoc(docRef, {
+    const volunteerRef = ref(db, `${VOLUNTEERS_PATH}/${volunteer.id}`);
+    await set(volunteerRef, {
         ...volunteer,
         createdAt: serverTimestamp()
     });
@@ -75,10 +96,18 @@ export function getVolunteers(
     callback: (volunteers: Volunteer[]) => void,
     setLoading: (loading: boolean) => void
 ) {
-    const q = query(collection(db, VOLUNTEERS_COLLECTION), orderBy('createdAt', 'desc'));
-    const unsubscribe = onSnapshot(q, (querySnapshot) => {
-        const volunteers = querySnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as Volunteer));
-        callback(volunteers);
+    const volunteersRef = query(ref(db, VOLUNTEERS_PATH), orderByChild('createdAt'));
+    const unsubscribe = onValue(volunteersRef, (snapshot) => {
+        const volunteersData = snapshot.val();
+        if (volunteersData) {
+            const volunteers = Object.keys(volunteersData).map(key => ({
+                id: key,
+                ...volunteersData[key]
+            })).reverse();
+            callback(volunteers);
+        } else {
+            callback([]);
+        }
         setLoading(false);
     }, (error) => {
         console.error("Error fetching volunteers:", error);
@@ -87,60 +116,71 @@ export function getVolunteers(
     return unsubscribe;
 }
 
+
 export async function getVerifiedVolunteers(): Promise<Volunteer[]> {
-    const q = query(collection(db, VOLUNTEERS_COLLECTION), where("status", "==", "تم التحقق"));
-    const querySnapshot = await getDocs(q);
-    return querySnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as Volunteer));
+    const volunteersRef = query(ref(db, VOLUNTEERS_PATH), orderByChild("status"), equalTo("تم التحقق"));
+    const snapshot = await get(volunteersRef);
+    if (snapshot.exists()) {
+        const volunteersData = snapshot.val();
+        return Object.keys(volunteersData).map(key => ({ id: key, ...volunteersData[key] }));
+    }
+    return [];
 }
 
 export async function getVolunteerByEmail(email: string): Promise<Volunteer | null> {
-    const q = query(collection(db, VOLUNTEERS_COLLECTION), where("email", "==", email));
-    const querySnapshot = await getDocs(q);
-    if (querySnapshot.empty) {
-        return null;
+    const volunteersRef = query(ref(db, VOLUNTEERS_PATH), orderByChild("email"), equalTo(email));
+    const snapshot = await get(volunteersRef);
+    if (snapshot.exists()) {
+        const volunteersData = snapshot.val();
+        const key = Object.keys(volunteersData)[0];
+        return { id: key, ...volunteersData[key] };
     }
-    const doc = querySnapshot.docs[0];
-    return { id: doc.id, ...doc.data() } as Volunteer;
+    return null;
 }
 
-
 export async function updateVolunteerStatus(id: string, status: Volunteer['status']) {
-    const docRef = doc(db, VOLUNTEERS_COLLECTION, id);
-    await updateDoc(docRef, { status });
+    const volunteerRef = ref(db, `${VOLUNTEERS_PATH}/${id}`);
+    await update(volunteerRef, { status });
 }
 
 export async function deleteVolunteer(id: string) {
-    const docRef = doc(db, VOLUNTEERS_COLLECTION, id);
-    await deleteDoc(docRef);
+    const volunteerRef = ref(db, `${VOLUNTEERS_PATH}/${id}`);
+    await remove(volunteerRef);
 }
-
 
 // Volunteer Dashboard
 export function getVolunteerRequests(
     volunteerId: string,
     callback: (assigned: EmergencyRequest[], history: EmergencyRequest[]) => void
 ) {
-    const q = query(collection(db, REQUESTS_COLLECTION), where('volunteerId', '==', volunteerId), orderBy('timestamp', 'desc'));
-    return onSnapshot(q, (querySnapshot) => {
-        const allRequests = querySnapshot.docs.map(doc => {
-            const data = doc.data();
-            return {
-                id: doc.id,
-                ...data,
-                timestamp: data.timestamp?.toDate ? data.timestamp.toDate().toISOString() : new Date().toISOString()
-             } as EmergencyRequest
-        });
-        const assigned = allRequests.filter(r => r.status === 'تم التعيين');
-        const history = allRequests.filter(r => r.status !== 'تم التعيين');
+    const requestsRef = query(ref(db, REQUESTS_PATH), orderByChild('volunteerId'), equalTo(volunteerId));
+    const unsubscribe = onValue(requestsRef, (snapshot) => {
+        const allRequests: EmergencyRequest[] = [];
+        if (snapshot.exists()) {
+            const requestsData = snapshot.val();
+            Object.keys(requestsData).forEach(key => {
+                 const request = requestsData[key];
+                 allRequests.push({
+                     id: key,
+                     ...request,
+                     timestamp: new Date(request.timestamp).toISOString()
+                 });
+            });
+        }
+        const assigned = allRequests.filter(r => r.status === 'تم التعيين').reverse();
+        const history = allRequests.filter(r => r.status !== 'تم التعيين').reverse();
         callback(assigned, history);
+    }, (error) => {
+        console.error("Error fetching volunteer requests:", error);
     });
+    return unsubscribe;
 }
 
 export function getVolunteerById(volunteerId: string, callback: (volunteer: Volunteer | null) => void) {
-    const docRef = doc(db, VOLUNTEERS_COLLECTION, volunteerId);
-    return onSnapshot(docRef, (docSnap) => {
-        if (docSnap.exists()) {
-            callback({ id: docSnap.id, ...docSnap.data() } as Volunteer);
+    const volunteerRef = ref(db, `${VOLUNTEERS_PATH}/${volunteerId}`);
+    return onValue(volunteerRef, (snapshot) => {
+        if (snapshot.exists()) {
+            callback({ id: snapshot.key!, ...snapshot.val() });
         } else {
             callback(null);
         }
@@ -148,6 +188,6 @@ export function getVolunteerById(volunteerId: string, callback: (volunteer: Volu
 }
 
 export async function updateVolunteerProfile(id: string, data: Partial<Pick<Volunteer, 'profession' | 'region'>>) {
-    const docRef = doc(db, VOLUNTEERS_COLLECTION, id);
-    await updateDoc(docRef, data);
+    const volunteerRef = ref(db, `${VOLUNTEERS_PATH}/${id}`);
+    await update(volunteerRef, data);
 }

@@ -47,7 +47,9 @@ export default function VolunteerDashboard() {
       });
       return () => {
         unsubscribeVolunteer();
-        unsubscribeRequests();
+        if (unsubscribeRequests) {
+          unsubscribeRequests();
+        }
       };
     } else {
         setLoading(false);
@@ -70,7 +72,7 @@ export default function VolunteerDashboard() {
     if (!volunteerId || !auth.currentUser) return;
     if (window.confirm('هل أنت متأكد؟ سيتم حذف حسابك وجميع بياناتك بشكل دائم.')) {
         try {
-            await deleteVolunteer(volunteerId); // Deletes from Firestore
+            await deleteVolunteer(volunteerId); // Deletes from RTDB
             await deleteUser(auth.currentUser); // Deletes from Firebase Auth
             toast({ title: 'تم حذف الحساب بنجاح' });
             router.push('/');
@@ -83,7 +85,7 @@ export default function VolunteerDashboard() {
 
 
   const RequestCard = ({ request }: { request: EmergencyRequest }) => {
-    const timestamp = typeof request.timestamp === 'string' ? new Date(request.timestamp) : request.timestamp.toDate();
+    const timestamp = new Date(request.timestamp as string);
     return (
     <Card>
       <CardHeader>

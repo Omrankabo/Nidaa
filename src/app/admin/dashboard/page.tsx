@@ -24,7 +24,7 @@ const FormattedDate = ({ timestamp }: { timestamp: any }) => {
       return null;
     }
 
-    const date = timestamp?.toDate ? timestamp.toDate() : new Date(timestamp);
+    const date = new Date(timestamp);
   
     return <>{date.toLocaleString('ar-EG')}</>;
 };

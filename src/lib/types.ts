@@ -1,4 +1,3 @@
-import type { Timestamp } from "firebase/firestore";
 
 export interface Volunteer {
   id: string;
@@ -11,6 +10,7 @@ export interface Volunteer {
   phoneNumber: string;
   status: 'تم التحقق' | 'قيد الانتظار' | 'مرفوض';
   photoIdUrl?: string; // URL to the uploaded ID photo
+  createdAt?: number;
 }
 
 export interface EmergencyRequest {
@@ -20,7 +20,7 @@ export interface EmergencyRequest {
   requestText: string;
   location: string;
   contactPhone: string;
-  timestamp: string | Timestamp;
+  timestamp: number | string;
   status: 'قيد الانتظار' | 'تم التعيين' | 'تم الحل' | 'تم الإلغاء';
   assignedVolunteer?: string;
   volunteerId?: string;

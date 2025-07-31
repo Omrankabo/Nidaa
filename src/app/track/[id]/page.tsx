@@ -2,8 +2,7 @@
 
 import { useEffect, useState } from 'react';
 import { useParams, useRouter } from 'next/navigation';
-import { doc, onSnapshot, updateDoc, deleteDoc, doc as firestoreDoc, getFirestore, Timestamp } from 'firebase/firestore';
-import { db } from '@/lib/firebase/config';
+import { updateRequest, deleteRequest, getRequestById } from '@/lib/firebase/firestore';
 import type { EmergencyRequest } from '@/lib/types';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -26,37 +25,32 @@ export default function TrackRequestPage() {
 
   useEffect(() => {
     if (!id) return;
-    const docRef = firestoreDoc(db, 'requests', id);
-    const unsubscribe = onSnapshot(docRef, (docSnap) => {
-      if (docSnap.exists()) {
-        const data = docSnap.data()
-        const timestamp = data.timestamp as Timestamp;
-        setRequest({ id: docSnap.id, ...data, timestamp: timestamp.toDate().toISOString() } as EmergencyRequest);
+    const unsubscribe = getRequestById(id, (data) => {
+      if (data) {
+        setRequest(data);
         setEditedText(data.requestText);
       } else {
         setError('لم يتم العثور على الطلب. يرجى التحقق من المعرف والمحاولة مرة أخرى.');
       }
       setLoading(false);
-    }, (err) => {
-      console.error(err);
-      setError('حدث خطأ أثناء جلب الطلب.');
-      setLoading(false);
     });
 
-    return () => unsubscribe();
+    return () => {
+        if(typeof unsubscribe === 'function') {
+            unsubscribe();
+        }
+    }
   }, [id]);
 
   const handleUpdate = async () => {
     if (!id || !request) return;
-    const docRef = firestoreDoc(db, 'requests', id);
-    await updateDoc(docRef, { requestText: editedText });
+    await updateRequest(id, { requestText: editedText });
     setIsEditing(false);
   };
 
   const handleDelete = async () => {
     if (!id) return;
-    const docRef = firestoreDoc(db, 'requests', id);
-    await deleteDoc(docRef);
+    await deleteRequest(id);
     router.push('/');
   };
   
