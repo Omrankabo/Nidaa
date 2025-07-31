@@ -65,7 +65,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
         </SidebarFooter>
       </Sidebar>
       <SidebarInset>
-        <header className="flex items-center justify-between p-4 border-b">
+        <header className="flex items-center justify-between p-4 border-b bg-card">
           <SidebarTrigger />
           <h1 className="text-xl font-semibold font-headline">
             {pathname.includes('/dashboard') ? 'Emergency Dashboard' : 'Volunteer Management'}

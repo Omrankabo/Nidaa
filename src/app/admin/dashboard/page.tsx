@@ -1,24 +1,13 @@
 'use client';
 
 import { useState } from 'react';
-import { useForm } from 'react-hook-form';
-import { zodResolver } from '@hookform/resolvers/zod';
-import * as z from 'zod';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
-import { Textarea } from '@/components/ui/textarea';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Badge } from '@/components/ui/badge';
-import { useToast } from '@/hooks/use-toast';
-import { prioritizeRequestAction } from '@/lib/actions';
 import type { EmergencyRequest } from '@/lib/types';
-import { AlertCircle, Loader2 } from 'lucide-react';
+import { AlertCircle, UserPlus, CheckCircle, Clock } from 'lucide-react';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
-
-const requestSchema = z.object({
-  requestText: z.string().min(10, { message: 'Request must be at least 10 characters.' }),
-});
 
 const initialRequests: EmergencyRequest[] = [
     {
@@ -27,6 +16,8 @@ const initialRequests: EmergencyRequest[] = [
         priorityLevel: 'critical',
         reason: "The request mentions a collapsed building with multiple people trapped, indicating a mass casualty incident requiring immediate and extensive emergency response.",
         timestamp: new Date(Date.now() - 2 * 60 * 1000).toISOString(),
+        status: 'Assigned',
+        assignedVolunteer: 'Fatima Al-Amin',
     },
     {
         id: '2',
@@ -34,44 +25,27 @@ const initialRequests: EmergencyRequest[] = [
         priorityLevel: 'high',
         reason: "The report of a car accident with a person who is unconscious and bleeding heavily indicates a life-threatening injury that requires immediate medical attention.",
         timestamp: new Date(Date.now() - 15 * 60 * 1000).toISOString(),
+        status: 'Pending',
+    },
+    {
+        id: '3',
+        requestText: "Reports of a fire at a market stall in Khartoum North. It seems small but needs checking.",
+        priorityLevel: 'medium',
+        reason: "A small fire can escalate quickly. It's important to dispatch a team to assess and control the situation.",
+        timestamp: new Date(Date.now() - 45 * 60 * 1000).toISOString(),
+        status: 'Pending',
     }
 ];
 
 export default function DashboardPage() {
   const [requests, setRequests] = useState<EmergencyRequest[]>(initialRequests);
-  const [isSubmitting, setIsSubmitting] = useState(false);
-  const { toast } = useToast();
 
-  const form = useForm<z.infer<typeof requestSchema>>({
-    resolver: zodResolver(requestSchema),
-    defaultValues: { requestText: '' },
-  });
-
-  const onSubmit = async (values: z.infer<typeof requestSchema>) => {
-    setIsSubmitting(true);
-    const result = await prioritizeRequestAction(values.requestText);
-    if (result.success && result.data) {
-      const newRequest: EmergencyRequest = {
-        id: new Date().getTime().toString(),
-        requestText: values.requestText,
-        ...result.data,
-        timestamp: new Date().toISOString(),
-      };
-      setRequests((prev) => [newRequest, ...prev]);
-      form.reset();
-      toast({
-        title: 'Request Prioritized',
-        description: `Assigned priority: ${result.data.priorityLevel.toUpperCase()}`,
-      });
-    } else {
-      toast({
-        variant: 'destructive',
-        title: 'Error',
-        description: result.error,
-      });
-    }
-    setIsSubmitting(false);
+  const handleAutoMatch = (requestId: string) => {
+    // In a real app, this would trigger a backend process to find and assign a suitable volunteer.
+    // For this prototype, we'll just simulate it by assigning a mock volunteer.
+    setRequests(requests.map(r => r.id === requestId ? {...r, status: 'Assigned', assignedVolunteer: 'Ahmed Ibrahim'} : r));
   };
+
 
   const getPriorityBadgeVariant = (priority: EmergencyRequest['priorityLevel']) => {
     switch (priority) {
@@ -88,98 +62,80 @@ export default function DashboardPage() {
     }
   };
 
-  return (
-    <div className="grid gap-8 lg:grid-cols-3">
-      <div className="lg:col-span-1">
-        <Card>
-          <CardHeader>
-            <CardTitle className="font-headline">New Emergency Request</CardTitle>
-            <CardDescription>
-              Enter a request from SMS or voice transcription to prioritize it with AI.
-            </CardDescription>
-          </CardHeader>
-          <CardContent>
-            <Form {...form}>
-              <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
-                <FormField
-                  control={form.control}
-                  name="requestText"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Request Message</FormLabel>
-                      <FormControl>
-                        <Textarea
-                          placeholder="e.g., 'Man fell from building at Sqa Al-Arabi, he is not moving...'"
-                          className="min-h-[150px]"
-                          {...field}
-                        />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-                <Button type="submit" className="w-full" disabled={isSubmitting}>
-                  {isSubmitting && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-                  Prioritize Request
-                </Button>
-              </form>
-            </Form>
-          </CardContent>
-        </Card>
-      </div>
+  const getStatusBadge = (status: EmergencyRequest['status']) => {
+    switch (status) {
+      case 'Assigned':
+        return <Badge className="bg-blue-500 hover:bg-blue-600"><CheckCircle className="mr-1 h-3 w-3" />Assigned</Badge>;
+      case 'Pending':
+        return <Badge variant="secondary"><Clock className="mr-1 h-3 w-3" />Pending</Badge>;
+      default:
+        return <Badge variant="outline">{status}</Badge>;
+    }
+  };
 
-      <div className="lg:col-span-2">
-        <Card>
-          <CardHeader>
-            <CardTitle className="font-headline">Prioritized Requests Queue</CardTitle>
-            <CardDescription>
-              List of incoming emergency requests, sorted by priority and time.
-            </CardDescription>
-          </CardHeader>
-          <CardContent>
-            {requests.length > 0 ? (
-                <div className="max-h-[600px] overflow-y-auto">
-                    <Table>
-                        <TableHeader>
-                        <TableRow>
-                            <TableHead>Request Details</TableHead>
-                            <TableHead className="w-[120px] text-center">Priority</TableHead>
+  return (
+    <Card>
+        <CardHeader>
+        <CardTitle className="font-headline">Prioritized Requests Queue</CardTitle>
+        <CardDescription>
+            List of incoming emergency requests, sorted by priority and time.
+        </CardDescription>
+        </CardHeader>
+        <CardContent>
+        {requests.length > 0 ? (
+            <div className="max-h-[70vh] overflow-y-auto">
+                <Table>
+                    <TableHeader>
+                    <TableRow>
+                        <TableHead>Request Details</TableHead>
+                        <TableHead className="w-[120px] text-center">Priority</TableHead>
+                        <TableHead className="w-[120px] text-center">Status</TableHead>
+                        <TableHead className="w-[200px]">Assigned To</TableHead>
+                    </TableRow>
+                    </TableHeader>
+                    <TableBody>
+                    {requests.map((req) => (
+                        <TableRow key={req.id}>
+                        <TableCell>
+                            <p className="font-medium">{req.requestText}</p>
+                            <p className="text-sm text-muted-foreground mt-1">
+                            <span className="font-semibold">Reason:</span> {req.reason}
+                            </p>
+                            <p className="text-xs text-muted-foreground mt-2">
+                            {new Date(req.timestamp).toLocaleString()}
+                            </p>
+                        </TableCell>
+                        <TableCell className="text-center">
+                            <Badge variant={getPriorityBadgeVariant(req.priorityLevel)}>
+                            {req.priorityLevel}
+                            </Badge>
+                        </TableCell>
+                        <TableCell className="text-center">{getStatusBadge(req.status)}</TableCell>
+                        <TableCell>
+                            {req.status === 'Pending' ? (
+                                <Button size="sm" onClick={() => handleAutoMatch(req.id)}>
+                                    <UserPlus className="mr-2 h-4 w-4" />
+                                    Auto-match
+                                </Button>
+                            ) : (
+                                <span className="font-medium">{req.assignedVolunteer}</span>
+                            )}
+                        </TableCell>
                         </TableRow>
-                        </TableHeader>
-                        <TableBody>
-                        {requests.map((req) => (
-                            <TableRow key={req.id}>
-                            <TableCell>
-                                <p className="font-medium">{req.requestText}</p>
-                                <p className="text-sm text-muted-foreground mt-1">
-                                <span className="font-semibold">Reason:</span> {req.reason}
-                                </p>
-                                <p className="text-xs text-muted-foreground mt-2">
-                                {new Date(req.timestamp).toLocaleString()}
-                                </p>
-                            </TableCell>
-                            <TableCell className="text-center">
-                                <Badge variant={getPriorityBadgeVariant(req.priorityLevel)}>
-                                {req.priorityLevel}
-                                </Badge>
-                            </TableCell>
-                            </TableRow>
-                        ))}
-                        </TableBody>
-                    </Table>
-                </div>
-            ) : (
-                <Alert>
-                    <AlertCircle className="h-4 w-4" />
-                    <AlertTitle>No Active Requests</AlertTitle>
-                    <AlertDescription>
-                        The emergency request queue is currently empty. New prioritized requests will appear here.
-                    </AlertDescription>
-                </Alert>
-            )}
-          </CardContent>
-        </Card>
-      </div>
-    </div>
+                    ))}
+                    </TableBody>
+                </Table>
+            </div>
+        ) : (
+            <Alert>
+                <AlertCircle className="h-4 w-4" />
+                <AlertTitle>No Active Requests</AlertTitle>
+                <AlertDescription>
+                    The emergency request queue is currently empty. New prioritized requests will appear here.
+                </AlertDescription>
+            </Alert>
+        )}
+        </CardContent>
+    </Card>
   );
 }

@@ -15,4 +15,6 @@ export type EmergencyRequest = PrioritizeEmergencyRequestOutput & {
   id: string;
   requestText: string;
   timestamp: string;
+  status: 'Pending' | 'Assigned' | 'Resolved' | 'Cancelled';
+  assignedVolunteer?: string;
 };
