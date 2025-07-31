@@ -52,10 +52,8 @@ export default function RegisterPage() {
     setIsSubmitting(true);
     form.clearErrors();
     try {
-      // Create user in Firebase Auth
       const userCredential = await createUserWithEmailAndPassword(auth, values.email, values.password);
       
-      // Add volunteer data to Firestore
       await addVolunteer({
         id: userCredential.user.uid,
         fullName: values.fullName,
@@ -66,7 +64,7 @@ export default function RegisterPage() {
         profession: values.profession,
         phoneNumber: values.phoneNumber,
         status: 'قيد الانتظار',
-        photoIdUrl: 'https://placehold.co/200x200.png'
+        photoIdUrl: '..'
       });
 
       toast({
@@ -77,10 +75,18 @@ export default function RegisterPage() {
     } catch (error: any) {
       console.error("Registration error:", error);
       let description = 'فشل إرسال طلب التسجيل. الرجاء المحاولة مرة أخرى.';
+      
       if (error.code === 'auth/email-already-in-use') {
-        description = 'هذا البريد الإلكتروني مسجل بالفعل.';
-        form.setError('email', { type: 'manual', message: description });
+        description = 'هذا البريد الإلكتروني مسجل بالفعل. يرجى استخدام بريد إلكتروني آخر أو تسجيل الدخول.';
+        form.setError('email', { type: 'manual', message: 'هذا البريد الإلكتروني مسجل بالفعل.' });
+      } else if (error.code === 'auth/weak-password') {
+        description = 'كلمة المرور ضعيفة جدا. الرجاء اختيار كلمة مرور أقوى.';
+        form.setError('password', { type: 'manual', message: 'كلمة المرور يجب أن تكون 6 أحرف على الأقل.' });
+      } else if (error.code === 'auth/invalid-email') {
+         description = 'البريد الإلكتروني الذي أدخلته غير صالح.';
+         form.setError('email', { type: 'manual', message: 'الرجاء إدخال بريد إلكتروني صحيح.' });
       }
+      
       toast({
         variant: 'destructive',
         title: 'حدث خطأ',

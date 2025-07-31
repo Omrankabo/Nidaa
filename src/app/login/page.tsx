@@ -48,7 +48,6 @@ export default function LoginPage() {
         const userCredential = await signInWithEmailAndPassword(auth, values.email, values.password);
         const user = userCredential.user;
         
-        // Fetch volunteer data from Firestore to get the ID
         const volunteer = await getVolunteerByEmail(user.email!);
         if (volunteer) {
           toast({ title: 'تم تسجيل الدخول بنجاح' });
@@ -56,8 +55,23 @@ export default function LoginPage() {
         } else {
           toast({ variant: 'destructive', title: 'فشل تسجيل الدخول', description: 'لم يتم العثور على حساب متطوع مطابق.' });
         }
-    } catch (error) {
-        toast({ variant: 'destructive', title: 'فشل تسجيل الدخول', description: 'البريد الإلكتروني أو كلمة المرور غير صحيحة.' });
+    } catch (error: any) {
+        let errorMessage = 'البريد الإلكتروني أو كلمة المرور غير صحيحة.';
+        if (error.code) {
+          switch (error.code) {
+            case 'auth/user-not-found':
+            case 'auth/wrong-password':
+            case 'auth/invalid-credential':
+              errorMessage = 'البريد الإلكتروني أو كلمة المرور التي أدخلتها غير صحيحة.';
+              break;
+            case 'auth/too-many-requests':
+              errorMessage = 'تم حظر الوصول إلى هذا الحساب مؤقتًا بسبب كثرة محاولات تسجيل الدخول الفاشلة.';
+              break;
+            default:
+               errorMessage = 'حدث خطأ غير متوقع. يرجى المحاولة مرة أخرى.';
+          }
+        }
+        toast({ variant: 'destructive', title: 'فشل تسجيل الدخول', description: errorMessage });
     } finally {
         setIsSubmitting(false);
     }
