@@ -1,3 +1,4 @@
+
 'use client';
 
 import { useState } from 'react';
@@ -6,7 +7,8 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import Logo from '@/components/logo';
-import { Search } from 'lucide-react';
+import { Search, ArrowLeft } from 'lucide-react';
+import { ThemeToggle } from '@/components/theme-toggle';
 
 export default function TrackRequestPage() {
   const [requestId, setRequestId] = useState('');
@@ -21,9 +23,15 @@ export default function TrackRequestPage() {
 
   return (
     <div className="flex flex-col items-center justify-center min-h-screen p-4">
-      <div className="absolute top-4 right-4">
-        <Logo />
-      </div>
+        <div className="absolute top-4 left-4 flex gap-4">
+            <Button variant="outline" size="icon" onClick={() => router.back()}>
+                <ArrowLeft />
+            </Button>
+            <ThemeToggle />
+        </div>
+        <div className="absolute top-4 right-4">
+            <Logo />
+        </div>
       <Card className="w-full max-w-md">
         <CardHeader>
           <CardTitle className="text-2xl font-headline">تتبع حالة طلبك</CardTitle>

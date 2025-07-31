@@ -1,3 +1,4 @@
+
 'use client';
 
 import { useEffect, useState } from 'react';
@@ -9,8 +10,9 @@ import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from '@/components/ui/alert-dialog';
-import { Loader2, AlertCircle, CheckCircle, Clock, Edit, Trash2, UserCheck, Timer } from 'lucide-react';
+import { Loader2, AlertCircle, CheckCircle, Clock, Edit, Trash2, UserCheck, Timer, ArrowLeft } from 'lucide-react';
 import Logo from '@/components/logo';
+import { ThemeToggle } from '@/components/theme-toggle';
 
 export default function TrackRequestPage() {
   const params = useParams();
@@ -89,11 +91,17 @@ export default function TrackRequestPage() {
   }
 
   return (
-    <div className="container mx-auto max-w-3xl p-4 sm:p-6 lg:p-8">
+    <div className="flex flex-col items-center justify-center min-h-screen p-4 bg-background/50">
+        <div className="absolute top-4 left-4 flex gap-4">
+            <Button variant="outline" size="icon" onClick={() => router.back()}>
+                <ArrowLeft />
+            </Button>
+            <ThemeToggle />
+        </div>
         <div className="absolute top-4 right-4">
             <Logo />
         </div>
-      <Card>
+      <Card className="w-full max-w-3xl">
         <CardHeader>
           <CardTitle className="font-headline text-2xl">تتبع طلب الطوارئ</CardTitle>
           <CardDescription>معرف الطلب: <span className="font-mono">{id}</span></CardDescription>

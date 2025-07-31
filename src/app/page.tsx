@@ -1,3 +1,4 @@
+
 'use client';
 
 import { useState } from 'react';
@@ -10,12 +11,13 @@ import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '
 import { Textarea } from '@/components/ui/textarea';
 import { useToast } from '@/hooks/use-toast';
 import { createRequestAction } from '@/lib/actions';
-import { Loader2, HandHeart, ShieldCheck, AlertCircle, Copy } from 'lucide-react';
+import { Loader2, HandHeart, ShieldCheck, AlertCircle, Copy, ArrowLeft } from 'lucide-react';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import Link from 'next/link';
 import Logo from '@/components/logo';
 import { Input } from '@/components/ui/input';
 import { ThemeToggle } from '@/components/theme-toggle';
+import { useRouter } from 'next/navigation';
 
 const requestSchema = z.object({
   requestText: z.string().min(10, { message: 'يجب أن يكون الطلب 10 أحرف على الأقل.' }),
@@ -27,6 +29,7 @@ export default function Home() {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [submissionResult, setSubmissionResult] = useState<{ success: boolean; data?: any; error?: string } | null>(null);
   const { toast } = useToast();
+  const router = useRouter();
 
   const form = useForm<z.infer<typeof requestSchema>>({
     resolver: zodResolver(requestSchema),
@@ -62,20 +65,26 @@ export default function Home() {
 
   return (
     <div className="flex flex-col min-h-screen">
-      <header className="container mx-auto px-4 sm:px-6 lg:px-8 py-4 flex items-center justify-between">
-        <Logo />
-        <nav className="flex items-center gap-2 sm:gap-4">
-            <ThemeToggle />
-             <Button variant="outline" asChild>
-                <Link href="/track">تتبع الطلب</Link>
-            </Button>
-            <Button variant="ghost" asChild>
-                <Link href="/login">تسجيل الدخول</Link>
-            </Button>
-            <Button asChild>
-                <Link href="/register">التسجيل كمتطوع</Link>
-            </Button>
-        </nav>
+      <header className="sticky top-0 z-40 w-full border-b bg-background">
+        <div className="container flex h-16 items-center space-x-4 sm:justify-between sm:space-x-0">
+          <div className="flex gap-6 md:gap-10">
+            <Logo />
+          </div>
+          <div className="flex flex-1 items-center justify-end space-x-4">
+            <nav className="flex items-center gap-2">
+                <ThemeToggle />
+                 <Button variant="outline" asChild>
+                    <Link href="/track">تتبع الطلب</Link>
+                </Button>
+                <Button variant="ghost" asChild>
+                    <Link href="/login">تسجيل الدخول</Link>
+                </Button>
+                <Button asChild>
+                    <Link href="/register">التسجيل كمتطوع</Link>
+                </Button>
+            </nav>
+          </div>
+        </div>
       </header>
       <main className="flex-grow">
         <section id="request-help" className="w-full py-12 md:py-24 lg:py-32 bg-muted/40">

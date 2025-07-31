@@ -1,6 +1,7 @@
+
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
@@ -10,11 +11,12 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
 import { Input } from '@/components/ui/input';
 import { useToast } from '@/hooks/use-toast';
-import { Loader2 } from 'lucide-react';
+import { Loader2, ArrowLeft } from 'lucide-react';
 import Logo from '@/components/logo';
 import { auth } from '@/lib/firebase/config';
-import { signInWithEmailAndPassword } from 'firebase/auth';
+import { signInWithEmailAndPassword, onAuthStateChanged } from 'firebase/auth';
 import { getVolunteerByEmail } from '@/lib/firebase/firestore';
+import { ThemeToggle } from '@/components/theme-toggle';
 
 
 const loginSchema = z.object({
@@ -27,6 +29,24 @@ export default function LoginPage() {
   const router = useRouter();
   const { toast } = useToast();
 
+  useEffect(() => {
+    const unsubscribe = onAuthStateChanged(auth, (user) => {
+      if (user) {
+        if (user.email === 'admin@awni.sd') {
+          router.push('/admin/dashboard');
+        } else {
+          getVolunteerByEmail(user.email!).then(volunteer => {
+            if (volunteer) {
+              router.push(`/volunteer/dashboard?id=${volunteer.id}`);
+            }
+          });
+        }
+      }
+    });
+    return () => unsubscribe();
+  }, [router]);
+
+
   const form = useForm<z.infer<typeof loginSchema>>({
     resolver: zodResolver(loginSchema),
     defaultValues: { email: '', password: '' },
@@ -35,25 +55,21 @@ export default function LoginPage() {
   const onSubmit = async (values: z.infer<typeof loginSchema>) => {
     setIsSubmitting(true);
     
-    // Admin Login (Hardcoded for prototype)
-    if (values.email === 'admin@awni.sd' && values.password === 'password') {
-        toast({ title: 'تم تسجيل دخول المسؤول بنجاح' });
-        router.push('/admin/dashboard');
-        setIsSubmitting(false);
-        return;
-    }
-
-    // Volunteer Login (Firebase Auth)
     try {
         const userCredential = await signInWithEmailAndPassword(auth, values.email, values.password);
         const user = userCredential.user;
         
-        const volunteer = await getVolunteerByEmail(user.email!);
-        if (volunteer) {
-          toast({ title: 'تم تسجيل الدخول بنجاح' });
-          router.push(`/volunteer/dashboard?id=${volunteer.id}`);
+        if (user.email === 'admin@awni.sd') {
+             toast({ title: 'تم تسجيل دخول المسؤول بنجاح' });
+             router.push('/admin/dashboard');
         } else {
-          toast({ variant: 'destructive', title: 'فشل تسجيل الدخول', description: 'لم يتم العثور على حساب متطوع مطابق.' });
+            const volunteer = await getVolunteerByEmail(user.email!);
+            if (volunteer) {
+              toast({ title: 'تم تسجيل الدخول بنجاح' });
+              router.push(`/volunteer/dashboard?id=${volunteer.id}`);
+            } else {
+              toast({ variant: 'destructive', title: 'فشل تسجيل الدخول', description: 'لم يتم العثور على حساب متطوع مطابق.' });
+            }
         }
     } catch (error: any) {
         let errorMessage = 'البريد الإلكتروني أو كلمة المرور غير صحيحة.';
@@ -79,6 +95,12 @@ export default function LoginPage() {
 
   return (
     <div className="flex flex-col items-center justify-center min-h-screen p-4 bg-background/50">
+       <div className="absolute top-4 left-4 flex gap-4">
+            <Button variant="outline" size="icon" onClick={() => router.back()}>
+                <ArrowLeft />
+            </Button>
+            <ThemeToggle />
+        </div>
        <div className="absolute top-4 right-4">
             <Logo />
         </div>

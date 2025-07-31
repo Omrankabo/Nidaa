@@ -8,7 +8,7 @@ import { Badge } from '@/components/ui/badge';
 import type { EmergencyRequest, Volunteer } from '@/lib/types';
 import { AlertCircle, UserPlus, CheckCircle, Clock, Trash2, Info, MoreHorizontal, UserCheck } from 'lucide-react';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
-import { getRequests, getVolunteers, updateRequest, updateVolunteerStatus, deleteRequest, getVerifiedVolunteers } from '@/lib/firebase/firestore';
+import { getRequests, getVolunteers, updateRequest, updateVolunteerStatus, deleteRequest } from '@/lib/firebase/firestore';
 import { findAndAssignVolunteer } from '@/lib/actions';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Button } from '@/components/ui/button';

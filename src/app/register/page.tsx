@@ -12,9 +12,10 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import Logo from '@/components/logo';
 import { useToast } from '@/hooks/use-toast';
 import { useRouter } from 'next/navigation';
-import { Loader2 } from 'lucide-react';
+import { Loader2, ArrowLeft } from 'lucide-react';
 import { useState } from 'react';
 import { createVolunteerAction } from '@/lib/actions';
+import { ThemeToggle } from '@/components/theme-toggle';
 
 const registrationSchema = z.object({
   fullName: z.string().min(2, { message: 'يجب أن يتكون الاسم الكامل من حرفين على الأقل.' }),
@@ -86,10 +87,16 @@ export default function RegisterPage() {
 
   return (
     <div className="flex flex-col items-center justify-center min-h-screen p-4 bg-background/50">
+         <div className="absolute top-4 left-4 flex gap-4">
+            <Button variant="outline" size="icon" onClick={() => router.back()}>
+                <ArrowLeft />
+            </Button>
+            <ThemeToggle />
+        </div>
         <div className="absolute top-4 right-4">
             <Logo />
         </div>
-      <Card className="w-full max-w-2xl">
+      <Card className="w-full max-w-2xl my-12">
         <CardHeader>
           <CardTitle className="text-2xl font-headline">كن مستجيباً معتمداً</CardTitle>
           <CardDescription>
