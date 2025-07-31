@@ -1,4 +1,5 @@
 
+
 import {
   ref,
   set,
@@ -12,8 +13,9 @@ import {
   remove,
   serverTimestamp,
 } from "firebase/database";
-import { db } from "./config";
+import { db, auth } from "./config";
 import type { EmergencyRequest, Volunteer } from "../types";
+import { createUserWithEmailAndPassword } from "firebase/auth";
 
 const REQUESTS_PATH = "requests";
 const VOLUNTEERS_PATH = "volunteers";
@@ -84,7 +86,17 @@ export async function updateRequestStatus(id: string, status: EmergencyRequest['
     await updateRequest(id, { status });
 }
 
+
 // Volunteers
+
+export async function addVolunteer(email: string, volunteer: Omit<Volunteer, 'id'>) {
+    // This is a placeholder as createUserWithEmailAndPassword should be handled on client
+    // For the prototype this will be called from a server action which is not ideal.
+    const volunteersRef = ref(db, `${VOLUNTEERS_PATH}/${btoa(email)}`);
+    await set(volunteersRef, volunteer);
+}
+
+
 export function getVolunteers(
     callback: (volunteers: Volunteer[]) => void,
     setLoading?: (loading: boolean) => void

@@ -12,12 +12,9 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import Logo from '@/components/logo';
 import { useToast } from '@/hooks/use-toast';
 import { useRouter } from 'next/navigation';
-import { createUserWithEmailAndPassword } from 'firebase/auth';
-import { auth } from '@/lib/firebase/config';
 import { Loader2 } from 'lucide-react';
 import { useState } from 'react';
-import axios from 'axios';
-import type { Volunteer } from '@/lib/types';
+import { createVolunteerAction } from '@/lib/actions';
 
 const registrationSchema = z.object({
   fullName: z.string().min(2, { message: 'يجب أن يتكون الاسم الكامل من حرفين على الأقل.' }),
@@ -30,15 +27,16 @@ const registrationSchema = z.object({
   phoneNumber: z.string().regex(/^\+?[0-9\s-]{7,20}$/, { message: 'الرجاء إدخال رقم هاتف صحيح.' }),
 });
 
+export type RegistrationFormValues = z.infer<typeof registrationSchema>;
+
 const regions = ['الخرطوم', 'شمال كردفان', 'البحر الأحمر', 'الجزيرة', 'كسلا', 'النيل الأزرق'];
-const DB_URL = "https://awni-sudan-default-rtdb.europe-west1.firebasedatabase.app/volunteers.json";
 
 export default function RegisterPage() {
   const { toast } = useToast();
   const router = useRouter();
   const [isSubmitting, setIsSubmitting] = useState(false);
 
-  const form = useForm<z.infer<typeof registrationSchema>>({
+  const form = useForm<RegistrationFormValues>({
     resolver: zodResolver(registrationSchema),
     defaultValues: {
       fullName: '',
@@ -51,60 +49,39 @@ export default function RegisterPage() {
     },
   });
 
-  async function onSubmit(values: z.infer<typeof registrationSchema>) {
+  async function onSubmit(values: RegistrationFormValues) {
     setIsSubmitting(true);
     form.clearErrors();
 
-    try {
-      const userCredential = await createUserWithEmailAndPassword(auth, values.email, values.password);
-      const { user } = userCredential;
+    const result = await createVolunteerAction(values);
 
-      const volunteerData: Omit<Volunteer, 'id'> = {
-        fullName: values.fullName,
-        email: values.email,
-        gender: values.gender === 'male' ? 'ذكر' : 'أنثى',
-        region: values.region,
-        city: values.city,
-        profession: values.profession,
-        phoneNumber: values.phoneNumber,
-        status: 'قيد الانتظار',
-        photoIdUrl: '..', // Placeholder
-        createdAt: Date.now()
-      };
-
-      await axios.put(`${process.env.NEXT_PUBLIC_FIREBASE_DATABASE_URL}/volunteers/${user.uid}.json`, volunteerData);
-
+    if (result.success) {
       toast({
         title: 'تم تقديم طلب التسجيل بنجاح!',
         description: 'سيقوم المسؤول بمراجعة طلبك قريبًا.',
       });
       router.push('/login');
+    } else {
+        let description = result.error || 'فشل إرسال طلب التسجيل. الرجاء المحاولة مرة أخرى.';
+        if (result.error?.includes('auth/email-already-in-use')) {
+             description = 'هذا البريد الإلكتروني مسجل بالفعل. يرجى استخدام بريد إلكتروني آخر أو تسجيل الدخول.';
+             form.setError('email', { type: 'manual', message: 'هذا البريد الإلكتروني مسجل بالفعل.' });
+        } else if (result.error?.includes('auth/weak-password')) {
+            description = 'كلمة المرور ضعيفة جدا. الرجاء اختيار كلمة مرور أقوى.';
+            form.setError('password', { type: 'manual', message: 'كلمة المرور يجب أن تكون 6 أحرف على الأقل.' });
+        } else if (result.error?.includes('auth/invalid-email')) {
+            description = 'البريد الإلكتروني الذي أدخلته غير صالح.';
+            form.setError('email', { type: 'manual', message: 'الرجاء إدخال بريد إلكتروني صحيح.' });
+        }
 
-    } catch (error: any) {
-      console.error("Registration error:", error);
-      let description = 'فشل إرسال طلب التسجيل. الرجاء المحاولة مرة أخرى.';
-      
-      if (error.code === 'auth/email-already-in-use') {
-        description = 'هذا البريد الإلكتروني مسجل بالفعل. يرجى استخدام بريد إلكتروني آخر أو تسجيل الدخول.';
-        form.setError('email', { type: 'manual', message: 'هذا البريد الإلكتروني مسجل بالفعل.' });
-      } else if (error.code === 'auth/weak-password') {
-        description = 'كلمة المرور ضعيفة جدا. الرجاء اختيار كلمة مرور أقوى.';
-        form.setError('password', { type: 'manual', message: 'كلمة المرور يجب أن تكون 6 أحرف على الأقل.' });
-      } else if (error.code === 'auth/invalid-email') {
-         description = 'البريد الإلكتروني الذي أدخلته غير صالح.';
-         form.setError('email', { type: 'manual', message: 'الرجاء إدخال بريد إلكتروني صحيح.' });
-      } else if (axios.isAxiosError(error)) {
-        description = `فشل حفظ بيانات المتطوع: ${error.message}`;
-      }
-      
-      toast({
-        variant: 'destructive',
-        title: 'حدث خطأ',
-        description,
-      });
-    } finally {
-      setIsSubmitting(false);
+        toast({
+            variant: 'destructive',
+            title: 'حدث خطأ',
+            description: description,
+        });
     }
+
+    setIsSubmitting(false);
   }
 
   return (
