@@ -13,7 +13,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Button } from '@/components/ui/button';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
 
-const FormattedDate = ({ timestamp }: { timestamp: string }) => {
+const FormattedDate = ({ timestamp }: { timestamp: any }) => {
     const [isMounted, setIsMounted] = useState(false);
   
     useEffect(() => {
@@ -23,8 +23,10 @@ const FormattedDate = ({ timestamp }: { timestamp: string }) => {
     if (!isMounted) {
       return null;
     }
+
+    const date = timestamp?.toDate ? timestamp.toDate() : new Date(timestamp);
   
-    return <>{new Date(timestamp).toLocaleString('ar-EG')}</>;
+    return <>{date.toLocaleString('ar-EG')}</>;
 };
 
 export default function DashboardPage() {

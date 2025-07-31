@@ -82,7 +82,9 @@ export default function VolunteerDashboard() {
   };
 
 
-  const RequestCard = ({ request }: { request: EmergencyRequest }) => (
+  const RequestCard = ({ request }: { request: EmergencyRequest }) => {
+    const timestamp = typeof request.timestamp === 'string' ? new Date(request.timestamp) : request.timestamp.toDate();
+    return (
     <Card>
       <CardHeader>
         <CardTitle className="text-xl">
@@ -90,7 +92,7 @@ export default function VolunteerDashboard() {
           طلب {getPriorityText(request.priorityLevel)}
         </CardTitle>
         <CardDescription>
-          {new Date(request.timestamp).toLocaleString('ar-EG')}
+          {timestamp.toLocaleString('ar-EG')}
         </CardDescription>
       </CardHeader>
       <CardContent className="space-y-4">
@@ -112,7 +114,7 @@ export default function VolunteerDashboard() {
          )}
       </CardContent>
     </Card>
-  );
+  )};
 
   const getPriorityText = (priority: EmergencyRequest['priorityLevel']) => {
     switch (priority) {

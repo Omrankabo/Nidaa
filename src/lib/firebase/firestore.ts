@@ -20,8 +20,11 @@ const REQUESTS_COLLECTION = "requests";
 const VOLUNTEERS_COLLECTION = "volunteers";
 
 // Requests
-export async function addRequest(request: Omit<EmergencyRequest, 'id'>) {
-  const docRef = await addDoc(collection(db, REQUESTS_COLLECTION), request);
+export async function addRequest(request: Omit<EmergencyRequest, 'id' | 'timestamp'>) {
+  const docRef = await addDoc(collection(db, REQUESTS_COLLECTION), {
+      ...request,
+      timestamp: serverTimestamp()
+  });
   return docRef.id;
 }
 
@@ -31,7 +34,14 @@ export function getRequests(
 ) {
     const q = query(collection(db, REQUESTS_COLLECTION), orderBy('timestamp', 'desc'));
     const unsubscribe = onSnapshot(q, (querySnapshot) => {
-        const requests = querySnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as EmergencyRequest));
+        const requests = querySnapshot.docs.map(doc => {
+            const data = doc.data();
+            return { 
+                id: doc.id, 
+                ...data,
+                timestamp: data.timestamp?.toDate ? data.timestamp.toDate().toISOString() : new Date().toISOString()
+            } as EmergencyRequest
+        });
         callback(requests);
         setLoading(false);
     }, (error) => {
@@ -112,7 +122,14 @@ export function getVolunteerRequests(
 ) {
     const q = query(collection(db, REQUESTS_COLLECTION), where('volunteerId', '==', volunteerId), orderBy('timestamp', 'desc'));
     return onSnapshot(q, (querySnapshot) => {
-        const allRequests = querySnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as EmergencyRequest));
+        const allRequests = querySnapshot.docs.map(doc => {
+            const data = doc.data();
+            return {
+                id: doc.id,
+                ...data,
+                timestamp: data.timestamp?.toDate ? data.timestamp.toDate().toISOString() : new Date().toISOString()
+             } as EmergencyRequest
+        });
         const assigned = allRequests.filter(r => r.status === 'تم التعيين');
         const history = allRequests.filter(r => r.status !== 'تم التعيين');
         callback(assigned, history);

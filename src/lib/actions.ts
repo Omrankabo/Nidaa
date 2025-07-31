@@ -5,18 +5,17 @@ import type { EmergencyRequest } from './types';
 
 export async function createRequestAction(requestText: string, location: string, contactPhone: string) {
   try {
-    const newRequest: Omit<EmergencyRequest, 'id'> = {
-        priorityLevel: 'medium', // Default priority
-        reason: 'New request, priority not yet triaged by admin.', // Default reason
+    const newRequest: Omit<EmergencyRequest, 'id' | 'timestamp'> = {
+        priorityLevel: 'medium',
+        reason: 'New request, priority not yet triaged by admin.',
         requestText,
         location,
         contactPhone,
-        timestamp: new Date().toISOString(),
         status: 'قيد الانتظار',
     };
 
     const id = await addRequest(newRequest);
-    return { success: true, data: { ...newRequest, id } };
+    return { success: true, data: { ...newRequest, id, timestamp: new Date().toISOString() } };
   } catch (error) {
     console.error(error);
     return { success: false, error: 'Failed to create request.' };

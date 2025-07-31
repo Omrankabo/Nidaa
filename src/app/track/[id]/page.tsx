@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from 'react';
 import { useParams, useRouter } from 'next/navigation';
-import { doc, onSnapshot, updateDoc, deleteDoc, doc as firestoreDoc, getFirestore } from 'firebase/firestore';
+import { doc, onSnapshot, updateDoc, deleteDoc, doc as firestoreDoc, getFirestore, Timestamp } from 'firebase/firestore';
 import { db } from '@/lib/firebase/config';
 import type { EmergencyRequest } from '@/lib/types';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
@@ -29,8 +29,9 @@ export default function TrackRequestPage() {
     const docRef = firestoreDoc(db, 'requests', id);
     const unsubscribe = onSnapshot(docRef, (docSnap) => {
       if (docSnap.exists()) {
-        const data = docSnap.data() as Omit<EmergencyRequest, 'id'>;
-        setRequest({ id: docSnap.id, ...data });
+        const data = docSnap.data()
+        const timestamp = data.timestamp as Timestamp;
+        setRequest({ id: docSnap.id, ...data, timestamp: timestamp.toDate().toISOString() } as EmergencyRequest);
         setEditedText(data.requestText);
       } else {
         setError('لم يتم العثور على الطلب. يرجى التحقق من المعرف والمحاولة مرة أخرى.');
