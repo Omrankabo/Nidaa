@@ -10,13 +10,15 @@ import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '
 import { Textarea } from '@/components/ui/textarea';
 import { useToast } from '@/hooks/use-toast';
 import { prioritizeRequestAction } from '@/lib/actions';
-import { Loader2, HandHeart, ShieldCheck, AlertCircle } from 'lucide-react';
+import { Loader2, HandHeart, ShieldCheck, AlertCircle, Copy } from 'lucide-react';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import Link from 'next/link';
 import Logo from '@/components/logo';
 
 const requestSchema = z.object({
   requestText: z.string().min(10, { message: 'يجب أن يكون الطلب 10 أحرف على الأقل.' }),
+  location: z.string().min(3, { message: 'الرجاء تحديد الموقع.'}),
+  contactPhone: z.string().regex(/^\+?[0-9\s-]{7,20}$/, { message: 'الرجاء إدخال رقم هاتف صحيح للتواصل.' }),
 });
 
 export default function Home() {
@@ -26,13 +28,13 @@ export default function Home() {
 
   const form = useForm<z.infer<typeof requestSchema>>({
     resolver: zodResolver(requestSchema),
-    defaultValues: { requestText: '' },
+    defaultValues: { requestText: '', location: '', contactPhone: '' },
   });
 
   const onSubmit = async (values: z.infer<typeof requestSchema>) => {
     setIsSubmitting(true);
     setSubmissionResult(null);
-    const result = await prioritizeRequestAction(values.requestText);
+    const result = await prioritizeRequestAction(values.requestText, values.location, values.contactPhone);
     setSubmissionResult(result);
 
     if (result.success) {
@@ -40,7 +42,7 @@ export default function Home() {
         title: 'تم تقديم الطلب',
         description: 'تم استلام طلبك ويجري تحديد أولويته.',
       });
-      form.reset();
+      // Don't reset form, so user can see their submission details and ID
     } else {
       toast({
         variant: 'destructive',
@@ -51,30 +53,10 @@ export default function Home() {
     setIsSubmitting(false);
   };
 
-  const getPriorityBadgeVariant = (priority: 'critical' | 'high' | 'medium' | 'low') => {
-    switch (priority) {
-      case 'critical':
-        return 'destructive';
-      case 'high':
-        return 'default';
-      case 'medium':
-        return 'secondary';
-      case 'low':
-        return 'outline';
-      default:
-        return 'outline';
-    }
+  const copyToClipboard = (text: string) => {
+    navigator.clipboard.writeText(text);
+    toast({ title: 'تم نسخ معرف الطلب!' });
   };
-
-  const getPriorityText = (priority: 'critical' | 'high' | 'medium' | 'low') => {
-    switch (priority) {
-        case 'critical': return 'حرج';
-        case 'high': return 'عالي';
-        case 'medium': return 'متوسط';
-        case 'low': return 'منخفض';
-    }
-  }
-
 
   return (
     <div className="flex flex-col min-h-screen">
@@ -82,10 +64,10 @@ export default function Home() {
         <Logo />
         <nav className="flex items-center gap-4">
             <Button variant="ghost" asChild>
-                <Link href="/admin/dashboard">تسجيل الدخول</Link>
+                <Link href="/login">تسجيل الدخول</Link>
             </Button>
             <Button asChild>
-                <Link href="/register">التسجيل</Link>
+                <Link href="/register">التسجيل كمتطوع</Link>
             </Button>
         </nav>
       </header>
@@ -109,39 +91,88 @@ export default function Home() {
                             </CardDescription>
                         </CardHeader>
                         <CardContent>
-                            <Form {...form}>
-                            <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
-                                <FormField
-                                control={form.control}
-                                name="requestText"
-                                render={({ field }) => (
-                                    <FormItem>
-                                    <FormLabel>تفاصيل الطوارئ</FormLabel>
-                                    <FormControl>
-                                        <Textarea
-                                        placeholder="مثال: 'اندلع حريق في منزل بشارع العمارات 61. يوجد عدة أشخاص في الداخل...'"
-                                        className="min-h-[150px]"
-                                        {...field}
-                                        />
-                                    </FormControl>
-                                    <FormMessage />
-                                    </FormItem>
-                                )}
-                                />
-                                <Button type="submit" className="w-full" disabled={isSubmitting}>
-                                {isSubmitting && <Loader2 className="ml-2 h-4 w-4 animate-spin" />}
-                                إرسال الطلب
-                                </Button>
-                            </form>
-                            </Form>
+                            {!submissionResult?.success ? (
+                                <Form {...form}>
+                                <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
+                                    <FormField
+                                    control={form.control}
+                                    name="requestText"
+                                    render={({ field }) => (
+                                        <FormItem>
+                                        <FormLabel>تفاصيل الطوارئ</FormLabel>
+                                        <FormControl>
+                                            <Textarea
+                                            placeholder="مثال: 'اندلع حريق في منزل بشارع العمارات 61. يوجد عدة أشخاص في الداخل...'"
+                                            className="min-h-[150px]"
+                                            {...field}
+                                            />
+                                        </FormControl>
+                                        <FormMessage />
+                                        </FormItem>
+                                    )}
+                                    />
+                                    <FormField
+                                        control={form.control}
+                                        name="location"
+                                        render={({ field }) => (
+                                            <FormItem>
+                                            <FormLabel>الموقع</FormLabel>
+                                            <FormControl>
+                                                <Textarea placeholder="مثال: الخرطوم، حي الرياض، بالقرب من..." {...field} />
+                                            </FormControl>
+                                            <FormMessage />
+                                            </FormItem>
+                                        )}
+                                    />
+                                     <FormField
+                                        control={form.control}
+                                        name="contactPhone"
+                                        render={({ field }) => (
+                                            <FormItem>
+                                            <FormLabel>رقم هاتف للتواصل</FormLabel>
+                                            <FormControl>
+                                                <input {...field} className="input" />
+                                            </FormControl>
+                                            <FormMessage />
+                                            </FormItem>
+                                        )}
+                                    />
+                                    <Button type="submit" className="w-full" disabled={isSubmitting}>
+                                    {isSubmitting && <Loader2 className="ml-2 h-4 w-4 animate-spin" />}
+                                    إرسال الطلب
+                                    </Button>
+                                </form>
+                                </Form>
+                            ) : null}
+
                              {submissionResult && (
                                 <div className="mt-6">
                                     {submissionResult.success && submissionResult.data ? (
-                                    <Alert variant={getPriorityBadgeVariant(submissionResult.data.priorityLevel)}>
+                                    <Alert>
                                         <AlertCircle className="h-4 w-4" />
-                                        <AlertTitle>تم تحديد أولوية الطلب: {getPriorityText(submissionResult.data.priorityLevel).toUpperCase()}</AlertTitle>
+                                        <AlertTitle>تم استلام طلبك بنجاح!</AlertTitle>
                                         <AlertDescription>
-                                            {submissionResult.data.reason}
+                                            <p className="mb-4">
+                                                لقد تم تحديد أولويته على أنه <span className="font-bold">{getPriorityText(submissionResult.data.priorityLevel)}</span>.
+                                                نحن نعمل على تعيين مستجيب في أسرع وقت ممكن.
+                                            </p>
+                                            <div className="flex items-center justify-between rounded-md bg-muted p-3">
+                                               <div>
+                                                    <p className="text-sm font-semibold">معرف التتبع الخاص بك:</p>
+                                                    <p className="text-lg font-mono">{submissionResult.data.id}</p>
+                                               </div>
+                                                <Button variant="ghost" size="icon" onClick={() => copyToClipboard(submissionResult.data.id)}>
+                                                    <Copy className="h-5 w-5" />
+                                                </Button>
+                                            </div>
+                                            <p className="mt-4 text-sm">
+                                               يمكنك تتبع حالة طلبك باستخدام هذا المعرف.
+                                            </p>
+                                            <Button asChild className="mt-4 w-full">
+                                                <Link href={`/track/${submissionResult.data.id}`}>
+                                                    تتبع الطلب الآن
+                                                </Link>
+                                            </Button>
                                         </AlertDescription>
                                     </Alert>
                                     ) : (
@@ -242,3 +273,12 @@ export default function Home() {
     </div>
   );
 }
+
+function getPriorityText(priority: 'critical' | 'high' | 'medium' | 'low') {
+    switch (priority) {
+        case 'critical': return 'حرج';
+        case 'high': return 'عالي';
+        case 'medium': return 'متوسط';
+        case 'low': return 'منخفض';
+    }
+  }

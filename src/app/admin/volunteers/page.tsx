@@ -1,27 +1,27 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Badge } from '@/components/ui/badge';
 import type { Volunteer } from '@/lib/types';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
-import { CheckCircle, MoreHorizontal, XCircle, Clock } from 'lucide-react';
+import { CheckCircle, MoreHorizontal, XCircle, Clock, AlertCircle } from 'lucide-react';
+import { getVolunteers, updateVolunteerStatus } from '@/lib/firebase/firestore';
 
-const initialVolunteers: Volunteer[] = [
-  { id: '1', fullName: 'فاطمة الأمين', gender: 'أنثى', region: 'الخرطوم', city: 'الخرطوم', profession: 'طبيبة', phoneNumber: '+249 912 345 678', status: 'تم التحقق' },
-  { id: '2', fullName: 'أحمد إبراهيم', gender: 'ذكر', region: 'الجزيرة', city: 'ود مدني', profession: 'ممرض', phoneNumber: '+249 923 456 789', status: 'تم التحقق' },
-  { id: '3', fullName: 'موسى آدم', gender: 'ذكر', region: 'شمال كردفان', city: 'الأبيض', profession: 'سائق', phoneNumber: '+249 123 456 789', status: 'قيد الانتظار' },
-  { id: '4', fullName: 'ليلى حسن', gender: 'أنثى', region: 'البحر الأحمر', city: 'بورتسودان', profession: 'مسعفة', phoneNumber: '+249 999 888 777', status: 'قيد الانتظار' },
-  { id: '5', fullName: 'يوسف خالد', gender: 'ذكر', region: 'الخرطوم', city: 'أم درمان', profession: 'صيدلي', phoneNumber: '+249 111 222 333', status: 'مرفوض' },
-];
 
 export default function VolunteersPage() {
-    const [volunteers, setVolunteers] = useState<Volunteer[]>(initialVolunteers);
+    const [volunteers, setVolunteers] = useState<Volunteer[]>([]);
+    const [loading, setLoading] = useState(true);
 
-    const handleStatusChange = (id: string, status: Volunteer['status']) => {
-        setVolunteers(volunteers.map(v => v.id === id ? { ...v, status } : v));
+    useEffect(() => {
+      const unsubscribe = getVolunteers(setVolunteers, setLoading);
+      return () => unsubscribe();
+    }, []);
+
+    const handleStatusChange = async (id: string, status: Volunteer['status']) => {
+        await updateVolunteerStatus(id, status);
     };
 
   const getStatusBadge = (status: Volunteer['status']) => {
@@ -36,6 +36,14 @@ export default function VolunteersPage() {
         return <Badge variant="outline">{status}</Badge>;
     }
   };
+
+  if (loading) {
+    return (
+        <div className="flex justify-center items-center h-full">
+            <AlertCircle className="h-8 w-8 animate-spin" />
+        </div>
+    )
+  }
 
   return (
     <Card>

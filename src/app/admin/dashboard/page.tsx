@@ -8,34 +8,8 @@ import { Badge } from '@/components/ui/badge';
 import type { EmergencyRequest } from '@/lib/types';
 import { AlertCircle, UserPlus, CheckCircle, Clock } from 'lucide-react';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
-
-const initialRequests: EmergencyRequest[] = [
-    {
-        id: '1',
-        requestText: "انهار مبنى في العمارات، وهناك الكثير من الناس محاصرون تحت الأنقاض. نحتاج إلى سيارات إسعاف وفرق إنقاذ بشكل عاجل.",
-        priorityLevel: 'critical',
-        reason: "يذكر الطلب انهيار مبنى مع وجود عدة أشخاص محاصرين، مما يشير إلى حادثة جماعية تتطلب استجابة طارئة وفورية ومكثفة.",
-        timestamp: new Date(Date.now() - 2 * 60 * 1000).toISOString(),
-        status: 'تم التعيين',
-        assignedVolunteer: 'فاطمة الأمين',
-    },
-    {
-        id: '2',
-        requestText: "هناك حادث سيارة على الطريق الرئيسي المؤدي إلى بحري. شخص ينزف بغزارة من رأسه ويبدو فاقداً للوعي.",
-        priorityLevel: 'high',
-        reason: "الإبلاغ عن حادث سيارة مع شخص فاقد للوعي وينزف بغزارة يشير إلى إصابة خطيرة تهدد الحياة وتتطلب عناية طبية فورية.",
-        timestamp: new Date(Date.now() - 15 * 60 * 1000).toISOString(),
-        status: 'قيد الانتظار',
-    },
-    {
-        id: '3',
-        requestText: "تقارير عن حريق في كشك بسوق في الخرطوم بحري. يبدو صغيراً ولكنه يحتاج إلى فحص.",
-        priorityLevel: 'medium',
-        reason: "الحريق الصغير يمكن أن يتصاعد بسرعة. من المهم إرسال فريق لتقييم الوضع والسيطرة عليه.",
-        timestamp: new Date(Date.now() - 45 * 60 * 1000).toISOString(),
-        status: 'قيد الانتظار',
-    }
-];
+import { getRequests, updateRequest } from '@/lib/firebase/firestore';
+import { findAndAssignVolunteer } from '@/lib/actions';
 
 const FormattedDate = ({ timestamp }: { timestamp: string }) => {
     const [isMounted, setIsMounted] = useState(false);
@@ -52,10 +26,24 @@ const FormattedDate = ({ timestamp }: { timestamp: string }) => {
 };
 
 export default function DashboardPage() {
-  const [requests, setRequests] = useState<EmergencyRequest[]>(initialRequests);
+  const [requests, setRequests] = useState<EmergencyRequest[]>([]);
+  const [loading, setLoading] = useState(true);
 
-  const handleAutoMatch = (requestId: string) => {
-    setRequests(requests.map(r => r.id === requestId ? {...r, status: 'تم التعيين', assignedVolunteer: 'أحمد إبراهيم'} : r));
+  useEffect(() => {
+    const unsubscribe = getRequests(setRequests, setLoading);
+    return () => unsubscribe();
+  }, []);
+
+  const handleAutoMatch = async (requestId: string) => {
+    const requestToMatch = requests.find(r => r.id === requestId);
+    if (requestToMatch) {
+      const result = await findAndAssignVolunteer(requestToMatch);
+      if (result.success && result.volunteer) {
+        await updateRequest(requestId, { status: 'تم التعيين', assignedVolunteer: result.volunteer.fullName, volunteerId: result.volunteer.id });
+      } else {
+        alert(result.error || 'لم يتم العثور على متطوع مطابق.');
+      }
+    }
   };
 
 
@@ -89,10 +77,22 @@ export default function DashboardPage() {
         return <Badge className="bg-blue-500 hover:bg-blue-600"><CheckCircle className="ml-1 h-3 w-3" />تم التعيين</Badge>;
       case 'قيد الانتظار':
         return <Badge variant="secondary"><Clock className="ml-1 h-3 w-3" />قيد الانتظار</Badge>;
+      case 'تم الحل':
+        return <Badge className="bg-green-500 hover:bg-green-600"><CheckCircle className="ml-1 h-3 w-3" />تم الحل</Badge>;
+      case 'تم الإلغاء':
+        return <Badge variant="destructive"><AlertCircle className="ml-1 h-3 w-3" />تم الإلغاء</Badge>;
       default:
         return <Badge variant="outline">{status}</Badge>;
     }
   };
+
+  if (loading) {
+    return (
+        <div className="flex justify-center items-center h-full">
+            <AlertCircle className="h-8 w-8 animate-spin" />
+        </div>
+    )
+  }
 
   return (
     <Card>
@@ -140,7 +140,7 @@ export default function DashboardPage() {
                                 </Button>
                             ) : (
                                 <div className="flex flex-col items-center">
-                                    <span className="font-medium">{req.assignedVolunteer}</span>
+                                    <span className="font-medium">{req.assignedVolunteer || 'غير معين'}</span>
                                     <span className="sm:hidden">{getStatusBadge(req.status)}</span>
                                 </div>
                             )}

@@ -14,18 +14,24 @@ import {
 } from '@/components/ui/sidebar';
 import Logo from '@/components/logo';
 import { LayoutDashboard, Users, LogOut } from 'lucide-react';
-import { usePathname } from 'next/navigation';
+import { usePathname, useRouter } from 'next/navigation';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import Link from 'next/link';
 import { Button } from '@/components/ui/button';
 
 export default function AdminLayout({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
+  const router = useRouter();
 
   const getHeaderTitle = () => {
     if (pathname.includes('/dashboard')) return 'لوحة تحكم الطوارئ';
     if (pathname.includes('/volunteers')) return 'إدارة المتطوعين';
     return 'لوحة التحكم';
+  }
+
+  const handleLogout = () => {
+    // In a real app, you would handle actual sign-out logic here
+    router.push('/login');
   }
 
   return (
@@ -64,8 +70,8 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
               <span className="text-sm font-semibold">المسؤول</span>
               <span className="text-xs text-foreground/70">admin@awni.sd</span>
             </div>
-            <Button variant="ghost" size="icon" className="mr-auto" asChild>
-                <Link href="/"><LogOut /></Link>
+            <Button variant="ghost" size="icon" className="mr-auto" onClick={handleLogout}>
+                <LogOut />
             </Button>
           </div>
         </SidebarFooter>

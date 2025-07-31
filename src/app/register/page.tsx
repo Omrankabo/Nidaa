@@ -10,6 +10,9 @@ import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '
 import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import Logo from '@/components/logo';
+import { addVolunteer } from '@/lib/firebase/firestore';
+import { useToast } from '@/hooks/use-toast';
+import { useRouter } from 'next/navigation';
 
 const registrationSchema = z.object({
   fullName: z.string().min(2, { message: 'يجب أن يتكون الاسم الكامل من حرفين على الأقل.' }),
@@ -18,13 +21,16 @@ const registrationSchema = z.object({
   city: z.string().min(1, { message: 'الرجاء إدخال مدينة.' }),
   profession: z.string().min(2, { message: 'يجب أن تكون المهنة من حرفين على الأقل.' }),
   phoneNumber: z.string().regex(/^\+?[0-9\s-]{7,20}$/, { message: 'الرجاء إدخال رقم هاتف صحيح.' }),
-  photoId: z.any().refine((files) => files?.length == 1, 'بطاقة الهوية المصورة مطلوبة.'),
+  // For simplicity, we are not handling file uploads in this prototype.
+  // photoId: z.any().refine((files) => files?.length == 1, 'بطاقة الهوية المصورة مطلوبة.'),
 });
 
 // Mock data
 const regions = ['الخرطوم', 'شمال كردفان', 'البحر الأحمر', 'الجزيرة', 'كسلا', 'النيل الأزرق'];
 
 export default function RegisterPage() {
+  const { toast } = useToast();
+  const router = useRouter();
   const form = useForm<z.infer<typeof registrationSchema>>({
     resolver: zodResolver(registrationSchema),
     defaultValues: {
@@ -36,11 +42,27 @@ export default function RegisterPage() {
     },
   });
 
-  function onSubmit(values: z.infer<typeof registrationSchema>) {
-    // In a real app, you would handle file upload and data submission here.
-    console.log(values);
-    alert('تم تقديم طلب التسجيل! سيقوم المسؤول بمراجعة طلبك.');
-    form.reset();
+  async function onSubmit(values: z.infer<typeof registrationSchema>) {
+    try {
+      // In a real app, you would handle file upload here. We'll pass a placeholder URL.
+      await addVolunteer({
+        ...values,
+        gender: values.gender === 'male' ? 'ذكر' : 'أنثى',
+        status: 'قيد الانتظار',
+        photoIdUrl: 'https://placehold.co/200x200.png'
+      });
+      toast({
+        title: 'تم تقديم طلب التسجيل بنجاح!',
+        description: 'سيقوم المسؤول بمراجعة طلبك قريبًا.',
+      });
+      router.push('/');
+    } catch (error) {
+      toast({
+        variant: 'destructive',
+        title: 'حدث خطأ',
+        description: 'فشل إرسال طلب التسجيل. الرجاء المحاولة مرة أخرى.',
+      });
+    }
   }
 
   return (
@@ -160,7 +182,7 @@ export default function RegisterPage() {
                   )}
                 />
               </div>
-               <FormField
+               {/* <FormField
                   control={form.control}
                   name="photoId"
                   render={({ field }) => (
@@ -172,8 +194,11 @@ export default function RegisterPage() {
                       <FormMessage />
                     </FormItem>
                   )}
-                />
-              <Button type="submit" className="w-full" size="lg">إرسال للتحقق</Button>
+                /> */}
+              <Button type="submit" className="w-full" size="lg" disabled={form.formState.isSubmitting}>
+                {form.formState.isSubmitting && <Loader2 className="ml-2 h-4 w-4 animate-spin" />}
+                إرسال للتحقق
+              </Button>
             </form>
           </Form>
         </CardContent>
