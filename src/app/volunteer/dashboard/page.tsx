@@ -7,7 +7,7 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { getVolunteerRequests, updateRequestStatus } from '@/lib/firebase/firestore';
 import type { EmergencyRequest } from '@/lib/types';
-import { AlertCircle, CheckCircle, Clock, MapPin, Phone } from 'lucide-react';
+import { AlertCircle, CheckCircle, Clock, Loader2, MapPin, Phone } from 'lucide-react';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 
 export default function VolunteerDashboard() {
