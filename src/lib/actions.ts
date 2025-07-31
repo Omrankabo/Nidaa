@@ -1,11 +1,13 @@
 
 'use server';
 
-import { addRequest, addVolunteer, getVerifiedVolunteers } from './firebase/firestore';
+import { addRequest, addVolunteer, getVerifiedVolunteers, getAdminDeviceTokens, sendNotificationToVolunteer } from './firebase/firestore';
 import type { EmergencyRequest, Volunteer } from './types';
 import { auth } from './firebase/config';
 import { createUserWithEmailAndPassword } from 'firebase/auth';
 import type { RegistrationFormValues } from '@/app/register/page';
+import { getMessaging, getToken } from 'firebase/messaging';
+import { app } from './firebase/config';
 
 
 export async function createRequestAction(requestText: string, location: string, contactPhone: string) {
@@ -20,6 +22,15 @@ export async function createRequestAction(requestText: string, location: string,
     };
 
     const id = await addRequest(newRequest);
+
+    // Send notification to admins
+    const adminTokens = await getAdminDeviceTokens();
+    const notificationPromises = adminTokens.map(token => 
+      sendNotificationToVolunteer(token, 'طلب طوارئ جديد', `تم استلام طلب جديد في ${location}`)
+    );
+    await Promise.all(notificationPromises);
+
+
     return { success: true, data: { ...newRequest, id, timestamp: new Date().toISOString() } };
   } catch (error) {
     console.error(error);
@@ -29,14 +40,7 @@ export async function createRequestAction(requestText: string, location: string,
 
 export async function createVolunteerAction(values: RegistrationFormValues) {
     try {
-        // Since this is a server action, we can't directly use the client-side `auth` object
-        // to sign the user in. We create the user, but the user will have to log in manually.
-        // A more complex setup would involve custom tokens.
-        
-        // This part is tricky on the server. Firebase client SDK is meant for clients.
-        // For this prototype, we'll assume this action is called from a client context
-        // where auth is initialized, even though it's a server action.
-        // In a real app, you'd use the Firebase Admin SDK to create users from the backend.
+        const userCredential = await createUserWithEmailAndPassword(auth, values.email, values.password);
         
         const volunteerData: Omit<Volunteer, 'id'> = {
             fullName: values.fullName,
@@ -50,14 +54,7 @@ export async function createVolunteerAction(values: RegistrationFormValues) {
             createdAt: Date.now()
         };
 
-        // We'll pass the password to a temporary client-side function to create auth user
-        // and then save the data here. This is not ideal but works for the prototype.
-        // The ideal way is to use Admin SDK or handle this on the client.
-        // Let's create a client-side wrapper that calls this action.
-        // For now, let's pretend auth works on the server for simplicity of the prototype.
-        // We'll add the volunteer first, then the user can log in.
-
-        await addVolunteer(values.email, volunteerData);
+        await addVolunteer(userCredential.user.uid, volunteerData);
 
         return { success: true };
 
@@ -71,16 +68,26 @@ export async function createVolunteerAction(values: RegistrationFormValues) {
 export async function findAndAssignVolunteer(request: EmergencyRequest) {
     try {
         const volunteers = await getVerifiedVolunteers();
-        // This is a simple matching logic. A real-world app would have a more complex algorithm
-        // considering location, profession, availability, etc.
-        const matchedVolunteer = volunteers.find(v => v.city === request.location.split(',')[0].trim());
+        // Match by region first
+        const region = request.location.split(',')[0].trim();
+        let matchedVolunteer = volunteers.find(v => v.region === region);
         
+        if (!matchedVolunteer) {
+             // Fallback to city if no region match
+            const city = request.location.split(',')[1]?.trim();
+            if(city) {
+                matchedVolunteer = volunteers.find(v => v.city === city);
+            }
+        }
+
         if(matchedVolunteer) {
+            await sendNotificationToVolunteer(matchedVolunteer.id, 'تم تعيين طلب جديد لك', `لقد تم تعيينك لطلب طوارئ في ${request.location}`);
             return { success: true, volunteer: matchedVolunteer };
         } else {
             // Fallback to any available volunteer if no location match
             const anyVolunteer = volunteers[0];
             if (anyVolunteer) {
+                 await sendNotificationToVolunteer(anyVolunteer.id, 'تم تعيين طلب جديد لك', `لقد تم تعيينك لطلب طوارئ في ${request.location}`);
                 return { success: true, volunteer: anyVolunteer };
             }
             return { success: false, error: 'لا يوجد متطوعون معتمدون متاحون حاليًا.' };

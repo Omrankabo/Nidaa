@@ -1,7 +1,9 @@
+
 // Import the functions you need from the SDKs you need
 import { initializeApp, getApps, getApp } from "firebase/app";
 import { getDatabase } from "firebase/database";
 import { getAuth } from "firebase/auth";
+import { getMessaging } from "firebase/messaging";
 
 // Your web app's Firebase configuration
 // IMPORTANT: This is a public configuration.
@@ -20,5 +22,6 @@ const firebaseConfig = {
 const app = !getApps().length ? initializeApp(firebaseConfig) : getApp();
 const db = getDatabase(app);
 const auth = getAuth(app);
+const messaging = (typeof window !== 'undefined') ? getMessaging(app) : null;
 
-export { db, auth };
+export { app, db, auth, messaging };

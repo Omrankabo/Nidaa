@@ -1,5 +1,4 @@
 
-
 import {
   ref,
   set,
@@ -13,12 +12,12 @@ import {
   remove,
   serverTimestamp,
 } from "firebase/database";
-import { db, auth } from "./config";
+import { db } from "./config";
 import type { EmergencyRequest, Volunteer } from "../types";
-import { createUserWithEmailAndPassword } from "firebase/auth";
 
 const REQUESTS_PATH = "requests";
 const VOLUNTEERS_PATH = "volunteers";
+const NOTIFICATIONS_PATH = "notifications"; // For sending notifications via DB trigger
 
 // Requests
 export async function addRequest(request: Omit<EmergencyRequest, 'id' | 'timestamp'>): Promise<string> {
@@ -89,10 +88,8 @@ export async function updateRequestStatus(id: string, status: EmergencyRequest['
 
 // Volunteers
 
-export async function addVolunteer(email: string, volunteer: Omit<Volunteer, 'id'>) {
-    // This is a placeholder as createUserWithEmailAndPassword should be handled on client
-    // For the prototype this will be called from a server action which is not ideal.
-    const volunteersRef = ref(db, `${VOLUNTEERS_PATH}/${btoa(email)}`);
+export async function addVolunteer(id: string, volunteer: Omit<Volunteer, 'id'>) {
+    const volunteersRef = ref(db, `${VOLUNTEERS_PATH}/${id}`);
     await set(volunteersRef, volunteer);
 }
 
@@ -195,4 +192,35 @@ export function getVolunteerById(volunteerId: string, callback: (volunteer: Volu
 export async function updateVolunteerProfile(id: string, data: Partial<Pick<Volunteer, 'profession' | 'region'>>) {
     const volunteerRef = ref(db, `${VOLUNTEERS_PATH}/${id}`);
     await update(volunteerRef, data);
+}
+
+// Notifications
+export async function saveDeviceToken(userId: string, token: string) {
+    const tokenRef = ref(db, `device_tokens/${userId}/${token}`);
+    await set(tokenRef, true);
+}
+
+export async function getAdminDeviceTokens(): Promise<string[]> {
+    // In a real app, you'd have a list of admin UIDs. For now, we assume one admin.
+    // This is a placeholder. You should manage admin roles properly.
+    const adminId = "admin_user"; // This should be the actual admin UID
+    const tokensRef = ref(db, `device_tokens/${adminId}`);
+    const snapshot = await get(tokensRef);
+    if(snapshot.exists()) {
+        return Object.keys(snapshot.val());
+    }
+    return [];
+}
+
+export async function sendNotificationToVolunteer(volunteerIdOrToken: string, title: string, body: string) {
+    // This function will write to a 'notifications' queue in RTDB.
+    // A Cloud Function would listen to this queue and send the actual push notification.
+    const notificationsRef = ref(db, NOTIFICATIONS_PATH);
+    const newNotificationRef = push(notificationsRef);
+    await set(newNotificationRef, {
+        target: volunteerIdOrToken, // Can be a userId or a specific token
+        title,
+        body,
+        createdAt: serverTimestamp()
+    });
 }

@@ -1,3 +1,4 @@
+
 'use client';
 
 import { useState, useEffect } from 'react';
@@ -5,15 +6,17 @@ import { useSearchParams, useRouter } from 'next/navigation';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { getVolunteerRequests, updateRequestStatus, getVolunteerById, updateVolunteerProfile, deleteVolunteer } from '@/lib/firebase/firestore';
+import { getVolunteerRequests, updateRequest, getVolunteerById, updateVolunteerProfile, deleteVolunteer, updateRequestStatus } from '@/lib/firebase/firestore';
 import type { EmergencyRequest, Volunteer } from '@/lib/types';
-import { AlertCircle, CheckCircle, Clock, Loader2, MapPin, Phone, User, Edit, Trash2 } from 'lucide-react';
+import { AlertCircle, CheckCircle, Clock, Loader2, MapPin, Phone, User, Edit, Trash2, FileText, Send, Check, X } from 'lucide-react';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { useToast } from '@/hooks/use-toast';
 import { signOut, deleteUser } from 'firebase/auth';
 import { auth } from '@/lib/firebase/config';
+import { Textarea } from '@/components/ui/textarea';
+import { requestForToken } from '@/lib/firebase/messaging';
 
 // Mock data
 const regions = ['الخرطوم', 'شمال كردفان', 'البحر الأحمر', 'الجزيرة', 'كسلا', 'النيل الأزرق'];
@@ -31,6 +34,7 @@ export default function VolunteerDashboard() {
   const [loading, setLoading] = useState(true);
   const [isEditing, setIsEditing] = useState(false);
   const [editForm, setEditForm] = useState({ profession: '', region: ''});
+  const [reportText, setReportText] = useState('');
 
   useEffect(() => {
     if (volunteerId) {
@@ -38,6 +42,7 @@ export default function VolunteerDashboard() {
         setVolunteer(data);
         if (data) {
           setEditForm({ profession: data.profession, region: data.region });
+          requestForToken(volunteerId); // Register for notifications
         }
         setLoading(false);
       });
@@ -56,8 +61,9 @@ export default function VolunteerDashboard() {
     }
   }, [volunteerId]);
 
-  const handleMarkAsResolved = async (requestId: string) => {
-    await updateRequestStatus(requestId, 'تم الحل');
+  const handleStatusUpdate = async (requestId: string, status: EmergencyRequest['status']) => {
+    await updateRequestStatus(requestId, status);
+    toast({ title: `تم تحديث حالة الطلب إلى "${status}"`});
   };
   
   const handleProfileUpdate = async (e: React.FormEvent) => {
@@ -83,8 +89,17 @@ export default function VolunteerDashboard() {
     }
   };
 
+  const handleReportSubmit = async (requestId: string) => {
+    if (!reportText.trim()) {
+        toast({variant: 'destructive', title: 'لا يمكن أن يكون التقرير فارغًا'});
+        return;
+    }
+    await updateRequest(requestId, { report: reportText });
+    toast({title: "تم تقديم التقرير بنجاح"});
+    setReportText('');
+  }
 
-  const RequestCard = ({ request }: { request: EmergencyRequest }) => {
+  const AssignedRequestCard = ({ request }: { request: EmergencyRequest }) => {
     const timestamp = new Date(request.timestamp as string);
     return (
     <Card>
@@ -103,20 +118,55 @@ export default function VolunteerDashboard() {
             <p className="flex items-center gap-2"><MapPin className="h-4 w-4 text-primary"/> <strong>الموقع:</strong> {request.location}</p>
             <p className="flex items-center gap-2"><Phone className="h-4 w-4 text-primary"/> <strong>هاتف التواصل:</strong> {request.contactPhone}</p>
         </div>
-        {request.status === 'تم التعيين' && (
-            <Button className="w-full bg-green-600 hover:bg-green-700" onClick={() => handleMarkAsResolved(request.id)}>
-                <CheckCircle className="ml-2 h-4 w-4" />
-                وضع علامة "تم الحل"
+        <div className="flex gap-2">
+            <Button className="w-full bg-green-600 hover:bg-green-700" onClick={() => handleStatusUpdate(request.id, 'تم الحل')}>
+                <Check className="ml-2 h-4 w-4" />
+                تم الحل
             </Button>
-        )}
-         {request.status !== 'تم التعيين' && (
-             <Badge variant={request.status === 'تم الحل' ? 'default' : 'destructive'} className={request.status === 'تم الحل' ? 'bg-green-500' : ''}>
-                {request.status}
-             </Badge>
-         )}
+             <Button className="w-full" variant="destructive" onClick={() => handleStatusUpdate(request.id, 'تم الإلغاء')}>
+                <X className="ml-2 h-4 w-4" />
+                إلغاء
+            </Button>
+        </div>
       </CardContent>
     </Card>
   )};
+
+  const HistoryRequestCard = ({ request }: { request: EmergencyRequest }) => {
+    const timestamp = new Date(request.timestamp as string);
+    return (
+    <Card>
+      <CardHeader>
+        <CardTitle className="text-xl">
+            <Badge variant={request.status === 'تم الحل' ? 'default' : 'destructive'} className={request.status === 'تم الحل' ? 'bg-green-500' : ''}>
+                {request.status}
+             </Badge>
+        </CardTitle>
+        <CardDescription>
+          {timestamp.toLocaleString('ar-EG')}
+        </CardDescription>
+      </CardHeader>
+      <CardContent className="space-y-4">
+        <p>{request.requestText}</p>
+        <div className="pt-4 border-t">
+            <h4 className="font-semibold mb-2">أضف تقريرًا أو ملاحظة</h4>
+            {request.report ? (
+                <p className="p-2 bg-muted rounded-md whitespace-pre-wrap break-words">{request.report}</p>
+            ) : (
+                <div className="flex items-start gap-2">
+                    <Textarea 
+                        placeholder="اكتب تقريرك هنا..."
+                        onChange={(e) => setReportText(e.target.value)}
+                        defaultValue={request.report}
+                    />
+                    <Button size="icon" onClick={() => handleReportSubmit(request.id)}><Send className="h-4 w-4"/></Button>
+                </div>
+            )}
+        </div>
+      </CardContent>
+    </Card>
+    )
+  }
 
   const getPriorityText = (priority: EmergencyRequest['priorityLevel']) => {
     switch (priority) {
@@ -205,14 +255,15 @@ export default function VolunteerDashboard() {
         </CardHeader>
         <CardContent>
             <Tabs defaultValue="assigned" className="w-full">
-                <TabsList className="grid w-full grid-cols-2">
+                <TabsList className="grid w-full grid-cols-3">
                     <TabsTrigger value="assigned">الطلبات المعينة ({assignedRequests.length})</TabsTrigger>
                     <TabsTrigger value="history">سجل الطلبات ({historyRequests.length})</TabsTrigger>
+                    <TabsTrigger value="reports">التقارير</TabsTrigger>
                 </TabsList>
                 <TabsContent value="assigned">
                     <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3 mt-4">
                         {assignedRequests.length > 0 ? (
-                            assignedRequests.map(req => <RequestCard key={req.id} request={req} />)
+                            assignedRequests.map(req => <AssignedRequestCard key={req.id} request={req} />)
                         ) : (
                             <p className="col-span-full text-center text-muted-foreground py-8">لا توجد طلبات معينة لك حاليًا.</p>
                         )}
@@ -221,9 +272,18 @@ export default function VolunteerDashboard() {
                 <TabsContent value="history">
                      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3 mt-4">
                         {historyRequests.length > 0 ? (
-                            historyRequests.map(req => <RequestCard key={req.id} request={req} />)
+                            historyRequests.map(req => <HistoryRequestCard key={req.id} request={req} />)
                         ) : (
                             <p className="col-span-full text-center text-muted-foreground py-8">لا يوجد شيء في سجلك حتى الآن.</p>
+                        )}
+                    </div>
+                </TabsContent>
+                 <TabsContent value="reports">
+                     <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3 mt-4">
+                        {historyRequests.filter(r => r.status === 'تم الحل').length > 0 ? (
+                            historyRequests.filter(r => r.status === 'تم الحل').map(req => <HistoryRequestCard key={req.id} request={req} />)
+                        ) : (
+                            <p className="col-span-full text-center text-muted-foreground py-8">ليس لديك أي طلبات مكتملة لتقديم تقرير عنها.</p>
                         )}
                     </div>
                 </TabsContent>

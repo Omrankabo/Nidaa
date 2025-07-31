@@ -11,6 +11,7 @@ export interface Volunteer {
   status: 'تم التحقق' | 'قيد الانتظار' | 'مرفوض';
   photoIdUrl?: string; // URL to the uploaded ID photo
   createdAt?: number;
+  deviceToken?: string;
 }
 
 export interface EmergencyRequest {
@@ -25,4 +26,5 @@ export interface EmergencyRequest {
   assignedVolunteer?: string;
   volunteerId?: string;
   eta?: string; // Estimated Time of Arrival
+  report?: string; // Report from the volunteer
 };

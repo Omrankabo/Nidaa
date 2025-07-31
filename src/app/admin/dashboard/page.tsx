@@ -6,9 +6,9 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Badge } from '@/components/ui/badge';
 import type { EmergencyRequest, Volunteer } from '@/lib/types';
-import { AlertCircle, UserPlus, CheckCircle, Clock, Trash2, Info, MoreHorizontal } from 'lucide-react';
+import { AlertCircle, UserPlus, CheckCircle, Clock, Trash2, Info, MoreHorizontal, UserCheck } from 'lucide-react';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
-import { getRequests, getVolunteers, updateRequest, updateVolunteerStatus, deleteRequest } from '@/lib/firebase/firestore';
+import { getRequests, getVolunteers, updateRequest, updateVolunteerStatus, deleteRequest, getVerifiedVolunteers } from '@/lib/firebase/firestore';
 import { findAndAssignVolunteer } from '@/lib/actions';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Button } from '@/components/ui/button';
@@ -46,7 +46,7 @@ export default function DashboardPage() {
     });
     const unsubscribeVolunteers = getVolunteers((data) => {
         setVolunteers(data);
-    }, () => setLoading(false));
+    });
 
     return () => {
         unsubscribeRequests();
@@ -70,6 +70,19 @@ export default function DashboardPage() {
       } else {
         alert(result.error || 'لم يتم العثور على متطوع مطابق.');
       }
+    }
+  };
+
+  const handleReassign = async (requestId: string, volunteerId: string) => {
+    const volunteer = volunteers.find(v => v.id === volunteerId);
+    if (volunteer) {
+        const eta = `${Math.floor(Math.random() * 10) + 5}-${Math.floor(Math.random() * 5) + 15} دقائق`;
+        await updateRequest(requestId, {
+            status: 'تم التعيين',
+            assignedVolunteer: volunteer.fullName,
+            volunteerId: volunteer.id,
+            eta: eta,
+        });
     }
   };
 
@@ -124,6 +137,8 @@ export default function DashboardPage() {
     acc[region] = (acc[region] || 0) + 1;
     return acc;
   }, {} as Record<string, number>);
+  
+  const verifiedVolunteers = volunteers.filter(v => v.status === 'تم التحقق');
 
   if (loading) {
     return <div className="flex justify-center items-center h-full"><AlertCircle className="h-8 w-8 animate-spin" /></div>
@@ -214,7 +229,7 @@ export default function DashboardPage() {
                         <TableHead className="w-[150px] text-center">الأولوية</TableHead>
                         <TableHead className="w-[170px] text-center hidden sm:table-cell">الحالة</TableHead>
                          <TableHead className="w-[180px] text-center hidden md:table-cell">المتطوع المعين</TableHead>
-                        <TableHead className="w-[200px] text-center">الإجراء</TableHead>
+                        <TableHead className="w-[250px] text-center">الإجراء</TableHead>
                     </TableRow>
                     </TableHeader>
                     <TableBody>
@@ -258,12 +273,29 @@ export default function DashboardPage() {
                         </TableCell>
                          <TableCell className="text-center hidden md:table-cell">{req.assignedVolunteer || 'غير معين'}</TableCell>
                         <TableCell className="text-center">
-                            <div className="flex justify-center gap-1">
+                            <div className="flex justify-center items-center gap-1">
                                 {req.status === 'قيد الانتظار' && (
                                     <Button size="sm" onClick={() => handleAutoMatch(req.id)}>
                                         <UserPlus className="ml-2 h-4 w-4" />
                                         مطابقة
                                     </Button>
+                                )}
+                                {req.status === 'تم التعيين' && (
+                                    <DropdownMenu>
+                                        <DropdownMenuTrigger asChild>
+                                            <Button size="sm" variant="outline">
+                                                <UserCheck className="ml-2 h-4 w-4" />
+                                                إعادة تعيين
+                                            </Button>
+                                        </DropdownMenuTrigger>
+                                        <DropdownMenuContent>
+                                            {verifiedVolunteers.map(v => (
+                                                <DropdownMenuItem key={v.id} onClick={() => handleReassign(req.id, v.id)} disabled={v.id === req.volunteerId}>
+                                                    {v.fullName}
+                                                </DropdownMenuItem>
+                                            ))}
+                                        </DropdownMenuContent>
+                                    </DropdownMenu>
                                 )}
                                 <Dialog>
                                     <DialogTrigger asChild>
@@ -331,5 +363,3 @@ export default function DashboardPage() {
     </div>
   );
 }
-
-    

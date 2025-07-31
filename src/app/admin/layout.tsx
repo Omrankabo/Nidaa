@@ -14,15 +14,33 @@ import {
   SidebarInset,
 } from '@/components/ui/sidebar';
 import Logo from '@/components/logo';
-import { LayoutDashboard, Users, LogOut } from 'lucide-react';
+import { LayoutDashboard, Users, LogOut, Bell } from 'lucide-react';
 import { usePathname, useRouter } from 'next/navigation';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import Link from 'next/link';
 import { Button } from '@/components/ui/button';
+import { useEffect } from 'react';
+import { requestForToken } from '@/lib/firebase/messaging';
+import { useToast } from '@/hooks/use-toast';
+
 
 export default function AdminLayout({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
   const router = useRouter();
+  const { toast } = useToast();
+
+  useEffect(() => {
+    requestForToken().then(token => {
+        if (token) {
+            console.log('FCM Token:', token);
+            // Here you would typically save the token to your database for the user
+            toast({ title: 'تمكين الإشعارات', description: 'ستتلقى إشعارات للحالات الطارئة الجديدة.' });
+        } else {
+             toast({ variant: 'destructive', title: 'لم يتم تمكين الإشعارات', description: 'لن تتلقى تحديثات في الوقت الفعلي. يرجى تمكين الإشعارات في متصفحك.' });
+        }
+    });
+  }, [toast]);
+
 
   const getHeaderTitle = () => {
     if (pathname.includes('/dashboard')) return 'لوحة تحكم الطوارئ';
@@ -31,7 +49,6 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
   }
 
   const handleLogout = () => {
-    // In a real app, you would handle actual sign-out logic here
     router.push('/login');
   }
 
@@ -86,7 +103,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
             </h1>
             <SidebarTrigger />
           </header>
-          <main className="p-4 sm:p-6 lg:p-8 bg-background/50 flex-grow">{children}</main>
+          <main className="p-4 sm:p-6 lg:p-8 bg-background/50 flex-grow overflow-auto">{children}</main>
         </div>
       </SidebarInset>
     </SidebarProvider>
