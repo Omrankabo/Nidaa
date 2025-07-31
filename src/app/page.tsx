@@ -15,6 +15,7 @@ import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import Link from 'next/link';
 import Logo from '@/components/logo';
 import { Input } from '@/components/ui/input';
+import { ThemeToggle } from '@/components/theme-toggle';
 
 const requestSchema = z.object({
   requestText: z.string().min(10, { message: 'يجب أن يكون الطلب 10 أحرف على الأقل.' }),
@@ -64,6 +65,7 @@ export default function Home() {
       <header className="container mx-auto px-4 sm:px-6 lg:px-8 py-4 flex items-center justify-between">
         <Logo />
         <nav className="flex items-center gap-4">
+            <ThemeToggle />
             <Button variant="ghost" asChild>
                 <Link href="/login">تسجيل الدخول</Link>
             </Button>
