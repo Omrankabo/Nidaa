@@ -19,9 +19,12 @@ export async function createRequestAction(requestText: string, location: string,
 
     const id = await addRequest(newRequest);
 
-    // Send notification to admins
-    const adminTokens = await getAdminDeviceTokens();
+    // This is a placeholder for getting admin tokens. In a real app, you'd have a roles system.
+    // For now, we will assume a generic 'admin_user' to get tokens.
+    const adminTokens = await getAdminDeviceTokens('admin_user'); 
     const notificationPromises = adminTokens.map(token => 
+      // The first argument to sendNotificationToVolunteer should be the target.
+      // Since we already have the tokens, we can pass them directly.
       sendNotificationToVolunteer(token, 'طلب طوارئ جديد', `تم استلام طلب جديد في ${location}`)
     );
     await Promise.all(notificationPromises);
@@ -62,28 +65,24 @@ export async function createVolunteerAction(values: RegistrationFormValues) {
 export async function findAndAssignVolunteer(request: EmergencyRequest) {
     try {
         const volunteers = await getVerifiedVolunteers();
-        // Match by region first
+        const availableVolunteers = volunteers.filter(v => v.id !== request.volunteerId); // Exclude currently assigned
+        
         const region = request.location.split(',')[0].trim();
-        let matchedVolunteer = volunteers.find(v => v.region === region);
+        let matchedVolunteer = availableVolunteers.find(v => v.region === region);
         
         if (!matchedVolunteer) {
-             // Fallback to city if no region match
-            const city = request.location.split(',')[1]?.trim();
-            if(city) {
-                matchedVolunteer = volunteers.find(v => v.city === city);
-            }
+            matchedVolunteer = availableVolunteers[0];
         }
 
         if(matchedVolunteer) {
-            await sendNotificationToVolunteer(matchedVolunteer.id, 'تم تعيين طلب جديد لك', `لقد تم تعيينك لطلب طوارئ في ${request.location}`);
+            // A volunteer's device tokens are stored under their ID (the safe email key)
+            const volunteerTokens = await getAdminDeviceTokens(matchedVolunteer.id);
+            const notificationPromises = volunteerTokens.map(token => 
+                sendNotificationToVolunteer(token, 'تم تعيين طلب جديد لك', `لقد تم تعيينك لطلب طوارئ في ${request.location}`)
+            );
+            await Promise.all(notificationPromises);
             return { success: true, volunteer: matchedVolunteer };
         } else {
-            // Fallback to any available volunteer if no location match
-            const anyVolunteer = volunteers[0];
-            if (anyVolunteer) {
-                 await sendNotificationToVolunteer(anyVolunteer.id, 'تم تعيين طلب جديد لك', `لقد تم تعيينك لطلب طوارئ في ${request.location}`);
-                return { success: true, volunteer: anyVolunteer };
-            }
             return { success: false, error: 'لا يوجد متطوعون معتمدون متاحون حاليًا.' };
         }
 

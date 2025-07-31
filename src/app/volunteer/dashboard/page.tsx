@@ -27,9 +27,9 @@ export default function VolunteerDashboard() {
   const searchParams = useSearchParams();
   const router = useRouter();
   const { toast } = useToast();
-  // Since we are not using auth, we'll get the volunteer id from search params
-  // In a real app with auth, you'd get this from the user's session
-  const volunteerId = searchParams.get('id');
+  // We get the email from the search params and then derive the ID
+  const volunteerEmail = searchParams.get('email');
+  const volunteerId = volunteerEmail ? volunteerEmail.replace(/[.#$[\]]/g, "_") : null;
   
   const [volunteer, setVolunteer] = useState<Volunteer | null>(null);
   const [assignedRequests, setAssignedRequests] = useState<EmergencyRequest[]>([]);
@@ -41,6 +41,7 @@ export default function VolunteerDashboard() {
 
   useEffect(() => {
     if (!volunteerId) {
+        toast({ variant: 'destructive', title: 'خطأ', description: 'معرف المتطوع غير موجود. يرجى تسجيل الدخول مرة أخرى.' });
         router.push('/login');
         return;
     }
@@ -51,6 +52,7 @@ export default function VolunteerDashboard() {
             setEditForm({ profession: data.profession, region: data.region });
             requestForToken(volunteerId); // Register for notifications
         } else {
+             toast({ variant: 'destructive', title: 'خطأ', description: 'لم يتم العثور على المتطوع. قد يكون الحساب قد تم حذفه.' });
              router.push('/login');
         }
         setLoading(false);
@@ -62,13 +64,15 @@ export default function VolunteerDashboard() {
     });
 
     return () => {
-        unsubscribeVolunteer();
-        if (unsubscribeRequests) {
+        if (typeof unsubscribeVolunteer === 'function') {
+          unsubscribeVolunteer();
+        }
+        if (typeof unsubscribeRequests === 'function') {
           unsubscribeRequests();
         }
     };
 
-  }, [volunteerId, router]);
+  }, [volunteerId, router, toast]);
 
   const handleStatusUpdate = async (requestId: string, status: EmergencyRequest['status']) => {
     await updateRequest(requestId, { status });

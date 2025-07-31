@@ -46,10 +46,12 @@ export default function LoginPage() {
     try {
         const volunteer = await getVolunteerByEmail(values.email);
         if (volunteer) {
+            // NOTE: We are not checking password here because we disabled Firebase Auth
+            // In a real app, you would validate the password.
             if (volunteer.status === 'تم التحقق') {
                 toast({ title: 'تم تسجيل الدخول بنجاح' });
-                // Pass volunteer id to the dashboard
-                router.push(`/volunteer/dashboard?id=${volunteer.id}`);
+                // Pass volunteer email to the dashboard to derive the ID
+                router.push(`/volunteer/dashboard?email=${volunteer.email}`);
             } else {
                  toast({ variant: 'destructive', title: 'فشل تسجيل الدخول', description: 'حسابك قيد المراجعة أو تم رفضه.' });
             }

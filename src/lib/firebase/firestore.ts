@@ -88,9 +88,9 @@ export async function updateRequestStatus(id: string, status: EmergencyRequest['
 
 // Volunteers
 
-export async function addVolunteer(id: string, volunteer: Omit<Volunteer, 'id'>) {
+export async function addVolunteer(email: string, volunteer: Omit<Volunteer, 'id'>) {
     // Use email as key since we removed firebase auth UIDs
-    const safeEmailKey = id.replace(/[.#$[\]]/g, "_");
+    const safeEmailKey = email.replace(/[.#$[\]]/g, "_");
     const volunteersRef = ref(db, `${VOLUNTEERS_PATH}/${safeEmailKey}`);
     await set(volunteersRef, volunteer);
 }
@@ -197,15 +197,13 @@ export async function updateVolunteerProfile(id: string, data: Partial<Pick<Volu
 
 // Notifications
 export async function saveDeviceToken(userId: string, token: string) {
+    // The userId here is the safe email key
     const tokenRef = ref(db, `device_tokens/${userId}/${token}`);
     await set(tokenRef, true);
 }
 
-export async function getAdminDeviceTokens(): Promise<string[]> {
-    // In a real app, you'd have a list of admin UIDs. For now, we assume one admin.
-    // This is a placeholder. You should manage admin roles properly.
-    const adminId = "admin_user"; // This should be the actual admin UID
-    const tokensRef = ref(db, `device_tokens/${adminId}`);
+export async function getAdminDeviceTokens(userId: string): Promise<string[]> {
+    const tokensRef = ref(db, `device_tokens/${userId}`);
     const snapshot = await get(tokensRef);
     if(snapshot.exists()) {
         return Object.keys(snapshot.val());
@@ -213,13 +211,13 @@ export async function getAdminDeviceTokens(): Promise<string[]> {
     return [];
 }
 
-export async function sendNotificationToVolunteer(volunteerIdOrToken: string, title: string, body: string) {
+export async function sendNotificationToVolunteer(targetIdOrToken: string, title: string, body: string) {
     // This function will write to a 'notifications' queue in RTDB.
     // A Cloud Function would listen to this queue and send the actual push notification.
     const notificationsRef = ref(db, NOTIFICATIONS_PATH);
     const newNotificationRef = push(notificationsRef);
     await set(newNotificationRef, {
-        target: volunteerIdOrToken, // Can be a userId or a specific token
+        target: targetIdOrToken, // Can be a userId (safe email key) or a specific token
         title,
         body,
         createdAt: serverTimestamp()
