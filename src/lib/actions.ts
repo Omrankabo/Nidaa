@@ -9,12 +9,12 @@ import type { RegistrationFormValues } from '@/app/register/page';
 export async function createRequestAction(requestText: string, location: string, contactPhone: string) {
   try {
     const newRequest: Omit<EmergencyRequest, 'id' | 'timestamp'> = {
-        priorityLevel: 'medium',
-        reason: 'New request, priority not yet triaged by admin.',
+        priorityLevel: 'متوسطة',
+        reason: 'طلب جديد، لسه ما اتصنف من المدير.',
         requestText,
         location,
         contactPhone,
-        status: 'قيد الانتظار',
+        status: 'في الانتظار',
     };
 
     const id = await addRequest(newRequest);
@@ -25,7 +25,7 @@ export async function createRequestAction(requestText: string, location: string,
     const notificationPromises = adminTokens.map(token => 
       // The first argument to sendNotificationToVolunteer should be the target.
       // Since we already have the tokens, we can pass them directly.
-      sendNotificationToVolunteer(token, 'طلب طوارئ جديد', `تم استلام طلب جديد في ${location}`)
+      sendNotificationToVolunteer(token, 'طلب طوارئ جديد', `جاكم طلب جديد في ${location}`)
     );
     await Promise.all(notificationPromises);
 
@@ -33,7 +33,7 @@ export async function createRequestAction(requestText: string, location: string,
     return { success: true, data: { ...newRequest, id, timestamp: new Date().toISOString() } };
   } catch (error) {
     console.error(error);
-    return { success: false, error: 'Failed to create request.' };
+    return { success: false, error: 'ما قدرنا ننشئ الطلب.' };
   }
 }
 
@@ -57,7 +57,7 @@ export async function createVolunteerAction(values: RegistrationFormValues) {
 
     } catch (error: any) {
         console.error("Registration error in server action:", error);
-        return { success: false, error: error.message || 'An unknown error occurred' };
+        return { success: false, error: error.message || 'حصل خطأ غريب' };
     }
 }
 
@@ -78,16 +78,16 @@ export async function findAndAssignVolunteer(request: EmergencyRequest) {
             // A volunteer's device tokens are stored under their ID (the safe email key)
             const volunteerTokens = await getAdminDeviceTokens(matchedVolunteer.id);
             const notificationPromises = volunteerTokens.map(token => 
-                sendNotificationToVolunteer(token, 'تم تعيين طلب جديد لك', `لقد تم تعيينك لطلب طوارئ في ${request.location}`)
+                sendNotificationToVolunteer(token, 'جاك طلب جديد', `تم تعيينك لطلب طوارئ في ${request.location}`)
             );
             await Promise.all(notificationPromises);
             return { success: true, volunteer: matchedVolunteer };
         } else {
-            return { success: false, error: 'لا يوجد متطوعون معتمدون متاحون حاليًا.' };
+            return { success: false, error: 'مافي أي متطوع معتمد وجاهز حالياً.' };
         }
 
     } catch (error) {
         console.error("Error finding volunteer:", error);
-        return { success: false, error: 'حدث خطأ أثناء محاولة العثور على متطوع.' };
+        return { success: false, error: 'حصل خطأ وإحنا بنفتش ليك في متطوع.' };
     }
 }

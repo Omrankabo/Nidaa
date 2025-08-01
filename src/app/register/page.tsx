@@ -18,14 +18,14 @@ import { createVolunteerAction } from '@/lib/actions';
 import { ThemeToggle } from '@/components/theme-toggle';
 
 const registrationSchema = z.object({
-  fullName: z.string().min(2, { message: 'يجب أن يتكون الاسم الكامل من حرفين على الأقل.' }),
-  email: z.string().email({ message: 'الرجاء إدخال بريد إلكتروني صحيح.' }),
-  password: z.string().min(6, { message: 'يجب أن تكون كلمة المرور 6 أحرف على الأقل.' }),
-  gender: z.enum(['male', 'female', 'other'], { errorMap: () => ({ message: "الرجاء اختيار النوع" }) }),
-  region: z.string().min(1, { message: 'الرجاء اختيار منطقة.' }),
-  city: z.string().min(1, { message: 'الرجاء إدخال مدينة.' }),
-  profession: z.string().min(2, { message: 'يجب أن تكون المهنة من حرفين على الأقل.' }),
-  phoneNumber: z.string().regex(/^\+?[0-9\s-]{7,20}$/, { message: 'الرجاء إدخال رقم هاتف صحيح.' }),
+  fullName: z.string().min(2, { message: 'الاسم لازم يكون حرفين أو أكتر.' }),
+  email: z.string().email({ message: 'أكتب إيميل صاح.' }),
+  password: z.string().min(6, { message: 'كلمة السر لازم تكون 6 حروف أو أكتر.' }),
+  gender: z.enum(['male', 'female', 'other'], { errorMap: () => ({ message: "اختار النوع" }) }),
+  region: z.string().min(1, { message: 'اختار منطقتك.' }),
+  city: z.string().min(1, { message: 'أكتب مدينتك.' }),
+  profession: z.string().min(2, { message: 'المهنة لازم تكون حرفين أو أكتر.' }),
+  phoneNumber: z.string().regex(/^\+?[0-9\s-]{7,20}$/, { message: 'أكتب رقم تلفون صاح.' }),
 });
 
 export type RegistrationFormValues = z.infer<typeof registrationSchema>;
@@ -58,16 +58,16 @@ export default function RegisterPage() {
 
     if (result.success) {
       toast({
-        title: 'تم تقديم طلب التسجيل بنجاح!',
-        description: 'سيقوم المسؤول بمراجعة طلبك قريبًا.',
+        title: 'طلبك اترسل بنجاح!',
+        description: 'المدير حيشوف طلبك ويوافق عليهو قريب.',
       });
       router.push('/login');
     } else {
-        let description = result.error || 'فشل إرسال طلب التسجيل. الرجاء المحاولة مرة أخرى.';
+        let description = result.error || 'طلب التسجيل ما مشى. جرب تاني بالله.';
         
         toast({
             variant: 'destructive',
-            title: 'حدث خطأ',
+            title: 'حصل خطأ',
             description: description,
         });
     }
@@ -88,9 +88,9 @@ export default function RegisterPage() {
         </div>
       <Card className="w-full max-w-2xl my-12">
         <CardHeader>
-          <CardTitle className="text-2xl font-headline">كن مستجيباً معتمداً</CardTitle>
+          <CardTitle className="text-2xl font-headline">خليك واحد من ناسنا</CardTitle>
           <CardDescription>
-            انضم إلى شبكتنا من المتطوعين والمهنيين الطبيين الموثوق بهم. مساعدتك يمكن أن تنقذ الأرواح.
+            خش معانا في شبكة المتطوعين والخبراء الطبيين الموثوقين. مساعدتك ممكن تنقذ حياة.
           </CardDescription>
         </CardHeader>
         <CardContent>
@@ -104,7 +104,7 @@ export default function RegisterPage() {
                     <FormItem>
                       <FormLabel>الاسم الكامل</FormLabel>
                       <FormControl>
-                        <Input placeholder="أدخل اسمك الكامل" {...field} />
+                        <Input placeholder="أكتب اسمك الكامل" {...field} />
                       </FormControl>
                       <FormMessage />
                     </FormItem>
@@ -119,12 +119,12 @@ export default function RegisterPage() {
                       <Select onValueChange={field.onChange} defaultValue={field.value}>
                         <FormControl>
                           <SelectTrigger>
-                            <SelectValue placeholder="اختر النوع" />
+                            <SelectValue placeholder="اختار النوع" />
                           </SelectTrigger>
                         </FormControl>
                         <SelectContent>
-                          <SelectItem value="male">ذكر</SelectItem>
-                          <SelectItem value="female">أنثى</SelectItem>
+                          <SelectItem value="male">راجل</SelectItem>
+                          <SelectItem value="female">مرة</SelectItem>
                           <SelectItem value="other">آخر</SelectItem>
                         </SelectContent>
                       </Select>
@@ -152,7 +152,7 @@ export default function RegisterPage() {
                   name="password"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>كلمة المرور</FormLabel>
+                      <FormLabel>كلمة السر</FormLabel>
                       <FormControl>
                         <Input type="password" placeholder="••••••••" {...field} />
                       </FormControl>
@@ -171,7 +171,7 @@ export default function RegisterPage() {
                        <Select onValueChange={field.onChange} defaultValue={field.value}>
                         <FormControl>
                           <SelectTrigger>
-                            <SelectValue placeholder="اختر منطقتك" />
+                            <SelectValue placeholder="اختار منطقتك" />
                           </SelectTrigger>
                         </FormControl>
                         <SelectContent>
@@ -189,9 +189,9 @@ export default function RegisterPage() {
                   name="city"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>المدينة / البلدة</FormLabel>
+                      <FormLabel>المدينة / الحلة</FormLabel>
                       <FormControl>
-                        <Input placeholder="مثال: أم درمان" {...field} />
+                        <Input placeholder="مثال: أمدرمان" {...field} />
                       </FormControl>
                       <FormMessage />
                     </FormItem>
@@ -204,9 +204,9 @@ export default function RegisterPage() {
                   name="profession"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>المهنة</FormLabel>
+                      <FormLabel>شغلك شنو؟</FormLabel>
                       <FormControl>
-                        <Input placeholder="مثال: طبيب، ممرض، سائق" {...field} />
+                        <Input placeholder="مثال: دكتور، ممرض، سواق" {...field} />
                       </FormControl>
                       <FormMessage />
                     </FormItem>
@@ -217,7 +217,7 @@ export default function RegisterPage() {
                   name="phoneNumber"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>رقم الهاتف</FormLabel>
+                      <FormLabel>رقم التلفون</FormLabel>
                       <FormControl>
                         <Input placeholder="... 249+" {...field} />
                       </FormControl>
@@ -228,7 +228,7 @@ export default function RegisterPage() {
               </div>
               <Button type="submit" className="w-full" size="lg" disabled={isSubmitting}>
                 {isSubmitting && <Loader2 className="ml-2 h-4 w-4 animate-spin" />}
-                إرسال للتحقق
+                أرسل عشان نتأكد
               </Button>
             </form>
           </Form>

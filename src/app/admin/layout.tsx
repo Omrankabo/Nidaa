@@ -56,7 +56,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
                         <Link href="/admin/dashboard"><LayoutDashboard className="ml-2 h-4 w-4"/>لوحة التحكم</Link>
                     </TabsTrigger>
                     <TabsTrigger value="volunteers" asChild>
-                        <Link href="/admin/volunteers"><Users className="ml-2 h-4 w-4"/>المتطوعون</Link>
+                        <Link href="/admin/volunteers"><Users className="ml-2 h-4 w-4"/>المتطوعين</Link>
                     </TabsTrigger>
                 </TabsList>
             </Tabs>

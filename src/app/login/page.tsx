@@ -18,8 +18,8 @@ import { getVolunteerByEmail } from '@/lib/firebase/firestore';
 
 
 const loginSchema = z.object({
-  email: z.string().email({ message: 'الرجاء إدخال بريد إلكتروني صحيح.' }),
-  password: z.string().min(1, { message: 'الرجاء إدخال كلمة المرور.' }),
+  email: z.string().email({ message: 'الرجاء إدخال بريد إلكتروني صاح.' }),
+  password: z.string().min(1, { message: 'الرجاء إدخال كلمة السر.' }),
 });
 
 export default function LoginPage() {
@@ -37,7 +37,7 @@ export default function LoginPage() {
     
     // Hardcoded credentials for admin
     if (values.email === 'admin@awni.sd' && values.password === 'password') {
-      toast({ title: 'تم تسجيل الدخول بنجاح' });
+      toast({ title: 'أهلاً بيك يا مدير' });
       router.push('/admin/dashboard');
       return;
     }
@@ -49,18 +49,18 @@ export default function LoginPage() {
             // NOTE: We are not checking password here because we disabled Firebase Auth
             // In a real app, you would validate the password.
             if (volunteer.status === 'تم التحقق') {
-                toast({ title: 'تم تسجيل الدخول بنجاح' });
+                toast({ title: 'أهلاً بيك يا متطوع' });
                 // Pass volunteer email to the dashboard to derive the ID
                 router.push(`/volunteer/dashboard?email=${volunteer.email}`);
             } else {
-                 toast({ variant: 'destructive', title: 'فشل تسجيل الدخول', description: 'حسابك قيد المراجعة أو تم رفضه.' });
+                 toast({ variant: 'destructive', title: 'الدخول فشل', description: 'حسابك لسه تحت المراجعة أو اترفض.' });
             }
         } else {
-            toast({ variant: 'destructive', title: 'فشل تسجيل الدخول', description: 'البريد الإلكتروني أو كلمة المرور غير صحيحة.' });
+            toast({ variant: 'destructive', title: 'الدخول فشل', description: 'الإيميل أو كلمة السر غلط.' });
         }
     } catch (error) {
         console.error("Login error", error);
-        toast({ variant: 'destructive', title: 'خطأ', description: 'حدث خطأ أثناء محاولة تسجيل الدخول.' });
+        toast({ variant: 'destructive', title: 'حصل خطأ', description: 'حصل خطأ وإحنا بنحاول ندخلك.' });
     }
 
     setIsSubmitting(false);
@@ -80,7 +80,7 @@ export default function LoginPage() {
       <Card className="w-full max-w-md">
         <CardHeader>
           <CardTitle className="text-2xl font-headline">تسجيل الدخول</CardTitle>
-          <CardDescription>أدخل بياناتك للوصول إلى حسابك.</CardDescription>
+          <CardDescription>أدخل بياناتك عشان تخش حسابك.</CardDescription>
         </CardHeader>
         <CardContent>
           <Form {...form}>
@@ -103,7 +103,7 @@ export default function LoginPage() {
                 name="password"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>كلمة المرور</FormLabel>
+                    <FormLabel>كلمة السر</FormLabel>
                     <FormControl>
                       <Input type="password" placeholder="••••••••" {...field} />
                     </FormControl>
@@ -113,7 +113,7 @@ export default function LoginPage() {
               />
               <Button type="submit" className="w-full" disabled={isSubmitting}>
                 {isSubmitting && <Loader2 className="ml-2 h-4 w-4 animate-spin" />}
-                تسجيل الدخول
+                خش
               </Button>
             </form>
           </Form>

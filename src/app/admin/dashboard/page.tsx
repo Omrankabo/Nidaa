@@ -54,7 +54,7 @@ export default function DashboardPage() {
   }, []);
   
   const handleAssign = async (requestId: string, volunteer: Volunteer) => {
-    const eta = `${Math.floor(Math.random() * 10) + 5}-${Math.floor(Math.random() * 5) + 15} دقائق`;
+    const eta = `${Math.floor(Math.random() * 10) + 5}-${Math.floor(Math.random() * 5) + 15} دقيقة`;
     await updateRequest(requestId, {
         status: 'تم التعيين',
         assignedVolunteer: volunteer.fullName,
@@ -76,7 +76,7 @@ export default function DashboardPage() {
   };
 
   const handleVolunteerDelete = async (id: string) => {
-    if (window.confirm('هل أنت متأكد أنك تريد حذف هذا المتطوع؟')) {
+    if (window.confirm('متأكد عايز تحذف المتطوع دا؟')) {
         await deleteVolunteer(id);
     }
   };
@@ -84,29 +84,29 @@ export default function DashboardPage() {
 
   const getPriorityBadgeVariant = (priority: EmergencyRequest['priorityLevel']) => {
     switch (priority) {
-      case 'critical': return 'destructive';
-      case 'high': return 'default';
-      case 'medium': return 'secondary';
-      case 'low': return 'outline';
+      case 'حرجة': return 'destructive';
+      case 'عالية': return 'default';
+      case 'متوسطة': return 'secondary';
+      case 'عادية': return 'outline';
       default: return 'outline';
     }
   };
   
   const getPriorityText = (priority: EmergencyRequest['priorityLevel']) => {
       switch (priority) {
-          case 'critical': return 'حرج';
-          case 'high': return 'عالي';
-          case 'medium': return 'متوسط';
-          case 'low': return 'منخفض';
+          case 'حرجة': return 'حرجة';
+          case 'عالية': return 'عالية';
+          case 'متوسطة': return 'متوسطة';
+          case 'عادية': return 'عادية';
       }
   }
 
   const getStatusBadge = (status: EmergencyRequest['status']) => {
     switch (status) {
       case 'تم التعيين': return <Badge className="bg-blue-500 hover:bg-blue-600"><CheckCircle className="ml-1 h-3 w-3" />تم التعيين</Badge>;
-      case 'قيد الانتظار': return <Badge variant="secondary"><Clock className="ml-1 h-3 w-3" />قيد الانتظار</Badge>;
-      case 'تم الحل': return <Badge className="bg-green-500 hover:bg-green-600"><CheckCircle className="ml-1 h-3 w-3" />تم الحل</Badge>;
-      case 'تم الإلغاء': return <Badge variant="destructive"><AlertCircle className="ml-1 h-3 w-3" />تم الإلغاء</Badge>;
+      case 'في الانتظار': return <Badge variant="secondary"><Clock className="ml-1 h-3 w-3" />في الانتظار</Badge>;
+      case 'اتحلت': return <Badge className="bg-green-500 hover:bg-green-600"><CheckCircle className="ml-1 h-3 w-3" />اتحلت</Badge>;
+      case 'ملغية': return <Badge variant="destructive"><AlertCircle className="ml-1 h-3 w-3" />ملغية</Badge>;
       default: return <Badge variant="outline">{status}</Badge>;
     }
   };
@@ -136,7 +136,7 @@ export default function DashboardPage() {
                     <CardTitle className="font-headline">طلبات تسجيل المتطوعين الجديدة</CardTitle>
                     <Badge variant="default" className="text-lg">{pendingVolunteers.length}</Badge>
                 </div>
-                <CardDescription>الموافقة على أو رفض طلبات المتطوعين الجدد.</CardDescription>
+                <CardDescription>هنا توافق أو ترفض طلبات المتطوعين الجداد.</CardDescription>
             </CardHeader>
             <CardContent>
                 {pendingVolunteers.length > 0 ? (
@@ -154,21 +154,21 @@ export default function DashboardPage() {
                                     <TableCell>{v.fullName}</TableCell>
                                     <TableCell>{v.city}, {v.region}</TableCell>
                                     <TableCell className="flex gap-2">
-                                        <Button size="sm" variant="outline" onClick={() => updateVolunteerStatus(v.id, 'تم التحقق')}>الموافقة</Button>
-                                        <Button size="sm" variant="destructive" onClick={() => handleVolunteerDelete(v.id)}>الرفض</Button>
+                                        <Button size="sm" variant="outline" onClick={() => updateVolunteerStatus(v.id, 'تم التحقق')}>موافقة</Button>
+                                        <Button size="sm" variant="destructive" onClick={() => handleVolunteerDelete(v.id)}>رفض</Button>
                                     </TableCell>
                                 </TableRow>
                             ))}
                         </TableBody>
                     </Table>
-                ) : <p>لا توجد طلبات تسجيل جديدة.</p>}
+                ) : <p>مافي طلبات تسجيل جديدة.</p>}
             </CardContent>
         </Card>
 
       <Card>
         <CardHeader>
           <CardTitle className="font-headline">تحليلات الطلبات</CardTitle>
-          <CardDescription>نظرة عامة على الطلبات حسب المنطقة.</CardDescription>
+          <CardDescription>نظرة سريعة على الطلبات حسب المنطقة.</CardDescription>
         </CardHeader>
         <CardContent className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
           {Object.entries(requestByRegionCount).map(([region, count]) => (
@@ -189,12 +189,12 @@ export default function DashboardPage() {
         <CardHeader>
             <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
                 <div>
-                    <CardTitle className="font-headline">جميع طلبات الطوارئ</CardTitle>
-                    <CardDescription>قائمة بجميع الطلبات الواردة، مرتبة حسب الوقت.</CardDescription>
+                    <CardTitle className="font-headline">كل طلبات الطوارئ</CardTitle>
+                    <CardDescription>دي كل الطلبات الجات، مرتبة بالزمن.</CardDescription>
                 </div>
                 <Select value={regionFilter} onValueChange={setRegionFilter}>
                     <SelectTrigger className="w-full sm:w-[180px]">
-                        <SelectValue placeholder="تصفية حسب المنطقة" />
+                        <SelectValue placeholder="فلتر حسب المنطقة" />
                     </SelectTrigger>
                     <SelectContent>
                         <SelectItem value="all">كل المناطق</SelectItem>
@@ -210,9 +210,9 @@ export default function DashboardPage() {
                     <TableHeader>
                     <TableRow>
                         <TableHead className="min-w-[300px]">تفاصيل الطلب</TableHead>
-                        <TableHead className="w-[150px] text-center">الأولوية</TableHead>
+                        <TableHead className="w-[150px] text-center">الأهمية</TableHead>
                         <TableHead className="w-[170px] text-center hidden sm:table-cell">الحالة</TableHead>
-                         <TableHead className="w-[180px] text-center hidden md:table-cell">المتطوع المعين</TableHead>
+                         <TableHead className="w-[180px] text-center hidden md:table-cell">المتطوع المسؤول</TableHead>
                         <TableHead className="w-[250px] text-center">الإجراء</TableHead>
                     </TableRow>
                     </TableHeader>
@@ -233,10 +233,10 @@ export default function DashboardPage() {
                                     </Button>
                                 </DropdownMenuTrigger>
                                 <DropdownMenuContent>
-                                    <DropdownMenuItem onClick={() => handlePriorityChange(req.id, 'critical')}>حرج</DropdownMenuItem>
-                                    <DropdownMenuItem onClick={() => handlePriorityChange(req.id, 'high')}>عالي</DropdownMenuItem>
-                                    <DropdownMenuItem onClick={() => handlePriorityChange(req.id, 'medium')}>متوسط</DropdownMenuItem>
-                                    <DropdownMenuItem onClick={() => handlePriorityChange(req.id, 'low')}>منخفض</DropdownMenuItem>
+                                    <DropdownMenuItem onClick={() => handlePriorityChange(req.id, 'حرجة')}>حرجة</DropdownMenuItem>
+                                    <DropdownMenuItem onClick={() => handlePriorityChange(req.id, 'عالية')}>عالية</DropdownMenuItem>
+                                    <DropdownMenuItem onClick={() => handlePriorityChange(req.id, 'متوسطة')}>متوسطة</DropdownMenuItem>
+                                    <DropdownMenuItem onClick={() => handlePriorityChange(req.id, 'عادية')}>عادية</DropdownMenuItem>
                                 </DropdownMenuContent>
                             </DropdownMenu>
                         </TableCell>
@@ -248,25 +248,25 @@ export default function DashboardPage() {
                                     </Button>
                                 </DropdownMenuTrigger>
                                 <DropdownMenuContent>
-                                    <DropdownMenuItem onClick={() => handleStatusChange(req.id, 'قيد الانتظار')}>قيد الانتظار</DropdownMenuItem>
+                                    <DropdownMenuItem onClick={() => handleStatusChange(req.id, 'في الانتظار')}>في الانتظار</DropdownMenuItem>
                                     <DropdownMenuItem onClick={() => handleStatusChange(req.id, 'تم التعيين')}>تم التعيين</DropdownMenuItem>
-                                    <DropdownMenuItem onClick={() => handleStatusChange(req.id, 'تم الحل')}>تم الحل</DropdownMenuItem>
-                                    <DropdownMenuItem onClick={() => handleStatusChange(req.id, 'تم الإلغاء')}>تم الإلغاء</DropdownMenuItem>
+                                    <DropdownMenuItem onClick={() => handleStatusChange(req.id, 'اتحلت')}>اتحلت</DropdownMenuItem>
+                                    <DropdownMenuItem onClick={() => handleStatusChange(req.id, 'ملغية')}>ملغية</DropdownMenuItem>
                                 </DropdownMenuContent>
                             </DropdownMenu>
                         </TableCell>
-                         <TableCell className="text-center hidden md:table-cell">{req.assignedVolunteer || 'غير معين'}</TableCell>
+                         <TableCell className="text-center hidden md:table-cell">{req.assignedVolunteer || 'لسه مافي'}</TableCell>
                         <TableCell className="text-center">
                             <div className="flex justify-center items-center gap-1">
-                                {req.status === 'قيد الانتظار' && (
+                                {req.status === 'في الانتظار' && (
                                     <Dialog>
                                         <DialogTrigger asChild>
-                                            <Button size="sm"><UserPlus className="ml-2 h-4 w-4" />مطابقة</Button>
+                                            <Button size="sm"><UserPlus className="ml-2 h-4 w-4" />توصيل</Button>
                                         </DialogTrigger>
                                         <DialogContent>
                                             <DialogHeader>
-                                                <DialogTitle>اختر متطوعًا</DialogTitle>
-                                                <DialogDescription>اختر متطوعًا متاحًا من منطقة الخرطوم.</DialogDescription>
+                                                <DialogTitle>اختار متطوع</DialogTitle>
+                                                <DialogDescription>اختار متطوع جاهز من منطقة الخرطوم.</DialogDescription>
                                             </DialogHeader>
                                             <div className="space-y-2 max-h-60 overflow-y-auto">
                                                 {khartoumVolunteers.length > 0 ? khartoumVolunteers.map(v => (
@@ -279,7 +279,7 @@ export default function DashboardPage() {
                                                             <Button size="sm" onClick={() => handleAssign(req.id, v)}>تعيين</Button>
                                                         </DialogTrigger>
                                                     </div>
-                                                )) : <p>لا يوجد متطوعون متاحون في الخرطوم.</p>}
+                                                )) : <p>مافي متطوعين جاهزين في الخرطوم حالياً.</p>}
                                             </div>
                                         </DialogContent>
                                     </Dialog>
@@ -292,7 +292,7 @@ export default function DashboardPage() {
                                          <DialogContent>
                                             <DialogHeader>
                                                 <DialogTitle>إعادة تعيين متطوع</DialogTitle>
-                                                <DialogDescription>اختر متطوعًا مختلفًا لهذا الطلب.</DialogDescription>
+                                                <DialogDescription>اختار متطوع تاني للطلب دا.</DialogDescription>
                                             </DialogHeader>
                                             <div className="space-y-2 max-h-60 overflow-y-auto">
                                                 {verifiedVolunteers.map(v => (
@@ -303,7 +303,7 @@ export default function DashboardPage() {
                                                         </div>
                                                          <DialogTrigger asChild>
                                                             <Button size="sm" onClick={() => handleAssign(req.id, v)} disabled={v.id === req.volunteerId}>
-                                                                {v.id === req.volunteerId ? 'معين حاليًا' : 'تعيين'}
+                                                                {v.id === req.volunteerId ? 'معين حالياً' : 'تعيين'}
                                                             </Button>
                                                         </DialogTrigger>
                                                     </div>
@@ -318,9 +318,9 @@ export default function DashboardPage() {
                                     </DialogTrigger>
                                     <DialogContent className="sm:max-w-md">
                                         <DialogHeader>
-                                            <DialogTitle>تفاصيل الطلب الكاملة</DialogTitle>
+                                            <DialogTitle>تفاصيل الطلب كاملة</DialogTitle>
                                             <DialogDescription>
-                                                معرف الطلب: {req.id}
+                                                رقم الطلب: {req.id}
                                             </DialogDescription>
                                         </DialogHeader>
                                         <div className="space-y-4 max-h-[60vh] overflow-y-auto p-1">
@@ -333,7 +333,7 @@ export default function DashboardPage() {
                                                 <p>{req.location}</p>
                                             </div>
                                              <div>
-                                                <h4 className="font-semibold">هاتف التواصل:</h4>
+                                                <h4 className="font-semibold">تلفون التواصل:</h4>
                                                 <p>{req.contactPhone}</p>
                                             </div>
                                         </div>
@@ -345,14 +345,14 @@ export default function DashboardPage() {
                                     </AlertDialogTrigger>
                                     <AlertDialogContent>
                                         <AlertDialogHeader>
-                                            <AlertDialogTitle>هل أنت متأكد؟</AlertDialogTitle>
+                                            <AlertDialogTitle>متأكد؟</AlertDialogTitle>
                                             <AlertDialogDescription>
-                                            سيؤدي هذا إلى حذف هذا الطلب بشكل دائم. لا يمكن التراجع عن هذا الإجراء.
+                                            الحركة دي بتحذف الطلب نهائياً. وما بتقدر ترجعو تاني.
                                             </AlertDialogDescription>
                                         </AlertDialogHeader>
                                         <AlertDialogFooter>
                                             <AlertDialogCancel>إلغاء</AlertDialogCancel>
-                                            <AlertDialogAction onClick={() => handleDeleteRequest(req.id)}>حذف</AlertDialogAction>
+                                            <AlertDialogAction onClick={() => handleDeleteRequest(req.id)}>أحذف</AlertDialogAction>
                                         </AlertDialogFooter>
                                     </AlertDialogContent>
                                 </AlertDialog>
@@ -367,9 +367,9 @@ export default function DashboardPage() {
         ) : (
             <Alert>
                 <AlertCircle className="h-4 w-4" />
-                <AlertTitle>لا توجد طلبات</AlertTitle>
+                <AlertTitle>مافي أي طلبات</AlertTitle>
                 <AlertDescription>
-                    لا توجد طلبات تطابق الفلتر الحالي.
+                    مافي طلبات مطابقة للفلتر الإنت مختارو.
                 </AlertDescription>
             </Alert>
         )}
@@ -377,5 +377,3 @@ export default function DashboardPage() {
     </Card>
     </div>
   );
-
-    

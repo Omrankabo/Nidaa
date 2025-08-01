@@ -16,13 +16,13 @@ export interface Volunteer {
 
 export interface EmergencyRequest {
   id: string;
-  priorityLevel: 'critical' | 'high' | 'medium' | 'low';
+  priorityLevel: 'حرجة' | 'عالية' | 'متوسطة' | 'عادية';
   reason: string;
   requestText: string;
   location: string;
   contactPhone: string;
   timestamp: number | string;
-  status: 'قيد الانتظار' | 'تم التعيين' | 'تم الحل' | 'تم الإلغاء';
+  status: 'في الانتظار' | 'تم التعيين' | 'اتحلت' | 'ملغية';
   assignedVolunteer?: string;
   volunteerId?: string;
   eta?: string; // Estimated Time of Arrival

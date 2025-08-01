@@ -5,7 +5,7 @@ import { ThemeProvider } from '@/components/theme-provider';
 
 export const metadata: Metadata = {
   title: 'نداء',
-  description: 'نظام استجابة للطوارئ لربط المجتمعات بالمساعدة الطبية الموثوقة',
+  description: 'نظام استجابة للطوارئ عشان نوصل المحتاجين بمساعدة طبية موثوقة وسريعة.',
 };
 
 export default function RootLayout({

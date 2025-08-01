@@ -35,29 +35,29 @@ export default function VolunteersPage() {
     }, []);
 
     const handleDelete = async (id: string) => {
-        if (window.confirm('هل أنت متأكد أنك تريد حذف هذا المتطوع؟')) {
+        if (window.confirm('متأكد عايز تحذف المتطوع دا؟')) {
             await deleteVolunteer(id);
         }
     };
     
     const handleSendNotification = async (volunteerId: string) => {
-        const message = prompt("أدخل رسالة الإشعار:");
+        const message = prompt("أكتب رسالة الإشعار:");
         if (message) {
-            await sendNotificationToVolunteer(volunteerId, 'رسالة من المسؤول', message);
-            toast({title: "تم إرسال الإشعار بنجاح"});
+            await sendNotificationToVolunteer(volunteerId, 'رسالة من الإدارة', message);
+            toast({title: "الإشعار اترسل بنجاح"});
         }
     };
 
     const getHandledRequestsCount = (volunteerId: string) => {
-        return requests.filter(req => req.volunteerId === volunteerId && req.status === 'تم الحل').length;
+        return requests.filter(req => req.volunteerId === volunteerId && req.status === 'اتحلت').length;
     };
 
     const getStatusBadge = (status: Volunteer['status']) => {
         switch (status) {
             case 'تم التحقق':
-                return <Badge variant="default" className="bg-green-500 hover:bg-green-600"><CheckCircle className="ml-1 h-3 w-3" />تم التحقق</Badge>;
+                return <Badge variant="default" className="bg-green-500 hover:bg-green-600"><CheckCircle className="ml-1 h-3 w-3" />مقبول</Badge>;
             case 'قيد الانتظار':
-                return <Badge variant="secondary"><Clock className="ml-1 h-3 w-3" />قيد الانتظار</Badge>;
+                return <Badge variant="secondary"><Clock className="ml-1 h-3 w-3" />لسه بنتأكد</Badge>;
             case 'مرفوض':
                 return <Badge variant="destructive"><XCircle className="ml-1 h-3 w-3" />مرفوض</Badge>;
             default:
@@ -86,11 +86,11 @@ export default function VolunteersPage() {
                 <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
                     <div>
                         <CardTitle className="font-headline">إدارة المتطوعين</CardTitle>
-                        <CardDescription>عرض وإدارة جميع المستجيبين المعتمدين في النظام.</CardDescription>
+                        <CardDescription>هنا بتشوف وبتدير كل المتطوعين المعتمدين في النظام.</CardDescription>
                     </div>
                     <Select value={regionFilter} onValueChange={setRegionFilter}>
                         <SelectTrigger className="w-full sm:w-[180px]">
-                            <SelectValue placeholder="تصفية حسب المنطقة" />
+                            <SelectValue placeholder="فلتر حسب المنطقة" />
                         </SelectTrigger>
                         <SelectContent>
                             <SelectItem value="all">كل المناطق</SelectItem>
@@ -107,7 +107,7 @@ export default function VolunteersPage() {
                                 <TableHead>الاسم الكامل</TableHead>
                                 <TableHead className="hidden sm:table-cell">الحالة</TableHead>
                                 <TableHead className="hidden lg:table-cell">المنطقة</TableHead>
-                                <TableHead className="hidden md:table-cell">الطلبات المكتملة</TableHead>
+                                <TableHead className="hidden md:table-cell">الطلبات الحلّوها</TableHead>
                                 <TableHead className="text-left">الإجراءات</TableHead>
                             </TableRow>
                         </TableHeader>
@@ -128,7 +128,7 @@ export default function VolunteersPage() {
                                             <DropdownMenuContent align="end">
                                                 <DropdownMenuItem onClick={() => handleSendNotification(volunteer.id)}>
                                                     <Bell className="ml-2 h-4 w-4 text-blue-500" />
-                                                    <span>إرسال إشعار</span>
+                                                    <span>أرسل إشعار</span>
                                                 </DropdownMenuItem>
                                                 <DropdownMenuItem onClick={() => handleDelete(volunteer.id)}>
                                                     <Trash2 className="ml-2 h-4 w-4 text-red-500" />
