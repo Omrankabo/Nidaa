@@ -41,7 +41,7 @@ export default function DashboardClient() {
 
   useEffect(() => {
     if (!volunteerId) {
-        toast({ variant: 'destructive', title: 'خطأ', description: 'رقم المتطوع مافي. سجل دخول تاني بالله.' });
+        toast({ variant: 'destructive', title: 'خطأ', description: 'لم يتم العثور على معرّف المتطوع. يرجى تسجيل الدخول مرة أخرى.' });
         router.push('/login');
         return;
     }
@@ -52,7 +52,7 @@ export default function DashboardClient() {
             setEditForm({ profession: data.profession, region: data.region });
             requestForToken(volunteerId); // Register for notifications
         } else {
-             toast({ variant: 'destructive', title: 'خطأ', description: 'ما لقينا المتطوع. يمكن الحساب اتمسح.' });
+             toast({ variant: 'destructive', title: 'خطأ', description: 'لم يتم العثور على المتطوع. قد يكون الحساب قد تم حذفه.' });
              router.push('/login');
         }
         setLoading(false);
@@ -76,38 +76,38 @@ export default function DashboardClient() {
 
   const handleStatusUpdate = async (requestId: string, status: EmergencyRequest['status']) => {
     await updateRequest(requestId, { status });
-    toast({ title: `حالة الطلب اتغيرت لـ "${status}"`});
+    toast({ title: `تم تغيير حالة الطلب إلى "${status}"`});
   };
   
   const handleProfileUpdate = async (e: React.FormEvent) => {
       e.preventDefault();
       if (!volunteerId) return;
       await updateVolunteerProfile(volunteerId, editForm);
-      toast({ title: 'ملفك اتحدث بنجاح' });
+      toast({ title: 'تم تحديث ملفك الشخصي بنجاح' });
       setIsEditing(false);
   };
   
   const handleAccountDelete = async () => {
     if (!volunteerId) return;
-    if (window.confirm('متأكد؟ حسابك وبياناتك كلها حتتمسح نهائياً.')) {
+    if (window.confirm('هل أنت متأكد؟ سيتم حذف حسابك وجميع بياناتك بشكل دائم.')) {
         try {
             await deleteVolunteer(volunteerId);
-            toast({ title: 'الحساب اتمسح بنجاح' });
+            toast({ title: 'تم حذف الحساب بنجاح' });
             router.push('/');
         } catch (error) {
             console.error("Error deleting account: ", error);
-            toast({ variant: 'destructive', title: 'خطأ', description: 'ما قدرنا نمسح الحساب. جرب تاني.' });
+            toast({ variant: 'destructive', title: 'خطأ', description: 'لم نتمكن من حذف الحساب. يرجى المحاولة مرة أخرى.' });
         }
     }
   };
 
   const handleReportSubmit = async (requestId: string) => {
     if (!reportText.trim()) {
-        toast({variant: 'destructive', title: 'التقرير ما ممكن يكون فاضي'});
+        toast({variant: 'destructive', title: 'لا يمكن أن يكون التقرير فارغًا'});
         return;
     }
     await updateRequest(requestId, { report: reportText });
-    toast({title: "التقرير اترسل بنجاح"});
+    toast({title: "تم إرسال التقرير بنجاح"});
     setReportText('');
   }
   
@@ -133,12 +133,12 @@ export default function DashboardClient() {
         <p>{request.requestText}</p>
         <div className="text-sm text-muted-foreground space-y-2 pt-2 border-t">
             <p className="flex items-center gap-2"><MapPin className="h-4 w-4 text-primary"/> <strong>الموقع:</strong> {request.location}</p>
-            <p className="flex items-center gap-2"><Phone className="h-4 w-4 text-primary"/> <strong>تلفون التواصل:</strong> {request.contactPhone}</p>
+            <p className="flex items-center gap-2"><Phone className="h-4 w-4 text-primary"/> <strong>هاتف التواصل:</strong> {request.contactPhone}</p>
         </div>
         <div className="flex gap-2">
             <Button className="w-full bg-green-600 hover:bg-green-700" onClick={() => handleStatusUpdate(request.id, 'اتحلت')}>
                 <Check className="ml-2 h-4 w-4" />
-                اتحلت
+                تم الحل
             </Button>
              <Button className="w-full" variant="destructive" onClick={() => handleStatusUpdate(request.id, 'ملغية')}>
                 <X className="ml-2 h-4 w-4" />
@@ -166,13 +166,13 @@ export default function DashboardClient() {
       <CardContent className="space-y-4">
         <p>{request.requestText}</p>
         <div className="pt-4 border-t">
-            <h4 className="font-semibold mb-2">أكتب تقرير أو ملاحظة</h4>
+            <h4 className="font-semibold mb-2">اكتب تقريرًا أو ملاحظة</h4>
             {request.report ? (
                 <p className="p-2 bg-muted rounded-md whitespace-pre-wrap break-words">{request.report}</p>
             ) : (
                 <div className="flex items-start gap-2">
                     <Textarea 
-                        placeholder="أكتب تقريرك هنا..."
+                        placeholder="اكتب تقريرك هنا..."
                         onChange={(e) => setReportText(e.target.value)}
                         defaultValue={request.report}
                     />
@@ -203,10 +203,10 @@ export default function DashboardClient() {
         <div className="flex flex-col justify-center items-center h-screen p-4">
              <Alert variant="destructive" className="max-w-lg">
                 <AlertCircle className="h-4 w-4" />
-                <AlertTitle>خطأ في الدخول</AlertTitle>
-                <AlertDescription>ما قدرنا نتأكد من حسابك. سجل دخول تاني بالله.</AlertDescription>
+                <AlertTitle>خطأ في تسجيل الدخول</AlertTitle>
+                <AlertDescription>لم نتمكن من التحقق من حسابك. يرجى تسجيل الدخول مرة أخرى.</AlertDescription>
             </Alert>
-             <Button onClick={() => router.push('/login')} className="mt-4">أمشي لصفحة الدخول</Button>
+             <Button onClick={() => router.push('/login')} className="mt-4">اذهب إلى صفحة تسجيل الدخول</Button>
         </div>
     );
   }
@@ -245,8 +245,8 @@ export default function DashboardClient() {
         <TabsContent value="dashboard">
              <Card>
                 <CardHeader>
-                    <CardTitle className="font-headline text-3xl">شغلك يا متطوع</CardTitle>
-                    <CardDescription>هنا بتشوف الشغل المعين ليك وسجل طلباتك القديمة.</CardDescription>
+                    <CardTitle className="font-headline text-3xl">مهامك كمتطوع</CardTitle>
+                    <CardDescription>هنا يمكنك عرض المهام المعينة لك وسجل طلباتك السابقة.</CardDescription>
                 </CardHeader>
                 <CardContent>
                     <Tabs defaultValue="assigned" className="w-full">
@@ -260,7 +260,7 @@ export default function DashboardClient() {
                                 {assignedRequests.length > 0 ? (
                                     assignedRequests.map(req => <AssignedRequestCard key={req.id} request={req} />)
                                 ) : (
-                                    <p className="col-span-full text-center text-muted-foreground py-8">ما عندك أي طلبات معينة ليك حالياً.</p>
+                                    <p className="col-span-full text-center text-muted-foreground py-8">ليس لديك أي طلبات معينة حاليًا.</p>
                                 )}
                             </div>
                         </TabsContent>
@@ -269,7 +269,7 @@ export default function DashboardClient() {
                                 {historyRequests.length > 0 ? (
                                     historyRequests.map(req => <HistoryRequestCard key={req.id} request={req} />)
                                 ) : (
-                                    <p className="col-span-full text-center text-muted-foreground py-8">ما عندك أي حاجة في السجل لسه.</p>
+                                    <p className="col-span-full text-center text-muted-foreground py-8">ليس لديك أي شيء في السجل حتى الآن.</p>
                                 )}
                             </div>
                         </TabsContent>
@@ -278,7 +278,7 @@ export default function DashboardClient() {
                                 {historyRequests.filter(r => r.status === 'اتحلت').length > 0 ? (
                                     historyRequests.filter(r => r.status === 'اتحلت').map(req => <HistoryRequestCard key={req.id} request={req} />)
                                 ) : (
-                                    <p className="col-span-full text-center text-muted-foreground py-8">ما عندك طلبات خلصتها عشان تكتب عنها تقرير.</p>
+                                    <p className="col-span-full text-center text-muted-foreground py-8">ليس لديك طلبات مكتملة لكتابة تقارير عنها.</p>
                                 )}
                             </div>
                         </TabsContent>
@@ -292,7 +292,7 @@ export default function DashboardClient() {
                     <div className="flex justify-between items-start">
                         <div>
                             <CardTitle className="font-headline text-3xl">{volunteer.fullName}</CardTitle>
-                            <CardDescription>رقمك: {volunteer.id} | منطقتك: {volunteer.region}</CardDescription>
+                            <CardDescription>معرّفك: {volunteer.id} | منطقتك: {volunteer.region}</CardDescription>
                         </div>
                          <Button onClick={() => setIsEditing(!isEditing)} size="sm"><Edit className="ml-2 h-4 w-4" />{isEditing ? 'إلغاء' : 'تعديل'}</Button>
                     </div>
@@ -301,7 +301,7 @@ export default function DashboardClient() {
                  {isEditing ? (
                      <form onSubmit={handleProfileUpdate} className="space-y-4 max-w-md">
                         <div>
-                            <label htmlFor="profession" className="block text-sm font-medium">شغلك</label>
+                            <label htmlFor="profession" className="block text-sm font-medium">مهنتك</label>
                             <Input id="profession" value={editForm.profession} onChange={(e) => setEditForm({...editForm, profession: e.target.value})} />
                         </div>
                         <div>
@@ -314,17 +314,17 @@ export default function DashboardClient() {
                             </Select>
                         </div>
                         <div className="flex gap-4 pt-4 border-t">
-                            <Button type="submit">أحفظ التغييرات</Button>
-                            <Button type="button" variant="destructive" onClick={handleAccountDelete}><Trash2 className="ml-2 h-4 w-4"/> أحذف حسابي</Button>
+                            <Button type="submit">حفظ التغييرات</Button>
+                            <Button type="button" variant="destructive" onClick={handleAccountDelete}><Trash2 className="ml-2 h-4 w-4"/> حذف حسابي</Button>
                         </div>
                     </form>
                  ) : (
                     <div className="space-y-2">
-                        <p><strong>الإيميل:</strong> {volunteer.email}</p>
+                        <p><strong>البريد الإلكتروني:</strong> {volunteer.email}</p>
                         <p><strong>المهنة:</strong> {volunteer.profession}</p>
-                        <p><strong>التلفون:</strong> {volunteer.phoneNumber}</p>
+                        <p><strong>رقم الهاتف:</strong> {volunteer.phoneNumber}</p>
                         <p><strong>الحالة:</strong> <Badge variant={volunteer.status === 'تم التحقق' ? 'default' : 'destructive'} className={volunteer.status === 'تم التحقق' ? 'bg-green-500' : ''}>{volunteer.status}</Badge></p>
-                         <p><strong>الطلبات الحلّيتها:</strong> {historyRequests.filter(r => r.status === 'اتحلت').length}</p>
+                         <p><strong>الطلبات التي تم حلها:</strong> {historyRequests.filter(r => r.status === 'اتحلت').length}</p>
                     </div>
                  )}
                 </CardContent>

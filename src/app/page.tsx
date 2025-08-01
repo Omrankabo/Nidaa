@@ -21,9 +21,9 @@ import { useRouter } from 'next/navigation';
 import { Sheet, SheetContent, SheetTrigger } from '@/components/ui/sheet';
 
 const requestSchema = z.object({
-  requestText: z.string().min(10, { message: 'الطلب لازم يكون 10 حروف أو أكتر.' }),
-  location: z.string().min(3, { message: 'أكتب لينا موقعك وين.'}),
-  contactPhone: z.string().regex(/^\+?[0-9\s-]{7,20}$/, { message: 'أكتب رقم تلفون صاح عشان نتصل بيك.' }),
+  requestText: z.string().min(10, { message: 'يجب أن يكون الطلب 10 أحرف على الأقل.' }),
+  location: z.string().min(3, { message: 'يرجى تحديد موقعك.'}),
+  contactPhone: z.string().regex(/^\+?[0-9\s-]{7,20}$/, { message: 'يرجى إدخال رقم هاتف صحيح.' }),
 });
 
 export default function Home() {
@@ -45,14 +45,14 @@ export default function Home() {
 
     if (result.success) {
       toast({
-        title: 'طلبك وصل',
-        description: 'استلمنا طلبك وجاري ترتيب الأولويات.',
+        title: 'تم استلام طلبك',
+        description: 'لقد استلمنا طلبك وجاري تحديد الأولويات.',
       });
       // Don't reset form, so user can see their submission details and ID
     } else {
       toast({
         variant: 'destructive',
-        title: 'حصل خطأ',
+        title: 'حدث خطأ',
         description: result.error,
       });
     }
@@ -61,7 +61,7 @@ export default function Home() {
 
   const copyToClipboard = (text: string) => {
     navigator.clipboard.writeText(text);
-    toast({ title: 'رقم التتبع اتنسخ!' });
+    toast({ title: 'تم نسخ رقم التتبع!' });
   };
 
   return (
@@ -76,13 +76,13 @@ export default function Home() {
             <nav className="hidden md:flex items-center gap-2">
                 <ThemeToggle />
                  <Button variant="outline" asChild>
-                    <Link href="/track">تابع طلبك</Link>
+                    <Link href="/track">تتبع طلبك</Link>
                 </Button>
                 <Button variant="ghost" asChild>
                     <Link href="/login">تسجيل الدخول</Link>
                 </Button>
                 <Button asChild>
-                    <Link href="/register">سجل كمتطوع</Link>
+                    <Link href="/register">التسجيل كمتطوع</Link>
                 </Button>
             </nav>
             <Sheet>
@@ -96,13 +96,13 @@ export default function Home() {
                 <nav className="grid gap-6 text-lg font-medium mt-8">
                   <Logo />
                   <Link href="/track" className="text-muted-foreground hover:text-foreground">
-                    تابع طلبك
+                    تتبع طلبك
                   </Link>
                   <Link href="/login" className="text-muted-foreground hover:text-foreground">
                     تسجيل الدخول
                   </Link>
                   <Link href="/register" className="text-muted-foreground hover:text-foreground">
-                    سجل كمتطوع
+                    التسجيل كمتطوع
                   </Link>
                   <div className="pt-4">
                      <ThemeToggle />
@@ -118,9 +118,9 @@ export default function Home() {
             <div className="container px-4 md:px-6">
                  <div className="flex flex-col items-center justify-center space-y-4 text-center mb-12">
                     <div className="space-y-2">
-                        <h1 className="text-3xl font-bold tracking-tighter sm:text-5xl font-headline">داير مساعدة طارئة؟</h1>
+                        <h1 className="text-3xl font-bold tracking-tighter sm:text-5xl font-headline">هل تحتاج إلى مساعدة طارئة؟</h1>
                         <p className="max-w-[900px] text-foreground/80 md:text-xl/relaxed lg:text-base/relaxed xl:text-xl/relaxed">
-                            لو عندك حالة طارئة، املأ الطلب التحت دا. طلبك حيتحلل فوراً ويتوجه لأقرب زول معتمد يقدر يساعد.
+                            إذا كنت في حالة طارئة، قم بتعبئة النموذج أدناه. سيتم تحليل طلبك وتوجيهه فوراً إلى أقرب متطوع معتمد للمساعدة.
                         </p>
                     </div>
                 </div>
@@ -129,7 +129,7 @@ export default function Home() {
                         <CardHeader>
                             <CardTitle className="font-headline">طلب طوارئ جديد</CardTitle>
                             <CardDescription>
-                            أشرح لينا الحالة بالتفصيل عشان نقدر نساعد صاح.
+                            يرجى وصف الحالة بالتفصيل لضمان تقديم المساعدة المناسبة.
                             </CardDescription>
                         </CardHeader>
                         <CardContent>
@@ -144,7 +144,7 @@ export default function Home() {
                                         <FormLabel>تفاصيل الحالة</FormLabel>
                                         <FormControl>
                                             <Textarea
-                                            placeholder="مثال: 'في حريقة في بيت في شارع 61 العمارات. في ناس جوه...'."
+                                            placeholder="مثال: 'حريق في منزل بشارع 61 في العمارات. يوجد أشخاص بالداخل...'."
                                             className="min-h-[150px]"
                                             {...field}
                                             />
@@ -158,9 +158,9 @@ export default function Home() {
                                         name="location"
                                         render={({ field }) => (
                                             <FormItem>
-                                            <FormLabel>وين إنت؟</FormLabel>
+                                            <FormLabel>أين موقعك؟</FormLabel>
                                             <FormControl>
-                                                <Input placeholder="مثال: الخرطوم، الرياض، جمب..." {...field} />
+                                                <Input placeholder="مثال: الخرطوم، الرياض، بالقرب من..." {...field} />
                                             </FormControl>
                                             <FormMessage />
                                             </FormItem>
@@ -171,7 +171,7 @@ export default function Home() {
                                         name="contactPhone"
                                         render={({ field }) => (
                                             <FormItem>
-                                            <FormLabel>رقم تلفون للتواصل</FormLabel>
+                                            <FormLabel>رقم هاتف للتواصل</FormLabel>
                                             <FormControl>
                                                 <Input placeholder="+249..." {...field} />
                                             </FormControl>
@@ -181,7 +181,7 @@ export default function Home() {
                                     />
                                     <Button type="submit" className="w-full" disabled={isSubmitting}>
                                     {isSubmitting && <Loader2 className="ml-2 h-4 w-4 animate-spin" />}
-                                    أرسل الطلب
+                                    إرسال الطلب
                                     </Button>
                                 </form>
                                 </Form>
@@ -192,14 +192,14 @@ export default function Home() {
                                     {submissionResult.success && submissionResult.data ? (
                                     <Alert>
                                         <AlertCircle className="h-4 w-4" />
-                                        <AlertTitle>طلبك وصل بنجاح!</AlertTitle>
+                                        <AlertTitle>تم استلام طلبك بنجاح!</AlertTitle>
                                         <AlertDescription>
                                             <p className="mb-4">
-                                                فريقنا حيشوف طلبك ويرتب أمورو في أسرع وقت.
+                                                سيقوم فريقنا بمراجعة طلبك وتنسيق الاستجابة في أسرع وقت ممكن.
                                             </p>
                                             <div className="flex items-center justify-between rounded-md bg-muted p-3">
                                                <div>
-                                                    <p className="text-sm font-semibold">رقم التتبع بتاعك:</p>
+                                                    <p className="text-sm font-semibold">رقم التتبع الخاص بك:</p>
                                                     <p className="text-lg font-mono">{submissionResult.data.id}</p>
                                                </div>
                                                 <Button variant="ghost" size="icon" onClick={() => copyToClipboard(submissionResult.data.id)}>
@@ -207,11 +207,11 @@ export default function Home() {
                                                 </Button>
                                             </div>
                                             <p className="mt-4 text-sm">
-                                               تقدر تتابع طلبك بالرقم دا.
+                                               يمكنك متابعة حالة طلبك باستخدام هذا الرقم.
                                             </p>
                                             <Button asChild className="mt-4 w-full">
                                                 <Link href={`/track/${submissionResult.data.id}`}>
-                                                    تابع الطلب هسي
+                                                    تتبع الطلب الآن
                                                 </Link>
                                             </Button>
                                         </AlertDescription>
@@ -219,9 +219,9 @@ export default function Home() {
                                     ) : (
                                     <Alert variant="destructive">
                                         <AlertCircle className="h-4 w-4" />
-                                        <AlertTitle>الإرسال فشل</AlertTitle>
+                                        <AlertTitle>فشل الإرسال</AlertTitle>
                                         <AlertDescription>
-                                            {submissionResult.error || 'حصل خطأ غريب. جرب تاني بالله.'}
+                                            {submissionResult.error || 'حدث خطأ غير متوقع. يرجى المحاولة مرة أخرى.'}
                                         </AlertDescription>
                                     </Alert>
                                     )}
@@ -241,12 +241,12 @@ export default function Home() {
                   نداء: يد العون في وقت الشدة
                 </h2>
                 <p className="max-w-[600px] mx-auto text-foreground/80 md:text-xl">
-                  نظام بسيط وساهل عشان نوصل أهلنا في السودان بالمساعدة الطبية الموثوقة بسرعة.
+                  نظام بسيط وسهل لربط أهلنا في السودان بالمساعدة الطبية الموثوقة بسرعة وأمان.
                 </p>
               </div>
               <div className="flex flex-col gap-2 min-[400px]:flex-row justify-center">
                 <Button asChild size="lg">
-                  <Link href="/register">سجل كمتطوع</Link>
+                  <Link href="/register">انضم كمتطوع</Link>
                 </Button>
               </div>
             </div>
@@ -258,9 +258,9 @@ export default function Home() {
             <div className="flex flex-col items-center justify-center space-y-4 text-center">
               <div className="space-y-2">
                 <div className="inline-block rounded-lg bg-secondary px-3 py-1 text-sm">مهمتنا</div>
-                <h2 className="text-3xl font-bold tracking-tighter sm:text-5xl font-headline">بنسد الفجوة عشان نصل للمحتاج</h2>
+                <h2 className="text-3xl font-bold tracking-tighter sm:text-5xl font-headline">نسد الفجوة للوصول إلى المحتاجين</h2>
                 <p className="max-w-[900px] text-foreground/80 md:text-xl/relaxed lg:text-base/relaxed xl:text-xl/relaxed">
-                  في بلد ظروفه صعبة، "نداء" هو حلقة الوصل بين الزول المحتاج والزول البقدر يساعد. نظامنا مبني على الثقة والسرعة والسهولة.
+                  في ظل الظروف الصعبة، "نداء" هو حلقة الوصل بين من يحتاج العون ومن يستطيع تقديمه. نظامنا مبني على الثقة، السرعة، والسهولة.
                 </p>
               </div>
             </div>
@@ -274,7 +274,7 @@ export default function Home() {
                 </CardHeader>
                 <CardContent>
                   <CardDescription>
-                  أي زول يقدر يطلب مساعدة بكل سهولة. هدفنا إنو أي طلب مساعدة يلقى استجابة سريعة.
+                  يمكن لأي شخص طلب المساعدة بسهولة. هدفنا هو ضمان استجابة سريعة لكل نداء استغاثة.
                   </CardDescription>
                 </CardContent>
               </Card>
@@ -283,11 +283,11 @@ export default function Home() {
                   <div className="bg-primary/10 p-3 rounded-full">
                     <ShieldCheck className="h-6 w-6 text-primary" />
                   </div>
-                  <CardTitle className="font-headline">ناس ثقة ومضمونين</CardTitle>
+                  <CardTitle className="font-headline">موثوق وآمن</CardTitle>
                 </CardHeader>
                 <CardContent>
                   <CardDescription>
-                  شبكتنا من المتطوعين والجهات الطبية بنتأكد منهم واحد واحد عشان نضمن إنو المساعدة بتجي من زول موثوق وقادر، عشان نبني مجتمع آمن ومتكاتف.
+                  نتحقق من شبكة المتطوعين والجهات الطبية لضمان أن المساعدة تأتي من مصدر موثوق وقادر، لبناء مجتمع آمن ومتكاتف.
                   </CardDescription>
                 </CardContent>
               </Card>
@@ -297,10 +297,8 @@ export default function Home() {
 
       </main>
       <footer className="flex flex-col gap-2 sm:flex-row py-6 w-full shrink-0 items-center px-4 md:px-6 border-t">
-        <p className="text-xs text-foreground/60">&copy; 2024 نداء. كل الحقوق محفوظة.</p>
+        <p className="text-xs text-foreground/60">&copy; 2024 نداء. جميع الحقوق محفوظة.</p>
       </footer>
     </div>
   );
 }
-
-  

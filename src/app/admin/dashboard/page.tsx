@@ -76,7 +76,7 @@ export default function DashboardPage() {
   };
 
   const handleVolunteerDelete = async (id: string) => {
-    if (window.confirm('متأكد عايز تحذف المتطوع دا؟')) {
+    if (window.confirm('هل أنت متأكد من رغبتك في حذف هذا المتطوع؟')) {
         await deleteVolunteer(id);
     }
   };
@@ -105,7 +105,7 @@ export default function DashboardPage() {
     switch (status) {
       case 'تم التعيين': return <Badge className="bg-blue-500 hover:bg-blue-600"><CheckCircle className="ml-1 h-3 w-3" />تم التعيين</Badge>;
       case 'في الانتظار': return <Badge variant="secondary"><Clock className="ml-1 h-3 w-3" />في الانتظار</Badge>;
-      case 'اتحلت': return <Badge className="bg-green-500 hover:bg-green-600"><CheckCircle className="ml-1 h-3 w-3" />اتحلت</Badge>;
+      case 'اتحلت': return <Badge className="bg-green-500 hover:bg-green-600"><CheckCircle className="ml-1 h-3 w-3" />تم الحل</Badge>;
       case 'ملغية': return <Badge variant="destructive"><AlertCircle className="ml-1 h-3 w-3" />ملغية</Badge>;
       default: return <Badge variant="outline">{status}</Badge>;
     }
@@ -133,10 +133,10 @@ export default function DashboardPage() {
        <Card>
             <CardHeader>
                 <div className="flex justify-between items-center">
-                    <CardTitle className="font-headline">طلبات تسجيل المتطوعين الجديدة</CardTitle>
+                    <CardTitle className="font-headline">طلبات تسجيل المتطوعين الجدد</CardTitle>
                     <Badge variant="default" className="text-lg">{pendingVolunteers.length}</Badge>
                 </div>
-                <CardDescription>هنا توافق أو ترفض طلبات المتطوعين الجداد.</CardDescription>
+                <CardDescription>هنا يمكنك الموافقة على طلبات المتطوعين الجدد أو رفضها.</CardDescription>
             </CardHeader>
             <CardContent>
                 {pendingVolunteers.length > 0 ? (
@@ -161,7 +161,7 @@ export default function DashboardPage() {
                             ))}
                         </TableBody>
                     </Table>
-                ) : <p>مافي طلبات تسجيل جديدة.</p>}
+                ) : <p>لا توجد طلبات تسجيل جديدة.</p>}
             </CardContent>
         </Card>
 
@@ -189,8 +189,8 @@ export default function DashboardPage() {
         <CardHeader>
             <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
                 <div>
-                    <CardTitle className="font-headline">كل طلبات الطوارئ</CardTitle>
-                    <CardDescription>دي كل الطلبات الجات، مرتبة بالزمن.</CardDescription>
+                    <CardTitle className="font-headline">جميع طلبات الطوارئ</CardTitle>
+                    <CardDescription>هذه هي جميع الطلبات الواردة، مرتبة حسب الوقت.</CardDescription>
                 </div>
                 <Select value={regionFilter} onValueChange={setRegionFilter}>
                     <SelectTrigger className="w-full sm:w-[180px]">
@@ -250,23 +250,23 @@ export default function DashboardPage() {
                                 <DropdownMenuContent>
                                     <DropdownMenuItem onClick={() => handleStatusChange(req.id, 'في الانتظار')}>في الانتظار</DropdownMenuItem>
                                     <DropdownMenuItem onClick={() => handleStatusChange(req.id, 'تم التعيين')}>تم التعيين</DropdownMenuItem>
-                                    <DropdownMenuItem onClick={() => handleStatusChange(req.id, 'اتحلت')}>اتحلت</DropdownMenuItem>
+                                    <DropdownMenuItem onClick={() => handleStatusChange(req.id, 'اتحلت')}>تم الحل</DropdownMenuItem>
                                     <DropdownMenuItem onClick={() => handleStatusChange(req.id, 'ملغية')}>ملغية</DropdownMenuItem>
                                 </DropdownMenuContent>
                             </DropdownMenu>
                         </TableCell>
-                         <TableCell className="text-center hidden md:table-cell">{req.assignedVolunteer || 'لسه مافي'}</TableCell>
+                         <TableCell className="text-center hidden md:table-cell">{req.assignedVolunteer || 'لم يتم التعيين بعد'}</TableCell>
                         <TableCell className="text-center">
                             <div className="flex justify-center items-center gap-1">
                                 {req.status === 'في الانتظار' && (
                                     <Dialog>
                                         <DialogTrigger asChild>
-                                            <Button size="sm"><UserPlus className="ml-2 h-4 w-4" />توصيل</Button>
+                                            <Button size="sm"><UserPlus className="ml-2 h-4 w-4" />تعيين</Button>
                                         </DialogTrigger>
                                         <DialogContent>
                                             <DialogHeader>
-                                                <DialogTitle>اختار متطوع</DialogTitle>
-                                                <DialogDescription>اختار متطوع جاهز من منطقة الخرطوم.</DialogDescription>
+                                                <DialogTitle>اختر متطوعًا</DialogTitle>
+                                                <DialogDescription>اختر متطوعًا متاحًا من منطقة الخرطوم.</DialogDescription>
                                             </DialogHeader>
                                             <div className="space-y-2 max-h-60 overflow-y-auto">
                                                 {khartoumVolunteers.length > 0 ? khartoumVolunteers.map(v => (
@@ -279,7 +279,7 @@ export default function DashboardPage() {
                                                             <Button size="sm" onClick={() => handleAssign(req.id, v)}>تعيين</Button>
                                                         </DialogTrigger>
                                                     </div>
-                                                )) : <p>مافي متطوعين جاهزين في الخرطوم حالياً.</p>}
+                                                )) : <p>لا يوجد متطوعون متاحون في الخرطوم حاليًا.</p>}
                                             </div>
                                         </DialogContent>
                                     </Dialog>
@@ -292,7 +292,7 @@ export default function DashboardPage() {
                                          <DialogContent>
                                             <DialogHeader>
                                                 <DialogTitle>إعادة تعيين متطوع</DialogTitle>
-                                                <DialogDescription>اختار متطوع تاني للطلب دا.</DialogDescription>
+                                                <DialogDescription>اختر متطوعًا آخر لهذا الطلب.</DialogDescription>
                                             </DialogHeader>
                                             <div className="space-y-2 max-h-60 overflow-y-auto">
                                                 {verifiedVolunteers.map(v => (
@@ -333,7 +333,7 @@ export default function DashboardPage() {
                                                 <p>{req.location}</p>
                                             </div>
                                              <div>
-                                                <h4 className="font-semibold">تلفون التواصل:</h4>
+                                                <h4 className="font-semibold">هاتف التواصل:</h4>
                                                 <p>{req.contactPhone}</p>
                                             </div>
                                         </div>
@@ -345,14 +345,14 @@ export default function DashboardPage() {
                                     </AlertDialogTrigger>
                                     <AlertDialogContent>
                                         <AlertDialogHeader>
-                                            <AlertDialogTitle>متأكد؟</AlertDialogTitle>
+                                            <AlertDialogTitle>هل أنت متأكد؟</AlertDialogTitle>
                                             <AlertDialogDescription>
-                                            الحركة دي بتحذف الطلب نهائياً. وما بتقدر ترجعو تاني.
+                                            هذا الإجراء سيحذف الطلب نهائيًا. لا يمكن التراجع عن هذا الإجراء.
                                             </AlertDialogDescription>
                                         </AlertDialogHeader>
                                         <AlertDialogFooter>
                                             <AlertDialogCancel>إلغاء</AlertDialogCancel>
-                                            <AlertDialogAction onClick={() => handleDeleteRequest(req.id)}>أحذف</AlertDialogAction>
+                                            <AlertDialogAction onClick={() => handleDeleteRequest(req.id)}>حذف</AlertDialogAction>
                                         </AlertDialogFooter>
                                     </AlertDialogContent>
                                 </AlertDialog>
@@ -367,9 +367,9 @@ export default function DashboardPage() {
         ) : (
             <Alert>
                 <AlertCircle className="h-4 w-4" />
-                <AlertTitle>مافي أي طلبات</AlertTitle>
+                <AlertTitle>لا توجد طلبات</AlertTitle>
                 <AlertDescription>
-                    مافي طلبات مطابقة للفلتر الإنت مختارو.
+                    لا توجد طلبات تطابق الفلتر الذي اخترته.
                 </AlertDescription>
             </Alert>
         )}

@@ -31,7 +31,7 @@ export default function TrackRequestPage({ params }: { params: { id: string } })
         setRequest(data);
         setEditedText(data.requestText);
       } else {
-        setError('الطلب دا ما لقيناهو. اتأكد من الرقم وجرب تاني.');
+        setError('لم يتم العثور على هذا الطلب. يرجى التأكد من الرقم والمحاولة مرة أخرى.');
       }
       setLoading(false);
     });
@@ -58,13 +58,13 @@ export default function TrackRequestPage({ params }: { params: { id: string } })
   const getStatusInfo = (status: EmergencyRequest['status']) => {
     switch (status) {
       case 'في الانتظار':
-        return { icon: <Clock className="h-6 w-6 text-yellow-500" />, text: 'طلبك لسه في الانتظار. بنفتش ليك في أقرب زول يساعدك.', color: 'text-yellow-500' };
+        return { icon: <Clock className="h-6 w-6 text-yellow-500" />, text: 'طلبك لا يزال قيد الانتظار. نحن نبحث لك عن أقرب شخص للمساعدة.', color: 'text-yellow-500' };
       case 'تم التعيين':
-        return { icon: <UserCheck className="h-6 w-6 text-blue-500" />, text: 'لقينا ليك متطوع! المساعدة جاياك في الطريق.', color: 'text-blue-500' };
+        return { icon: <UserCheck className="h-6 w-6 text-blue-500" />, text: 'لقد وجدنا لك متطوعًا! المساعدة في طريقها إليك.', color: 'text-blue-500' };
       case 'اتحلت':
-        return { icon: <CheckCircle className="h-6 w-6 text-green-500" />, text: 'مشكلتك اتحلت. حمدلله على السلامة.', color: 'text-green-500' };
+        return { icon: <CheckCircle className="h-6 w-6 text-green-500" />, text: 'تم حل مشكلتك. الحمد لله على سلامتك.', color: 'text-green-500' };
       case 'ملغية':
-        return { icon: <AlertCircle className="h-6 w-6 text-red-500" />, text: 'الطلب دا اتلغى.', color: 'text-red-500' };
+        return { icon: <AlertCircle className="h-6 w-6 text-red-500" />, text: 'تم إلغاء هذا الطلب.', color: 'text-red-500' };
       default:
         return { icon: <Clock className="h-6 w-6" />, text: status, color: ''};
     }
@@ -84,7 +84,7 @@ export default function TrackRequestPage({ params }: { params: { id: string } })
                 <AlertTitle>خطأ</AlertTitle>
                 <AlertDescription>{error}</AlertDescription>
             </Alert>
-             <Button onClick={() => router.push('/')} className="mt-4">أرجع للصفحة الرئيسية</Button>
+             <Button onClick={() => router.push('/')} className="mt-4">العودة إلى الصفحة الرئيسية</Button>
         </div>
     );
   }
@@ -118,13 +118,13 @@ export default function TrackRequestPage({ params }: { params: { id: string } })
                  <Card>
                     <CardHeader className="flex flex-row items-center gap-4 pb-2">
                         <UserCheck className="h-6 w-6 text-primary" />
-                        <CardTitle className="text-xl">المستجيب الجاييك</CardTitle>
+                        <CardTitle className="text-xl">المستجيب القادم إليك</CardTitle>
                     </CardHeader>
                     <CardContent>
                         <p><strong>الاسم:</strong> {request.assignedVolunteer}</p>
                         <p className="mt-2 flex items-center gap-2">
                             <Timer className="h-5 w-5" />
-                            <strong>الوقت المتوقع عشان يصل:</strong> {request.eta || 'لسه بنحسب...'}
+                            <strong>الوقت المتوقع للوصول:</strong> {request.eta || 'جاري الحساب...'}
                         </p>
                     </CardContent>
                 </Card>
@@ -136,7 +136,7 @@ export default function TrackRequestPage({ params }: { params: { id: string } })
               <div className="space-y-2">
                 <Textarea value={editedText} onChange={(e) => setEditedText(e.target.value)} className="min-h-[120px]" />
                 <div className="flex gap-2">
-                  <Button onClick={handleUpdate}>أحفظ التعديلات</Button>
+                  <Button onClick={handleUpdate}>حفظ التعديلات</Button>
                   <Button variant="outline" onClick={() => setIsEditing(false)}>إلغاء</Button>
                 </div>
               </div>
@@ -160,15 +160,15 @@ export default function TrackRequestPage({ params }: { params: { id: string } })
                 </AlertDialogTrigger>
                 <AlertDialogContent>
                   <AlertDialogHeader>
-                    <AlertDialogTitle>متأكد؟</AlertDialogTitle>
+                    <AlertDialogTitle>هل أنت متأكد؟</AlertDialogTitle>
                     <AlertDialogDescription>
-                      الحركة دي حتحذف طلبك نهائياً. وما بتقدر ترجعو تاني.
+                      هذا الإجراء سيحذف طلبك نهائيًا. لا يمكن التراجع عن هذا الإجراء.
                     </AlertDialogDescription>
                   </AlertDialogHeader>
                   <AlertDialogFooter>
                     <AlertDialogCancel>تراجع</AlertDialogCancel>
                     <AlertDialogAction onClick={handleDelete} className="bg-destructive hover:bg-destructive/90">
-                      ايوة، ألغيهو
+                      نعم، قم بالإلغاء
                     </AlertDialogAction>
                   </AlertDialogFooter>
                 </AlertDialogContent>

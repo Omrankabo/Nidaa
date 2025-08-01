@@ -34,8 +34,8 @@ export default function TrackRequestPage() {
         </div>
       <Card className="w-full max-w-md">
         <CardHeader>
-          <CardTitle className="text-2xl font-headline">تابع حالة طلبك</CardTitle>
-          <CardDescription>أكتب رقم الطلب بتاعك تحت عشان تشوف حالتو وتفاصيلو.</CardDescription>
+          <CardTitle className="text-2xl font-headline">تتبع حالة طلبك</CardTitle>
+          <CardDescription>أدخل رقم طلبك أدناه لعرض حالته وتفاصيله.</CardDescription>
         </CardHeader>
         <CardContent>
           <form onSubmit={handleTrack} className="flex gap-2">
