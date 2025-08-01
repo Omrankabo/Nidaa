@@ -11,13 +11,14 @@ import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '
 import { Textarea } from '@/components/ui/textarea';
 import { useToast } from '@/hooks/use-toast';
 import { createRequestAction } from '@/lib/actions';
-import { Loader2, HandHeart, ShieldCheck, AlertCircle, Copy, ArrowLeft } from 'lucide-react';
+import { Loader2, HandHeart, ShieldCheck, AlertCircle, Copy, ArrowLeft, Menu } from 'lucide-react';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import Link from 'next/link';
 import Logo from '@/components/logo';
 import { Input } from '@/components/ui/input';
 import { ThemeToggle } from '@/components/theme-toggle';
 import { useRouter } from 'next/navigation';
+import { Sheet, SheetContent, SheetTrigger } from '@/components/ui/sheet';
 
 const requestSchema = z.object({
   requestText: z.string().min(10, { message: 'يجب أن يكون الطلب 10 أحرف على الأقل.' }),
@@ -65,13 +66,14 @@ export default function Home() {
 
   return (
     <div className="flex flex-col min-h-screen">
-      <header className="sticky top-0 z-40 w-full border-b bg-background">
-        <div className="container flex h-16 items-center space-x-4 sm:justify-between sm:space-x-0">
+       <header className="sticky top-0 z-40 w-full border-b bg-background">
+        <div className="container flex h-16 items-center justify-between">
           <div className="flex gap-6 md:gap-10">
             <Logo />
           </div>
-          <div className="flex flex-1 items-center justify-end space-x-4">
-            <nav className="flex items-center gap-2">
+
+          <div className="flex items-center gap-2">
+            <nav className="hidden md:flex items-center gap-2">
                 <ThemeToggle />
                  <Button variant="outline" asChild>
                     <Link href="/track">تتبع الطلب</Link>
@@ -83,6 +85,31 @@ export default function Home() {
                     <Link href="/register">التسجيل كمتطوع</Link>
                 </Button>
             </nav>
+            <Sheet>
+              <SheetTrigger asChild>
+                <Button variant="outline" size="icon" className="md:hidden">
+                  <Menu className="h-5 w-5" />
+                  <span className="sr-only">Open navigation menu</span>
+                </Button>
+              </SheetTrigger>
+              <SheetContent side="left">
+                <nav className="grid gap-6 text-lg font-medium mt-8">
+                  <Logo />
+                  <Link href="/track" className="text-muted-foreground hover:text-foreground">
+                    تتبع الطلب
+                  </Link>
+                  <Link href="/login" className="text-muted-foreground hover:text-foreground">
+                    تسجيل الدخول
+                  </Link>
+                  <Link href="/register" className="text-muted-foreground hover:text-foreground">
+                    التسجيل كمتطوع
+                  </Link>
+                  <div className="pt-4">
+                     <ThemeToggle />
+                  </div>
+                </nav>
+              </SheetContent>
+            </Sheet>
           </div>
         </div>
       </header>
@@ -275,3 +302,5 @@ export default function Home() {
     </div>
   );
 }
+
+  
