@@ -6,16 +6,17 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Badge } from '@/components/ui/badge';
 import type { EmergencyRequest, Volunteer } from '@/lib/types';
-import { AlertCircle, UserPlus, CheckCircle, Clock, Trash2, Info, MoreHorizontal, UserCheck } from 'lucide-react';
+import { AlertCircle, UserPlus, CheckCircle, Clock, Trash2, Info, UserCheck } from 'lucide-react';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { getRequests, getVolunteers, updateRequest, updateVolunteerStatus, deleteRequest, deleteVolunteer } from '@/lib/firebase/firestore';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Button } from '@/components/ui/button';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
-import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from '@/components/ui/alert-dialog';
+import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from '@/componentsui/alert-dialog';
 
-
+// A client component to format a timestamp into a locale-specific date-time string.
+// It uses useEffect to prevent server-client hydration mismatches.
 const FormattedDate = ({ timestamp }: { timestamp: any }) => {
     const [isMounted, setIsMounted] = useState(false);
   
@@ -33,12 +34,15 @@ const FormattedDate = ({ timestamp }: { timestamp: any }) => {
 };
 
 export default function DashboardPage() {
+  // State for storing requests, volunteers, loading status, and filters.
   const [requests, setRequests] = useState<EmergencyRequest[]>([]);
   const [volunteers, setVolunteers] = useState<Volunteer[]>([]);
   const [loading, setLoading] = useState(true);
   const [regionFilter, setRegionFilter] = useState('all');
 
+  // Effect to subscribe to real-time updates for requests and volunteers from Firestore.
   useEffect(() => {
+    // onValue returns an unsubscribe function that we call on component unmount.
     const unsubscribeRequests = getRequests((data) => {
         setRequests(data);
         setLoading(false);
@@ -53,6 +57,11 @@ export default function DashboardPage() {
     };
   }, []);
   
+  /**
+   * Assigns a volunteer to a specific request and updates its status.
+   * @param {string} requestId - The ID of the request to update.
+   * @param {Volunteer} volunteer - The volunteer object to assign.
+   */
   const handleAssign = async (requestId: string, volunteer: Volunteer) => {
     const eta = `${Math.floor(Math.random() * 10) + 5}-${Math.floor(Math.random() * 5) + 15} دقيقة`;
     await updateRequest(requestId, {
@@ -63,25 +72,43 @@ export default function DashboardPage() {
     });
   };
 
+  /**
+   * Updates the priority level of a request.
+   * @param {string} requestId - The ID of the request.
+   * @param {EmergencyRequest['priorityLevel']} priorityLevel - The new priority level.
+   */
   const handlePriorityChange = async (requestId: string, priorityLevel: EmergencyRequest['priorityLevel']) => {
     await updateRequest(requestId, { priorityLevel });
   };
   
+  /**
+   * Updates the status of a request.
+   * @param {string} requestId - The ID of the request.
+   * @param {EmergencyRequest['status']} status - The new status.
+   */
   const handleStatusChange = async (requestId: string, status: EmergencyRequest['status']) => {
       await updateRequest(requestId, { status });
   };
   
+  /**
+   * Deletes a request from the database.
+   * @param {string} requestId - The ID of the request to delete.
+   */
   const handleDeleteRequest = async (requestId: string) => {
       await deleteRequest(requestId);
   };
 
+  /**
+   * Deletes a volunteer from the database after confirmation.
+   * @param {string} id - The ID of the volunteer to delete.
+   */
   const handleVolunteerDelete = async (id: string) => {
     if (window.confirm('هل أنت متأكد من رغبتك في حذف هذا المتطوع؟')) {
         await deleteVolunteer(id);
     }
   };
 
-
+  // Helper functions to get badge variants and text based on priority and status.
   const getPriorityBadgeVariant = (priority: EmergencyRequest['priorityLevel']) => {
     switch (priority) {
       case 'حرجة': return 'destructive';
@@ -111,6 +138,7 @@ export default function DashboardPage() {
     }
   };
 
+  // Filtering and data derivation for the dashboard UI.
   const pendingVolunteers = volunteers.filter(v => v.status !== 'تم التحقق');
   const regions = [...new Set(requests.map(r => r.location.split(',')[0].trim()))];
   const filteredRequests = regionFilter === 'all' ? requests : requests.filter(r => r.location.startsWith(regionFilter));
@@ -130,6 +158,7 @@ export default function DashboardPage() {
 
   return (
     <div className="space-y-8">
+       {/* Card for managing new volunteer registration requests */}
        <Card>
             <CardHeader>
                 <div className="flex justify-between items-center">
@@ -165,6 +194,7 @@ export default function DashboardPage() {
             </CardContent>
         </Card>
 
+      {/* Card for displaying analytics */}
       <Card>
         <CardHeader>
           <CardTitle className="font-headline">تحليلات الطلبات</CardTitle>
@@ -185,6 +215,7 @@ export default function DashboardPage() {
         </CardContent>
       </Card>
       
+      {/* Card for viewing and managing all emergency requests */}
       <Card>
         <CardHeader>
             <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
@@ -258,6 +289,7 @@ export default function DashboardPage() {
                          <TableCell className="text-center hidden md:table-cell">{req.assignedVolunteer || 'لم يتم التعيين بعد'}</TableCell>
                         <TableCell className="text-center">
                             <div className="flex justify-center items-center gap-1">
+                                {/* Dialog for assigning a volunteer */}
                                 {req.status === 'في الانتظار' && (
                                     <Dialog>
                                         <DialogTrigger asChild>
@@ -284,6 +316,7 @@ export default function DashboardPage() {
                                         </DialogContent>
                                     </Dialog>
                                 )}
+                                {/* Dialog for re-assigning a volunteer */}
                                 {req.status === 'تم التعيين' && (
                                     <Dialog>
                                         <DialogTrigger asChild>
@@ -312,6 +345,7 @@ export default function DashboardPage() {
                                         </DialogContent>
                                     </Dialog>
                                 )}
+                                {/* Dialog for viewing full request details */}
                                 <Dialog>
                                     <DialogTrigger asChild>
                                         <Button variant="outline" size="icon"><Info className="h-4 w-4" /></Button>
@@ -339,6 +373,7 @@ export default function DashboardPage() {
                                         </div>
                                     </DialogContent>
                                 </Dialog>
+                                {/* Alert Dialog for deleting a request */}
                                 <AlertDialog>
                                     <AlertDialogTrigger asChild>
                                          <Button variant="destructive" size="icon"><Trash2 className="h-4 w-4" /></Button>
@@ -377,3 +412,4 @@ export default function DashboardPage() {
     </Card>
     </div>
   );
+}

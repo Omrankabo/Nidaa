@@ -11,15 +11,16 @@ import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '
 import { Textarea } from '@/components/ui/textarea';
 import { useToast } from '@/hooks/use-toast';
 import { createRequestAction } from '@/lib/actions';
-import { Loader2, HandHeart, ShieldCheck, AlertCircle, Copy, ArrowLeft, Menu } from 'lucide-react';
+import { Loader2, Copy, Menu } from 'lucide-react';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import Link from 'next/link';
 import Logo from '@/components/logo';
 import { Input } from '@/components/ui/input';
 import { ThemeToggle } from '@/components/theme-toggle';
-import { useRouter } from 'next/navigation';
 import { Sheet, SheetContent, SheetTrigger } from '@/components/ui/sheet';
+import { AlertCircle } from 'lucide-react';
 
+// Defines the validation schema for the emergency request form.
 const requestSchema = z.object({
   requestText: z.string().min(10, { message: 'يجب أن يكون الطلب 10 أحرف على الأقل.' }),
   location: z.string().min(3, { message: 'يرجى تحديد موقعك.'}),
@@ -30,13 +31,17 @@ export default function Home() {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [submissionResult, setSubmissionResult] = useState<{ success: boolean; data?: any; error?: string } | null>(null);
   const { toast } = useToast();
-  const router = useRouter();
 
   const form = useForm<z.infer<typeof requestSchema>>({
     resolver: zodResolver(requestSchema),
     defaultValues: { requestText: '', location: '', contactPhone: '' },
   });
 
+  /**
+   * Handles the submission of the emergency request form.
+   * It calls a server action to create the request and displays the result.
+   * @param {z.infer<typeof requestSchema>} values - The validated form values.
+   */
   const onSubmit = async (values: z.infer<typeof requestSchema>) => {
     setIsSubmitting(true);
     setSubmissionResult(null);
@@ -48,7 +53,6 @@ export default function Home() {
         title: 'تم استلام طلبك',
         description: 'لقد استلمنا طلبك وجاري تحديد الأولويات.',
       });
-      // Don't reset form, so user can see their submission details and ID
     } else {
       toast({
         variant: 'destructive',
@@ -59,6 +63,10 @@ export default function Home() {
     setIsSubmitting(false);
   };
 
+  /**
+   * Copies the provided text to the clipboard and shows a confirmation toast.
+   * @param {string} text - The text to copy.
+   */
   const copyToClipboard = (text: string) => {
     navigator.clipboard.writeText(text);
     toast({ title: 'تم نسخ رقم التتبع!' });
@@ -85,6 +93,7 @@ export default function Home() {
                     <Link href="/register">التسجيل كمتطوع</Link>
                 </Button>
             </nav>
+            {/* Mobile Navigation Menu */}
             <Sheet>
               <SheetTrigger asChild>
                 <Button variant="outline" size="icon" className="md:hidden">
@@ -114,6 +123,7 @@ export default function Home() {
         </div>
       </header>
       <main className="flex-grow">
+        {/* Main section for submitting a new emergency request */}
         <section id="request-help" className="w-full py-12 md:py-24 lg:py-32 bg-muted/40">
             <div className="container px-4 md:px-6">
                  <div className="flex flex-col items-center justify-center space-y-4 text-center mb-12">
@@ -133,6 +143,7 @@ export default function Home() {
                             </CardDescription>
                         </CardHeader>
                         <CardContent>
+                            {/* The form is displayed only if a submission has not been successfully made yet. */}
                             {!submissionResult?.success ? (
                                 <Form {...form}>
                                 <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
@@ -187,6 +198,7 @@ export default function Home() {
                                 </Form>
                             ) : null}
 
+                             {/* Displays the result of the form submission (success or error). */}
                              {submissionResult && (
                                 <div className="mt-6">
                                     {submissionResult.success && submissionResult.data ? (
@@ -232,69 +244,6 @@ export default function Home() {
                 </div>
             </div>
         </section>
-
-        <section className="w-full py-12 md:py-24 lg:py-32">
-          <div className="container px-4 md:px-6">
-            <div className="flex flex-col justify-center space-y-4 text-center">
-              <div className="space-y-2">
-                <h2 className="text-3xl font-bold tracking-tighter sm:text-5xl xl:text-6xl/none font-headline">
-                  نداء: يد العون في وقت الشدة
-                </h2>
-                <p className="max-w-[600px] mx-auto text-foreground/80 md:text-xl">
-                  نظام بسيط وسهل لربط أهلنا في السودان بالمساعدة الطبية الموثوقة بسرعة وأمان.
-                </p>
-              </div>
-              <div className="flex flex-col gap-2 min-[400px]:flex-row justify-center">
-                <Button asChild size="lg">
-                  <Link href="/register">انضم كمتطوع</Link>
-                </Button>
-              </div>
-            </div>
-          </div>
-        </section>
-
-        <section className="w-full py-12 md:py-24 lg:py-32 bg-background/50">
-          <div className="container px-4 md:px-6">
-            <div className="flex flex-col items-center justify-center space-y-4 text-center">
-              <div className="space-y-2">
-                <div className="inline-block rounded-lg bg-secondary px-3 py-1 text-sm">مهمتنا</div>
-                <h2 className="text-3xl font-bold tracking-tighter sm:text-5xl font-headline">نسد الفجوة للوصول إلى المحتاجين</h2>
-                <p className="max-w-[900px] text-foreground/80 md:text-xl/relaxed lg:text-base/relaxed xl:text-xl/relaxed">
-                  في ظل الظروف الصعبة، "نداء" هو حلقة الوصل بين من يحتاج العون ومن يستطيع تقديمه. نظامنا مبني على الثقة، السرعة، والسهولة.
-                </p>
-              </div>
-            </div>
-            <div className="mx-auto grid max-w-5xl items-start gap-8 sm:grid-cols-2 md:gap-12 lg:max-w-none lg:grid-cols-2 mt-12">
-              <Card>
-                <CardHeader className="flex flex-row items-center gap-4">
-                  <div className="bg-primary/10 p-3 rounded-full">
-                    <HandHeart className="h-6 w-6 text-primary" />
-                  </div>
-                  <CardTitle className="font-headline">بسيط وفعال</CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <CardDescription>
-                  يمكن لأي شخص طلب المساعدة بسهولة. هدفنا هو ضمان استجابة سريعة لكل نداء استغاثة.
-                  </CardDescription>
-                </CardContent>
-              </Card>
-              <Card>
-                <CardHeader className="flex flex-row items-center gap-4">
-                  <div className="bg-primary/10 p-3 rounded-full">
-                    <ShieldCheck className="h-6 w-6 text-primary" />
-                  </div>
-                  <CardTitle className="font-headline">موثوق وآمن</CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <CardDescription>
-                  نتحقق من شبكة المتطوعين والجهات الطبية لضمان أن المساعدة تأتي من مصدر موثوق وقادر، لبناء مجتمع آمن ومتكاتف.
-                  </CardDescription>
-                </CardContent>
-              </Card>
-            </div>
-          </div>
-        </section>
-
       </main>
       <footer className="flex flex-col gap-2 sm:flex-row py-6 w-full shrink-0 items-center px-4 md:px-6 border-t">
         <p className="text-xs text-foreground/60">&copy; 2024 نداء. جميع الحقوق محفوظة.</p>

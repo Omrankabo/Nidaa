@@ -8,7 +8,7 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { getVolunteerRequests, getVolunteerById, updateVolunteerProfile, deleteVolunteer, updateRequest } from '@/lib/firebase/firestore';
 import type { EmergencyRequest, Volunteer } from '@/lib/types';
-import { AlertCircle, CheckCircle, Clock, Loader2, MapPin, Phone, User, Edit, Trash2, FileText, Send, Check, X, LogOut, ArrowLeft } from 'lucide-react';
+import { AlertCircle, CheckCircle, Clock, Loader2, MapPin, Phone, Edit, Trash2, Send, Check, X, LogOut, ArrowLeft } from 'lucide-react';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
@@ -18,17 +18,21 @@ import { requestForToken } from '@/lib/firebase/messaging';
 import { ThemeToggle } from '@/components/theme-toggle';
 import Logo from '@/components/logo';
 
-
-// Mock data
 const regions = ['الخرطوم', 'شمال كردفان', 'البحر الأحمر', 'الجزيرة', 'كسلا', 'النيل الأزرق'];
 
-
+/**
+ * This is the main client component for the volunteer dashboard.
+ * It fetches and displays the volunteer's data, assigned requests, and history.
+ * It also handles profile updates, account deletion, and request status changes.
+ * @param {{ volunteerEmail: string | null }} props - The email of the logged-in volunteer.
+ */
 export default function DashboardClient({ volunteerEmail }: { volunteerEmail: string | null }) {
   const router = useRouter();
   const { toast } = useToast();
-  // We get the email from the search params and then derive the ID
+  // The volunteer ID is derived from their email by replacing characters that are invalid in Firebase keys.
   const volunteerId = volunteerEmail ? volunteerEmail.replace(/[.#$[\]]/g, "_") : null;
   
+  // State management for volunteer data, requests, loading status, and form inputs.
   const [volunteer, setVolunteer] = useState<Volunteer | null>(null);
   const [assignedRequests, setAssignedRequests] = useState<EmergencyRequest[]>([]);
   const [historyRequests, setHistoryRequests] = useState<EmergencyRequest[]>([]);
@@ -37,6 +41,7 @@ export default function DashboardClient({ volunteerEmail }: { volunteerEmail: st
   const [editForm, setEditForm] = useState({ profession: '', region: ''});
   const [reportText, setReportText] = useState('');
 
+  // Effect hook to fetch initial data and subscribe to real-time updates.
   useEffect(() => {
     if (!volunteerId) {
         toast({ variant: 'destructive', title: 'خطأ', description: 'لم يتم العثور على معرّف المتطوع. يرجى تسجيل الدخول مرة أخرى.' });
@@ -44,11 +49,13 @@ export default function DashboardClient({ volunteerEmail }: { volunteerEmail: st
         return;
     }
 
+    // Subscribe to volunteer profile updates.
     const unsubscribeVolunteer = getVolunteerById(volunteerId, (data) => {
         if (data) {
             setVolunteer(data);
             setEditForm({ profession: data.profession, region: data.region });
-            requestForToken(volunteerId); // Register for notifications
+            // Register the device for push notifications upon successful data fetch.
+            requestForToken(volunteerId);
         } else {
              toast({ variant: 'destructive', title: 'خطأ', description: 'لم يتم العثور على المتطوع. قد يكون الحساب قد تم حذفه.' });
              router.push('/login');
@@ -56,11 +63,13 @@ export default function DashboardClient({ volunteerEmail }: { volunteerEmail: st
         setLoading(false);
     });
 
+    // Subscribe to updates on requests assigned to this volunteer.
     const unsubscribeRequests = getVolunteerRequests(volunteerId, (assigned, history) => {
         setAssignedRequests(assigned);
         setHistoryRequests(history);
     });
 
+    // Cleanup subscriptions on component unmount.
     return () => {
         if (typeof unsubscribeVolunteer === 'function') {
           unsubscribeVolunteer();
@@ -72,11 +81,20 @@ export default function DashboardClient({ volunteerEmail }: { volunteerEmail: st
 
   }, [volunteerId, router, toast]);
 
+  /**
+   * Updates the status of a specific emergency request.
+   * @param {string} requestId - The ID of the request to update.
+   * @param {EmergencyRequest['status']} status - The new status to set.
+   */
   const handleStatusUpdate = async (requestId: string, status: EmergencyRequest['status']) => {
     await updateRequest(requestId, { status });
     toast({ title: `تم تغيير حالة الطلب إلى "${status}"`});
   };
   
+  /**
+   * Handles the submission of the profile edit form.
+   * @param {React.FormEvent} e - The form event.
+   */
   const handleProfileUpdate = async (e: React.FormEvent) => {
       e.preventDefault();
       if (!volunteerId) return;
@@ -85,6 +103,9 @@ export default function DashboardClient({ volunteerEmail }: { volunteerEmail: st
       setIsEditing(false);
   };
   
+  /**
+   * Handles the permanent deletion of the volunteer's account after confirmation.
+   */
   const handleAccountDelete = async () => {
     if (!volunteerId) return;
     if (window.confirm('هل أنت متأكد؟ سيتم حذف حسابك وجميع بياناتك بشكل دائم.')) {
@@ -99,6 +120,10 @@ export default function DashboardClient({ volunteerEmail }: { volunteerEmail: st
     }
   };
 
+  /**
+   * Submits a report for a completed request.
+   * @param {string} requestId - The ID of the request to add the report to.
+   */
   const handleReportSubmit = async (requestId: string) => {
     if (!reportText.trim()) {
         toast({variant: 'destructive', title: 'لا يمكن أن يكون التقرير فارغًا'});
@@ -113,6 +138,8 @@ export default function DashboardClient({ volunteerEmail }: { volunteerEmail: st
     router.push('/login');
   }
 
+
+  // --- Sub-components for rendering cards ---
 
   const AssignedRequestCard = ({ request }: { request: EmergencyRequest }) => {
     const timestamp = new Date(request.timestamp as string);
@@ -192,6 +219,8 @@ export default function DashboardClient({ volunteerEmail }: { volunteerEmail: st
     }
   }
 
+  // --- Loading and Error States ---
+
   if (loading) {
     return <div className="flex justify-center items-center h-screen"><Loader2 className="h-12 w-12 animate-spin" /></div>;
   }
@@ -209,6 +238,7 @@ export default function DashboardClient({ volunteerEmail }: { volunteerEmail: st
     );
   }
 
+  // --- Main Component Render ---
   return (
     <>
     <header className="sticky top-0 z-50 w-full border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
