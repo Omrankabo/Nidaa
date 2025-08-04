@@ -8,7 +8,7 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { getVolunteerRequests, getVolunteerById, updateVolunteerProfile, deleteVolunteer, updateRequest } from '@/lib/firebase/firestore';
 import type { EmergencyRequest, Volunteer } from '@/lib/types';
-import { AlertCircle, CheckCircle, Clock, Loader2, MapPin, Phone, Edit, Trash2, Send, Check, X, LogOut, ArrowLeft } from 'lucide-react';
+import { AlertCircle, CheckCircle, Clock, Loader2, MapPin, Phone, Edit, Trash2, Send, Check, X, LogOut, ArrowLeft, MessageSquarePlus, FileText } from 'lucide-react';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
@@ -17,6 +17,8 @@ import { Textarea } from '@/components/ui/textarea';
 import { requestForToken } from '@/lib/firebase/messaging';
 import { ThemeToggle } from '@/components/theme-toggle';
 import Logo from '@/components/logo';
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger, DialogFooter } from '@/components/ui/dialog';
+
 
 const regions = ['الخرطوم', 'شمال كردفان', 'البحر الأحمر', 'الجزيرة', 'كسلا', 'النيل الأزرق'];
 
@@ -108,7 +110,7 @@ export default function DashboardClient({ volunteerEmail }: { volunteerEmail: st
       status: 'في الانتظار',
       assignedVolunteer: '', // Remove volunteer name
       volunteerId: '',       // Remove volunteer ID
-      eta: '',               // Clear ETA
+      eta: '',               // Clear ETA,
     });
     toast({ title: 'تم رفض الطلب بنجاح', description: 'سيعاد تعيين الطلب لمتطوع آخر.' });
   };
@@ -238,6 +240,12 @@ export default function DashboardClient({ volunteerEmail }: { volunteerEmail: st
   const HistoryRequestCard = ({ request }: { request: EmergencyRequest }) => {
     const reportText = reportTexts[request.id] || '';
     const isReported = !!request.report;
+    const [dialogOpen, setDialogOpen] = useState(false);
+
+    const handleDialogSubmit = async () => {
+        await handleReportSubmit(request.id);
+        setDialogOpen(false); // Close dialog on successful submission
+    }
 
     return (
     <Card>
@@ -252,21 +260,46 @@ export default function DashboardClient({ volunteerEmail }: { volunteerEmail: st
         <p>{request.requestText}</p>
         <FormattedDateTime timestamp={request.timestamp} />
         <div className="pt-4 border-t">
-            <h4 className="font-semibold mb-2">إضافة ملاحظة للمسؤول</h4>
-            {isReported ? (
-                <p className="p-2 bg-muted rounded-md whitespace-pre-wrap break-words">{request.report}</p>
-            ) : (
-                <div className="flex items-start gap-2">
-                    <Textarea 
-                        placeholder="اكتب ملاحظتك هنا..."
-                        value={reportText}
-                        onChange={(e) => handleReportTextChange(request.id, e.target.value)}
-                    />
-                    <Button size="icon" onClick={() => handleReportSubmit(request.id)} disabled={!reportText.trim()}>
-                        <Send className="h-4 w-4"/>
-                    </Button>
+            <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
+              <DialogTrigger asChild>
+                {isReported ? (
+                   <Button variant="outline" className="w-full">
+                       <FileText className="ml-2 h-4 w-4" /> عرض الملاحظة
+                   </Button>
+                ) : (
+                   <Button className="w-full">
+                       <MessageSquarePlus className="ml-2 h-4 w-4" /> إضافة ملاحظة
+                   </Button>
+                )}
+              </DialogTrigger>
+              <DialogContent className="sm:max-w-md">
+                <DialogHeader>
+                  <DialogTitle>{isReported ? 'الملاحظة المرسلة' : 'إضافة ملاحظة للمسؤول'}</DialogTitle>
+                  <DialogDescription>
+                    {isReported ? 'هذه هي الملاحظة التي أرسلتها بخصوص هذا الطلب.' : 'اكتب ملاحظتك عن الحالة. ستصل هذه الملاحظة للمسؤول لمراجعتها.'}
+                  </DialogDescription>
+                </DialogHeader>
+                <div className="py-4">
+                    {isReported ? (
+                        <p className="p-2 bg-muted rounded-md whitespace-pre-wrap break-words">{request.report}</p>
+                    ) : (
+                        <Textarea 
+                            placeholder="اكتب ملاحظتك هنا..."
+                            value={reportText}
+                            onChange={(e) => handleReportTextChange(request.id, e.target.value)}
+                            className="min-h-[120px]"
+                        />
+                    )}
                 </div>
-            )}
+                {!isReported && (
+                  <DialogFooter>
+                    <Button onClick={handleDialogSubmit} disabled={!reportText.trim()}>
+                        <Send className="ml-2 h-4 w-4"/> إرسال
+                    </Button>
+                  </DialogFooter>
+                )}
+              </DialogContent>
+            </Dialog>
         </div>
       </CardContent>
     </Card>
