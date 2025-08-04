@@ -113,7 +113,7 @@ export default function DashboardPage() {
 
   const pendingVolunteers = volunteers.filter(v => v.status !== 'تم التحقق');
   const regions = [...new Set(requests.map(r => r.location.split(',')[0].trim()))];
-  const filteredRequests = regionFilter === 'all' ? requests : requests.filter(r => r.location.startsWith(regionFilter));
+  const filteredRequests = regionFilter === 'all' ? requests: requests.filter(r => r.location.startsWith(regionFilter));
   
   const requestByRegionCount = requests.reduce((acc, req) => {
     const region = req.location.split(',')[0].trim();
@@ -376,6 +376,4 @@ export default function DashboardPage() {
         </CardContent>
     </Card>
     </div>
-  );
-
-    
+  )};
