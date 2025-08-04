@@ -34,7 +34,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
                 <Logo />
             </div>
             <div className="flex items-center gap-2 md:hidden">
-                 <Button variant="ghost" size="icon" onClick={() => router.back()}>
+                 <Button variant="ghost" size="icon" onClick={() => router.push('/login')}>
                     <ArrowLeft />
                 </Button>
             </div>

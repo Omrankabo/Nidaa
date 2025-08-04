@@ -79,7 +79,7 @@ export default function LoginPage() {
   return (
     <div className="flex flex-col items-center justify-center min-h-screen p-4 bg-background/50">
        <div className="absolute top-4 left-4 flex gap-4">
-            <Button variant="outline" size="icon" onClick={() => router.back()}>
+            <Button variant="outline" size="icon" onClick={() => router.push('/')}>
                 <ArrowLeft />
             </Button>
             <ThemeToggle />
