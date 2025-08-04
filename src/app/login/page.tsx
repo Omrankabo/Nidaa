@@ -59,7 +59,7 @@ export default function LoginPage() {
             // IMPORTANT: Password is not being checked here because Firebase Auth is disabled.
             // In a real application, you MUST validate the password hash.
             if (volunteer.status === 'تم التحقق') {
-                toast({ title: 'أهلاً بك أيها المتطوع' });
+                toast({ title: `أهلاً بك يا ${volunteer.fullName}` });
                 // Navigate to the volunteer dashboard, passing the email as a query parameter.
                 router.push(`/volunteer/dashboard?email=${volunteer.email}`);
             } else {

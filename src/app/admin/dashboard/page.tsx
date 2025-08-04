@@ -123,9 +123,9 @@ export default function DashboardPage() {
 
   const getStatusBadge = (status: EmergencyRequest['status']) => {
     switch (status) {
-      case 'تم التعيين': return <Badge className="bg-blue-500"><CheckCircle className="ml-1 h-3 w-3" />تم التعيين</Badge>;
+      case 'تم التعيين': return <Badge className="bg-blue-500 hover:bg-blue-500"><CheckCircle className="ml-1 h-3 w-3" />تم التعيين</Badge>;
       case 'في الانتظار': return <Badge variant="secondary"><Clock className="ml-1 h-3 w-3" />في الانتظار</Badge>;
-      case 'اتحلت': return <Badge className="bg-green-500"><CheckCircle className="ml-1 h-3 w-3" />تم الحل</Badge>;
+      case 'اتحلت': return <Badge className="bg-green-500 hover:bg-green-500"><CheckCircle className="ml-1 h-3 w-3" />تم الحل</Badge>;
       case 'ملغية': return <Badge variant="destructive"><AlertCircle className="ml-1 h-3 w-3" />ملغية</Badge>;
       default: return <Badge variant="outline">{status}</Badge>;
     }
@@ -283,6 +283,12 @@ export default function DashboardPage() {
                                                 <h4 className="font-semibold">هاتف التواصل:</h4>
                                                 <p>{req.contactPhone}</p>
                                             </div>
+                                            {req.report && (
+                                                <div>
+                                                    <h4 className="font-semibold">ملاحظات المتطوع:</h4>
+                                                    <p className="p-2 bg-muted rounded-md whitespace-pre-wrap break-words">{req.report}</p>
+                                                </div>
+                                            )}
                                         </div>
                                     </DialogContent>
                                 </Dialog>

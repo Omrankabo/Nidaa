@@ -40,6 +40,7 @@ export default function DashboardClient({ volunteerEmail }: { volunteerEmail: st
   const [isEditing, setIsEditing] = useState(false);
   const [editForm, setEditForm] = useState({ profession: '', region: ''});
   const [reportText, setReportText] = useState('');
+  const [currentReportId, setCurrentReportId] = useState<string | null>(null);
 
   // Effect hook to fetch initial data and subscribe to real-time updates.
   useEffect(() => {
@@ -126,12 +127,13 @@ export default function DashboardClient({ volunteerEmail }: { volunteerEmail: st
    */
   const handleReportSubmit = async (requestId: string) => {
     if (!reportText.trim()) {
-        toast({variant: 'destructive', title: 'لا يمكن أن يكون التقرير فارغًا'});
+        toast({variant: 'destructive', title: 'لا يمكن أن تكون الملاحظة فارغة'});
         return;
     }
     await updateRequest(requestId, { report: reportText });
-    toast({title: "تم إرسال التقرير بنجاح"});
+    toast({title: "تم إرسال الملاحظة بنجاح"});
     setReportText('');
+    setCurrentReportId(null);
   }
   
   const handleLogout = () => {
@@ -176,6 +178,7 @@ export default function DashboardClient({ volunteerEmail }: { volunteerEmail: st
 
   const HistoryRequestCard = ({ request }: { request: EmergencyRequest }) => {
     const timestamp = new Date(request.timestamp as string);
+    const isEditingReport = currentReportId === request.id;
     return (
     <Card>
       <CardHeader>
@@ -191,17 +194,22 @@ export default function DashboardClient({ volunteerEmail }: { volunteerEmail: st
       <CardContent className="space-y-4">
         <p>{request.requestText}</p>
         <div className="pt-4 border-t">
-            <h4 className="font-semibold mb-2">اكتب تقريرًا أو ملاحظة</h4>
+            <h4 className="font-semibold mb-2">إضافة ملاحظة للمسؤول</h4>
             {request.report ? (
                 <p className="p-2 bg-muted rounded-md whitespace-pre-wrap break-words">{request.report}</p>
             ) : (
                 <div className="flex items-start gap-2">
                     <Textarea 
-                        placeholder="اكتب تقريرك هنا..."
-                        onChange={(e) => setReportText(e.target.value)}
+                        placeholder="اكتب ملاحظتك هنا..."
+                        onChange={(e) => {
+                            setCurrentReportId(request.id);
+                            setReportText(e.target.value);
+                        }}
                         defaultValue={request.report}
                     />
-                    <Button size="icon" onClick={() => handleReportSubmit(request.id)}><Send className="h-4 w-4"/></Button>
+                    <Button size="icon" onClick={() => handleReportSubmit(request.id)} disabled={!isEditingReport || !reportText.trim()}>
+                        <Send className="h-4 w-4"/>
+                    </Button>
                 </div>
             )}
         </div>
@@ -251,10 +259,7 @@ export default function DashboardClient({ volunteerEmail }: { volunteerEmail: st
                     <ArrowLeft />
                 </Button>
             </div>
-            <div className="flex flex-1 items-center justify-between space-x-2 md:justify-end">
-                <div className="w-full flex-1 md:w-auto md:flex-none text-center">
-                    <h1 className="font-headline text-xl">{volunteer.fullName}</h1>
-                </div>
+            <div className="flex flex-1 items-center justify-end space-x-2">
                  <nav className="flex items-center gap-2">
                     <ThemeToggle />
                      <Button variant="ghost" size="icon" onClick={handleLogout}>
@@ -265,6 +270,9 @@ export default function DashboardClient({ volunteerEmail }: { volunteerEmail: st
         </div>
     </header>
     <div className="container mx-auto p-4 sm:p-6 lg:p-8">
+        <div className="mb-6">
+            <h1 className="font-headline text-3xl">أهلاً بك يا {volunteer.fullName}</h1>
+        </div>
       <Tabs defaultValue="dashboard" className="w-full">
         <TabsList className="grid w-full grid-cols-2 mb-6">
             <TabsTrigger value="dashboard">لوحة التحكم</TabsTrigger>
@@ -278,10 +286,9 @@ export default function DashboardClient({ volunteerEmail }: { volunteerEmail: st
                 </CardHeader>
                 <CardContent>
                     <Tabs defaultValue="assigned" className="w-full">
-                        <TabsList className="grid w-full grid-cols-3">
+                        <TabsList className="grid w-full grid-cols-2">
                             <TabsTrigger value="assigned">الطلبات المعينة ({assignedRequests.length})</TabsTrigger>
                             <TabsTrigger value="history">سجل الطلبات ({historyRequests.length})</TabsTrigger>
-                            <TabsTrigger value="reports">التقارير</TabsTrigger>
                         </TabsList>
                         <TabsContent value="assigned">
                             <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3 mt-4">
@@ -298,15 +305,6 @@ export default function DashboardClient({ volunteerEmail }: { volunteerEmail: st
                                     historyRequests.map(req => <HistoryRequestCard key={req.id} request={req} />)
                                 ) : (
                                     <p className="col-span-full text-center text-muted-foreground py-8">ليس لديك أي شيء في السجل حتى الآن.</p>
-                                )}
-                            </div>
-                        </TabsContent>
-                        <TabsContent value="reports">
-                            <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3 mt-4">
-                                {historyRequests.filter(r => r.status === 'اتحلت').length > 0 ? (
-                                    historyRequests.filter(r => r.status === 'اتحلت').map(req => <HistoryRequestCard key={req.id} request={req} />)
-                                ) : (
-                                    <p className="col-span-full text-center text-muted-foreground py-8">ليس لديك طلبات مكتملة لكتابة تقارير عنها.</p>
                                 )}
                             </div>
                         </TabsContent>
@@ -327,13 +325,13 @@ export default function DashboardClient({ volunteerEmail }: { volunteerEmail: st
                 </CardHeader>
                 <CardContent>
                  {isEditing ? (
-                     <form onSubmit={handleProfileUpdate} className="space-y-4 max-w-md">
+                     <form onSubmit={handleProfileUpdate} className="space-y-4 max-w-md text-right">
                         <div>
-                            <label htmlFor="profession" className="block text-sm font-medium">مهنتك</label>
+                            <label htmlFor="profession" className="block text-sm font-medium mb-1">مهنتك</label>
                             <Input id="profession" value={editForm.profession} onChange={(e) => setEditForm({...editForm, profession: e.target.value})} />
                         </div>
                         <div>
-                            <label htmlFor="region" className="block text-sm font-medium">المنطقة</label>
+                            <label htmlFor="region" className="block text-sm font-medium mb-1">المنطقة</label>
                             <Select value={editForm.region} onValueChange={(value) => setEditForm({...editForm, region: value})}>
                                 <SelectTrigger><SelectValue/></SelectTrigger>
                                 <SelectContent>
@@ -347,7 +345,7 @@ export default function DashboardClient({ volunteerEmail }: { volunteerEmail: st
                         </div>
                     </form>
                  ) : (
-                    <div className="space-y-2">
+                    <div className="space-y-2 text-right">
                         <p><strong>البريد الإلكتروني:</strong> {volunteer.email}</p>
                         <p><strong>المهنة:</strong> {volunteer.profession}</p>
                         <p><strong>رقم الهاتف:</strong> {volunteer.phoneNumber}</p>
