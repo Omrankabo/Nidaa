@@ -324,7 +324,7 @@ export default function DashboardClient({ volunteerEmail }: { volunteerEmail: st
         <TabsContent value="dashboard">
              <Card>
                 <CardHeader>
-                    <CardTitle className="font-headline text-3xl">مهامك كمتطوع</CardTitle>
+                    <CardTitle className="font-headline text-3xl">مهامك يا {volunteer.fullName}</CardTitle>
                     <CardDescription>هنا يمكنك عرض المهام المعينة لك وسجل طلباتك السابقة.</CardDescription>
                 </CardHeader>
                 <CardContent>
