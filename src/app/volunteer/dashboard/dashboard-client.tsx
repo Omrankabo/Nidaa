@@ -154,11 +154,27 @@ export default function DashboardClient({ volunteerEmail }: { volunteerEmail: st
     router.push('/login');
   }
 
+    const FormattedDateTime = ({ timestamp }: { timestamp: any }) => {
+        const [isMounted, setIsMounted] = useState(false);
+        useEffect(() => setIsMounted(true), []);
+        if (!isMounted) return null;
+
+        const date = new Date(timestamp);
+        const dateOptions: Intl.DateTimeFormatOptions = { year: 'numeric', month: 'long', day: 'numeric', numberingSystem: 'latn' };
+        const timeOptions: Intl.DateTimeFormatOptions = { hour: 'numeric', minute: '2-digit', hour12: true, numberingSystem: 'latn' };
+        
+        return (
+            <div className="text-xs text-muted-foreground mt-2">
+                <span>{date.toLocaleDateString('ar-EG', dateOptions)}</span>
+                <span className="mx-1">|</span>
+                <span>{date.toLocaleTimeString('ar-EG', timeOptions)}</span>
+            </div>
+        );
+    };
 
   // --- Sub-components for rendering cards ---
 
   const AssignedRequestCard = ({ request }: { request: EmergencyRequest }) => {
-    const timestamp = new Date(request.timestamp as string);
     return (
     <Card>
       <CardHeader>
@@ -166,12 +182,11 @@ export default function DashboardClient({ volunteerEmail }: { volunteerEmail: st
           {request.priorityLevel === 'حرجة' ? '🔴' : request.priorityLevel === 'عالية' ? '🟠' : '🟡'}
           طلب {getPriorityText(request.priorityLevel)}
         </CardTitle>
-        <CardDescription>
-          {timestamp.toLocaleString('ar-EG')}
-        </CardDescription>
+        
       </CardHeader>
       <CardContent className="space-y-4">
         <p>{request.requestText}</p>
+        <FormattedDateTime timestamp={request.timestamp} />
         <div className="text-sm text-muted-foreground space-y-2 pt-2 border-t">
             <p className="flex items-center gap-2"><MapPin className="h-4 w-4 text-primary"/> <strong>الموقع:</strong> {request.location}</p>
             <p className="flex items-center gap-2"><Phone className="h-4 w-4 text-primary"/> <strong>هاتف التواصل:</strong> {request.contactPhone}</p>
@@ -208,7 +223,6 @@ export default function DashboardClient({ volunteerEmail }: { volunteerEmail: st
   )};
 
   const HistoryRequestCard = ({ request }: { request: EmergencyRequest }) => {
-    const timestamp = new Date(request.timestamp as string);
     const isEditingReport = currentReportId === request.id;
     return (
     <Card>
@@ -218,12 +232,10 @@ export default function DashboardClient({ volunteerEmail }: { volunteerEmail: st
                 {request.status}
              </Badge>
         </CardTitle>
-        <CardDescription>
-          {timestamp.toLocaleString('ar-EG')}
-        </CardDescription>
       </CardHeader>
       <CardContent className="space-y-4">
         <p>{request.requestText}</p>
+        <FormattedDateTime timestamp={request.timestamp} />
         <div className="pt-4 border-t">
             <h4 className="font-semibold mb-2">إضافة ملاحظة للمسؤول</h4>
             {request.report ? (

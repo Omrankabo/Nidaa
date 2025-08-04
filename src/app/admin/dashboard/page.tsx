@@ -29,8 +29,13 @@ const FormattedDate = ({ timestamp }: { timestamp: any }) => {
     }
 
     const date = new Date(timestamp);
+    const options: Intl.DateTimeFormatOptions = {
+        year: 'numeric', month: 'long', day: 'numeric',
+        hour: 'numeric', minute: 'numeric', second: 'numeric',
+        numberingSystem: 'latn' // Use English numerals
+    };
   
-    return <>{date.toLocaleString('ar-EG')}</>;
+    return <>{date.toLocaleString('ar-EG', options)}</>;
 };
 
 export default function DashboardPage() {
@@ -123,10 +128,10 @@ export default function DashboardPage() {
 
   const getStatusBadge = (status: EmergencyRequest['status']) => {
     switch (status) {
-      case 'تم التعيين': return <Badge className="bg-blue-500 hover:bg-blue-500"><CheckCircle className="ml-1 h-3 w-3" />تم التعيين</Badge>;
+      case 'تم التعيين': return <Badge className="bg-blue-500"><CheckCircle className="ml-1 h-3 w-3" />تم التعيين</Badge>;
       case 'في الانتظار': return <Badge variant="secondary"><Clock className="ml-1 h-3 w-3" />في الانتظار</Badge>;
-      case 'قيد التنفيذ': return <Badge className="bg-yellow-500 hover:bg-yellow-500"><PlayCircle className="ml-1 h-3 w-3" />قيد التنفيذ</Badge>;
-      case 'اتحلت': return <Badge className="bg-green-500 hover:bg-green-500"><CheckCircle className="ml-1 h-3 w-3" />تم الحل</Badge>;
+      case 'قيد التنفيذ': return <Badge className="bg-yellow-500"><PlayCircle className="ml-1 h-3 w-3" />قيد التنفيذ</Badge>;
+      case 'اتحلت': return <Badge className="bg-green-500"><CheckCircle className="ml-1 h-3 w-3" />تم الحل</Badge>;
       case 'ملغية': return <Badge variant="destructive"><AlertCircle className="ml-1 h-3 w-3" />ملغية</Badge>;
       default: return <Badge variant="outline">{status}</Badge>;
     }
