@@ -8,7 +8,7 @@ import { Badge } from '@/components/ui/badge';
 import type { EmergencyRequest, Volunteer } from '@/lib/types';
 import { AlertCircle, UserPlus, CheckCircle, Clock, Trash2, Info, UserCheck } from 'lucide-react';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
-import { getRequests, getVolunteers, updateRequest, updateVolunteerStatus, deleteRequest } from '@/lib/firebase/firestore';
+import { getRequests, getVolunteers, updateRequest, updateVolunteerStatus, deleteRequest, deleteVolunteer } from '@/lib/firebase/firestore';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Button } from '@/components/ui/button';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
@@ -130,9 +130,9 @@ export default function DashboardPage() {
 
   const getStatusBadge = (status: EmergencyRequest['status']) => {
     switch (status) {
-      case 'تم التعيين': return <Badge className="bg-blue-500 hover:bg-blue-600"><CheckCircle className="ml-1 h-3 w-3" />تم التعيين</Badge>;
+      case 'تم التعيين': return <Badge className="bg-blue-500"><CheckCircle className="ml-1 h-3 w-3" />تم التعيين</Badge>;
       case 'في الانتظار': return <Badge variant="secondary"><Clock className="ml-1 h-3 w-3" />في الانتظار</Badge>;
-      case 'اتحلت': return <Badge className="bg-green-500 hover:bg-green-600"><CheckCircle className="ml-1 h-3 w-3" />تم الحل</Badge>;
+      case 'اتحلت': return <Badge className="bg-green-500"><CheckCircle className="ml-1 h-3 w-3" />تم الحل</Badge>;
       case 'ملغية': return <Badge variant="destructive"><AlertCircle className="ml-1 h-3 w-3" />ملغية</Badge>;
       default: return <Badge variant="outline">{status}</Badge>;
     }
@@ -290,9 +290,9 @@ export default function DashboardPage() {
                         <TableCell className="text-center hidden sm:table-cell">
                              <DropdownMenu>
                                 <DropdownMenuTrigger asChild>
-                                    <Button variant="ghost" className="w-32">
+                                    <div className="inline-flex">
                                          {getStatusBadge(req.status)}
-                                    </Button>
+                                    </div>
                                 </DropdownMenuTrigger>
                                 <DropdownMenuContent>
                                     <DropdownMenuItem onClick={() => handleStatusChange(req.id, 'في الانتظار')}>في الانتظار</DropdownMenuItem>
