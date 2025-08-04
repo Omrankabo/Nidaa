@@ -39,8 +39,7 @@ export default function DashboardClient({ volunteerEmail }: { volunteerEmail: st
   const [loading, setLoading] = useState(true);
   const [isEditing, setIsEditing] = useState(false);
   const [editForm, setEditForm] = useState({ profession: '', region: ''});
-  const [reportText, setReportText] = useState('');
-  const [currentReportId, setCurrentReportId] = useState<string | null>(null);
+  const [reportTexts, setReportTexts] = useState<Record<string, string>>({});
 
   // Effect hook to fetch initial data and subscribe to real-time updates.
   useEffect(() => {
@@ -68,6 +67,14 @@ export default function DashboardClient({ volunteerEmail }: { volunteerEmail: st
     const unsubscribeRequests = getVolunteerRequests(volunteerId, (assigned, history) => {
         setAssignedRequests(assigned);
         setHistoryRequests(history);
+        // Initialize reportTexts state for any history requests that have a report
+        const initialReports = history.reduce((acc, req) => {
+            if (req.report) {
+                acc[req.id] = req.report;
+            }
+            return acc;
+        }, {} as Record<string, string>);
+        setReportTexts(prev => ({...prev, ...initialReports}));
     });
 
     // Cleanup subscriptions on component unmount.
@@ -140,16 +147,22 @@ export default function DashboardClient({ volunteerEmail }: { volunteerEmail: st
    * @param {string} requestId - The ID of the request to add the report to.
    */
   const handleReportSubmit = async (requestId: string) => {
-    if (!reportText.trim()) {
+    const reportText = reportTexts[requestId];
+    if (!reportText || !reportText.trim()) {
         toast({variant: 'destructive', title: 'لا يمكن أن تكون الملاحظة فارغة'});
         return;
     }
     await updateRequest(requestId, { report: reportText });
     toast({title: "تم إرسال الملاحظة بنجاح"});
-    setReportText('');
-    setCurrentReportId(null);
   }
   
+  const handleReportTextChange = (requestId: string, text: string) => {
+    setReportTexts(prev => ({
+        ...prev,
+        [requestId]: text
+    }));
+  };
+
   const handleLogout = () => {
     router.push('/login');
   }
@@ -223,7 +236,9 @@ export default function DashboardClient({ volunteerEmail }: { volunteerEmail: st
   )};
 
   const HistoryRequestCard = ({ request }: { request: EmergencyRequest }) => {
-    const isEditingReport = currentReportId === request.id;
+    const reportText = reportTexts[request.id] || '';
+    const isReported = !!request.report;
+
     return (
     <Card>
       <CardHeader>
@@ -238,19 +253,16 @@ export default function DashboardClient({ volunteerEmail }: { volunteerEmail: st
         <FormattedDateTime timestamp={request.timestamp} />
         <div className="pt-4 border-t">
             <h4 className="font-semibold mb-2">إضافة ملاحظة للمسؤول</h4>
-            {request.report ? (
+            {isReported ? (
                 <p className="p-2 bg-muted rounded-md whitespace-pre-wrap break-words">{request.report}</p>
             ) : (
                 <div className="flex items-start gap-2">
                     <Textarea 
                         placeholder="اكتب ملاحظتك هنا..."
-                        onChange={(e) => {
-                            setCurrentReportId(request.id);
-                            setReportText(e.target.value);
-                        }}
-                        defaultValue={request.report}
+                        value={reportText}
+                        onChange={(e) => handleReportTextChange(request.id, e.target.value)}
                     />
-                    <Button size="icon" onClick={() => handleReportSubmit(request.id)} disabled={!isEditingReport || !reportText.trim()}>
+                    <Button size="icon" onClick={() => handleReportSubmit(request.id)} disabled={!reportText.trim()}>
                         <Send className="h-4 w-4"/>
                     </Button>
                 </div>
