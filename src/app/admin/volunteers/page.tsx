@@ -7,9 +7,8 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Badge } from '@/components/ui/badge';
 import type { Volunteer, EmergencyRequest } from '@/lib/types';
-import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
-import { CheckCircle, MoreHorizontal, XCircle, Clock, AlertCircle, Trash2, Bell, Info } from 'lucide-react';
-import { getVolunteers, updateVolunteerStatus, deleteVolunteer, getRequests, sendNotificationToVolunteer } from '@/lib/firebase/firestore';
+import { CheckCircle, XCircle, Clock, AlertCircle, Trash2, Bell, Info } from 'lucide-react';
+import { getVolunteers, deleteVolunteer, getRequests, sendNotificationToVolunteer } from '@/lib/firebase/firestore';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { useToast } from '@/hooks/use-toast';
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
@@ -102,7 +101,7 @@ export default function VolunteersPage() {
                 </div>
             </CardHeader>
             <CardContent>
-                <div className="border rounded-md">
+                <div className="border rounded-md overflow-x-auto">
                     <Table>
                         <TableHeader>
                             <TableRow>
@@ -114,59 +113,67 @@ export default function VolunteersPage() {
                             </TableRow>
                         </TableHeader>
                         <TableBody>
-                            {verifiedVolunteers.map((volunteer) => (
-                                <TableRow key={volunteer.id}>
-                                    <TableCell className="font-medium">{volunteer.fullName}</TableCell>
-                                    <TableCell className="hidden sm:table-cell text-center">{getStatusBadge(volunteer.status)}</TableCell>
-                                    <TableCell className="hidden lg:table-cell text-center">{volunteer.region}</TableCell>
-                                    <TableCell className="hidden md:table-cell text-center">{getHandledRequestsCount(volunteer.id)}</TableCell>
-                                    <TableCell className="text-center">
-                                         <div className="flex justify-center items-center gap-1">
-                                             <Dialog>
-                                                <DialogTrigger asChild>
-                                                    <Button variant="outline" size="icon"><Info className="h-4 w-4" /></Button>
-                                                </DialogTrigger>
-                                                <DialogContent className="sm:max-w-md">
-                                                    <DialogHeader>
-                                                        <DialogTitle>تفاصيل المتطوع</DialogTitle>
-                                                        <DialogDescription>
-                                                            المعرف: {volunteer.id}
-                                                        </DialogDescription>
-                                                    </DialogHeader>
-                                                    <div className="space-y-2">
-                                                        <p><strong>الاسم:</strong> {volunteer.fullName}</p>
-                                                        <p><strong>البريد الإلكتروني:</strong> {volunteer.email}</p>
-                                                        <p><strong>الهاتف:</strong> {volunteer.phoneNumber}</p>
-                                                        <p><strong>المنطقة:</strong> {volunteer.region}</p>
-                                                        <p><strong>المدينة:</strong> {volunteer.city}</p>
-                                                        <p><strong>المهنة:</strong> {volunteer.profession}</p>
-                                                    </div>
-                                                </DialogContent>
-                                            </Dialog>
-                                            <Button variant="outline" size="icon" onClick={() => handleSendNotification(volunteer.id)}>
-                                                <Bell className="h-4 w-4" />
-                                            </Button>
-                                             <AlertDialog>
-                                                <AlertDialogTrigger asChild>
-                                                    <Button variant="destructive" size="icon"><Trash2 className="h-4 w-4" /></Button>
-                                                </AlertDialogTrigger>
-                                                <AlertDialogContent>
-                                                    <AlertDialogHeader>
-                                                        <AlertDialogTitle>هل أنت متأكد؟</AlertDialogTitle>
-                                                        <AlertDialogDescription>
-                                                        هذا الإجراء سيحذف المتطوع نهائيًا.
-                                                        </AlertDialogDescription>
-                                                    </AlertDialogHeader>
-                                                    <AlertDialogFooter>
-                                                        <AlertDialogCancel>إلغاء</AlertDialogCancel>
-                                                        <AlertDialogAction onClick={() => handleDelete(volunteer.id)}>حذف</AlertDialogAction>
-                                                    </AlertDialogFooter>
-                                                </AlertDialogContent>
-                                            </AlertDialog>
-                                         </div>
+                            {verifiedVolunteers.length > 0 ? (
+                                verifiedVolunteers.map((volunteer) => (
+                                    <TableRow key={volunteer.id}>
+                                        <TableCell className="font-medium whitespace-nowrap">{volunteer.fullName}</TableCell>
+                                        <TableCell className="hidden sm:table-cell text-center">{getStatusBadge(volunteer.status)}</TableCell>
+                                        <TableCell className="hidden lg:table-cell text-center">{volunteer.region}</TableCell>
+                                        <TableCell className="hidden md:table-cell text-center">{getHandledRequestsCount(volunteer.id)}</TableCell>
+                                        <TableCell className="text-center">
+                                             <div className="flex justify-center items-center gap-1">
+                                                 <Dialog>
+                                                    <DialogTrigger asChild>
+                                                        <Button variant="outline" size="icon"><Info className="h-4 w-4" /></Button>
+                                                    </DialogTrigger>
+                                                    <DialogContent className="sm:max-w-md">
+                                                        <DialogHeader>
+                                                            <DialogTitle>تفاصيل المتطوع</DialogTitle>
+                                                            <DialogDescription>
+                                                                المعرف: {volunteer.id}
+                                                            </DialogDescription>
+                                                        </DialogHeader>
+                                                        <div className="space-y-2">
+                                                            <p><strong>الاسم:</strong> {volunteer.fullName}</p>
+                                                            <p><strong>البريد الإلكتروني:</strong> {volunteer.email}</p>
+                                                            <p><strong>الهاتف:</strong> {volunteer.phoneNumber}</p>
+                                                            <p><strong>المنطقة:</strong> {volunteer.region}</p>
+                                                            <p><strong>المدينة:</strong> {volunteer.city}</p>
+                                                            <p><strong>المهنة:</strong> {volunteer.profession}</p>
+                                                        </div>
+                                                    </DialogContent>
+                                                </Dialog>
+                                                <Button variant="outline" size="icon" onClick={() => handleSendNotification(volunteer.id)}>
+                                                    <Bell className="h-4 w-4" />
+                                                </Button>
+                                                 <AlertDialog>
+                                                    <AlertDialogTrigger asChild>
+                                                        <Button variant="destructive" size="icon"><Trash2 className="h-4 w-4" /></Button>
+                                                    </AlertDialogTrigger>
+                                                    <AlertDialogContent>
+                                                        <AlertDialogHeader>
+                                                            <AlertDialogTitle>هل أنت متأكد؟</AlertDialogTitle>
+                                                            <AlertDialogDescription>
+                                                            هذا الإجراء سيحذف المتطوع نهائيًا.
+                                                            </AlertDialogDescription>
+                                                        </AlertDialogHeader>
+                                                        <AlertDialogFooter>
+                                                            <AlertDialogCancel>إلغاء</AlertDialogCancel>
+                                                            <AlertDialogAction onClick={() => handleDelete(volunteer.id)}>حذف</AlertDialogAction>
+                                                        </AlertDialogFooter>
+                                                    </AlertDialogContent>
+                                                </AlertDialog>
+                                             </div>
+                                        </TableCell>
+                                    </TableRow>
+                                ))
+                             ) : (
+                                <TableRow>
+                                    <TableCell colSpan={5} className="text-center py-8">
+                                        لا يوجد متطوعون معتمدون يطابقون الفلتر الحالي.
                                     </TableCell>
                                 </TableRow>
-                            ))}
+                            )}
                         </TableBody>
                     </Table>
                 </div>

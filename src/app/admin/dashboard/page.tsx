@@ -8,7 +8,7 @@ import { Badge } from '@/components/ui/badge';
 import type { EmergencyRequest, Volunteer } from '@/lib/types';
 import { AlertCircle, UserPlus, CheckCircle, Clock, Trash2, Info, UserCheck } from 'lucide-react';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
-import { getRequests, getVolunteers, updateRequest, updateVolunteerStatus, deleteRequest, deleteVolunteer } from '@/lib/firebase/firestore';
+import { getRequests, getVolunteers, updateRequest, deleteRequest } from '@/lib/firebase/firestore';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Button } from '@/components/ui/button';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
@@ -40,6 +40,7 @@ export default function DashboardPage() {
   const [loading, setLoading] = useState(true);
   const [regionFilter, setRegionFilter] = useState('all');
   const [dialogOpen, setDialogOpen] = useState(false);
+  const [currentRequestId, setCurrentRequestId] = useState<string | null>(null);
 
   // Effect to subscribe to real-time updates for requests and volunteers from Firestore.
   useEffect(() => {
@@ -100,14 +101,6 @@ export default function DashboardPage() {
       await deleteRequest(requestId);
   };
 
-  /**
-   * Deletes a volunteer from the database after confirmation.
-   * @param {string} id - The ID of the volunteer to delete.
-   */
-  const handleVolunteerDelete = async (id: string) => {
-    await deleteVolunteer(id);
-  };
-
   // Helper functions to get badge variants and text based on priority and status.
   const getPriorityBadgeVariant = (priority: EmergencyRequest['priorityLevel']) => {
     switch (priority) {
@@ -137,9 +130,13 @@ export default function DashboardPage() {
       default: return <Badge variant="outline">{status}</Badge>;
     }
   };
+  
+  const openAssignDialog = (requestId: string) => {
+    setCurrentRequestId(requestId);
+    setDialogOpen(true);
+  };
 
   // Filtering and data derivation for the dashboard UI.
-  const pendingVolunteers = volunteers.filter(v => v.status !== 'تم التحقق');
   const regions = [...new Set(requests.map(r => r.location.split(',')[0].trim()))];
   const filteredRequests = regionFilter === 'all' ? requests : requests.filter(r => r.location.startsWith(regionFilter));
   
@@ -158,58 +155,6 @@ export default function DashboardPage() {
 
   return (
     <div className="space-y-8">
-       {/* Card for managing new volunteer registration requests */}
-       <Card>
-            <CardHeader>
-                <div className="flex justify-between items-center">
-                    <CardTitle className="font-headline">طلبات تسجيل المتطوعين الجدد</CardTitle>
-                    <Badge variant="default" className="text-lg">{pendingVolunteers.length}</Badge>
-                </div>
-                <CardDescription>هنا يمكنك الموافقة على طلبات المتطوعين الجدد أو رفضها.</CardDescription>
-            </CardHeader>
-            <CardContent>
-                {pendingVolunteers.length > 0 ? (
-                    <Table>
-                        <TableHeader>
-                            <TableRow>
-                                <TableHead>الاسم الكامل</TableHead>
-                                <TableHead>الموقع</TableHead>
-                                <TableHead>الإجراء</TableHead>
-                            </TableRow>
-                        </TableHeader>
-                        <TableBody>
-                            {pendingVolunteers.map(v => (
-                                <TableRow key={v.id}>
-                                    <TableCell>{v.fullName}</TableCell>
-                                    <TableCell>{v.city}, {v.region}</TableCell>
-                                    <TableCell className="flex gap-2">
-                                        <Button size="sm" variant="outline" onClick={() => updateVolunteerStatus(v.id, 'تم التحقق')}>موافقة</Button>
-                                        <AlertDialog>
-                                            <AlertDialogTrigger asChild>
-                                                <Button size="sm" variant="destructive">رفض</Button>
-                                            </AlertDialogTrigger>
-                                            <AlertDialogContent>
-                                                <AlertDialogHeader>
-                                                    <AlertDialogTitle>هل أنت متأكد؟</AlertDialogTitle>
-                                                    <AlertDialogDescription>
-                                                        سيؤدي هذا الإجراء إلى رفض طلب المتطوع وحذفه.
-                                                    </AlertDialogDescription>
-                                                </AlertDialogHeader>
-                                                <AlertDialogFooter>
-                                                    <AlertDialogCancel>إلغاء</AlertDialogCancel>
-                                                    <AlertDialogAction onClick={() => handleVolunteerDelete(v.id)}>تأكيد الرفض</AlertDialogAction>
-                                                </AlertDialogFooter>
-                                            </AlertDialogContent>
-                                        </AlertDialog>
-                                    </TableCell>
-                                </TableRow>
-                            ))}
-                        </TableBody>
-                    </Table>
-                ) : <p>لا توجد طلبات تسجيل جديدة.</p>}
-            </CardContent>
-        </Card>
-
       {/* Card for displaying analytics */}
       <Card>
         <CardHeader>
@@ -307,55 +252,11 @@ export default function DashboardPage() {
                             <div className="flex justify-center items-center gap-1">
                                 {/* Dialog for assigning a volunteer */}
                                 {req.status === 'في الانتظار' && (
-                                    <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
-                                        <DialogTrigger asChild>
-                                            <Button size="sm"><UserPlus className="ml-2 h-4 w-4" />تعيين</Button>
-                                        </DialogTrigger>
-                                        <DialogContent>
-                                            <DialogHeader>
-                                                <DialogTitle>اختر متطوعًا</DialogTitle>
-                                                <DialogDescription>اختر متطوعًا متاحًا من منطقة الخرطوم.</DialogDescription>
-                                            </DialogHeader>
-                                            <div className="space-y-2 max-h-60 overflow-y-auto">
-                                                {khartoumVolunteers.length > 0 ? khartoumVolunteers.map(v => (
-                                                    <div key={v.id} className="flex justify-between items-center p-2 border rounded-md">
-                                                        <div>
-                                                            <p className="font-semibold">{v.fullName}</p>
-                                                            <p className="text-sm text-muted-foreground">{v.profession}</p>
-                                                        </div>
-                                                        <Button size="sm" onClick={() => handleAssign(req.id, v)}>تعيين</Button>
-                                                    </div>
-                                                )) : <p>لا يوجد متطوعون متاحون في الخرطوم حاليًا.</p>}
-                                            </div>
-                                        </DialogContent>
-                                    </Dialog>
+                                    <Button size="sm" onClick={() => openAssignDialog(req.id)}><UserPlus className="ml-2 h-4 w-4" />تعيين</Button>
                                 )}
                                 {/* Dialog for re-assigning a volunteer */}
                                 {req.status === 'تم التعيين' && (
-                                    <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
-                                        <DialogTrigger asChild>
-                                            <Button size="sm" variant="outline"><UserCheck className="ml-2 h-4 w-4" />إعادة تعيين</Button>
-                                        </DialogTrigger>
-                                         <DialogContent>
-                                            <DialogHeader>
-                                                <DialogTitle>إعادة تعيين متطوع</DialogTitle>
-                                                <DialogDescription>اختر متطوعًا آخر لهذا الطلب.</DialogDescription>
-                                            </DialogHeader>
-                                            <div className="space-y-2 max-h-60 overflow-y-auto">
-                                                {verifiedVolunteers.map(v => (
-                                                    <div key={v.id} className="flex justify-between items-center p-2 border rounded-md">
-                                                        <div>
-                                                            <p className="font-semibold">{v.fullName}</p>
-                                                            <p className="text-sm text-muted-foreground">{v.region} - {v.profession}</p>
-                                                        </div>
-                                                        <Button size="sm" onClick={() => handleAssign(req.id, v)} disabled={v.id === req.volunteerId}>
-                                                            {v.id === req.volunteerId ? 'معين حالياً' : 'تعيين'}
-                                                        </Button>
-                                                    </div>
-                                                ))}
-                                            </div>
-                                        </DialogContent>
-                                    </Dialog>
+                                     <Button size="sm" variant="outline" onClick={() => openAssignDialog(req.id)}><UserCheck className="ml-2 h-4 w-4" />إعادة تعيين</Button>
                                 )}
                                 {/* Dialog for viewing full request details */}
                                 <Dialog>
@@ -422,6 +323,28 @@ export default function DashboardPage() {
         )}
         </CardContent>
     </Card>
+
+    {/* Assign Volunteer Dialog - rendered outside the table map */}
+    <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
+        <DialogContent>
+            <DialogHeader>
+                <DialogTitle>اختر متطوعًا</DialogTitle>
+                <DialogDescription>اختر متطوعًا متاحًا من منطقة الخرطوم.</DialogDescription>
+            </DialogHeader>
+            <div className="space-y-2 max-h-60 overflow-y-auto">
+                {khartoumVolunteers.length > 0 ? khartoumVolunteers.map(v => (
+                    <div key={v.id} className="flex justify-between items-center p-2 border rounded-md">
+                        <div>
+                            <p className="font-semibold">{v.fullName}</p>
+                            <p className="text-sm text-muted-foreground">{v.profession}</p>
+                        </div>
+                        <Button size="sm" onClick={() => currentRequestId && handleAssign(currentRequestId, v)}>تعيين</Button>
+                    </div>
+                )) : <p>لا يوجد متطوعون متاحون في الخرطوم حاليًا.</p>}
+            </div>
+        </DialogContent>
+    </Dialog>
+
     </div>
   );
 }
