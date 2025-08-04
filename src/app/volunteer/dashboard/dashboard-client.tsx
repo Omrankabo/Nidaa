@@ -41,7 +41,6 @@ export default function DashboardClient({ volunteerEmail }: { volunteerEmail: st
   const [loading, setLoading] = useState(true);
   const [isEditing, setIsEditing] = useState(false);
   const [editForm, setEditForm] = useState({ profession: '', region: ''});
-  const [reportTexts, setReportTexts] = useState<Record<string, string>>({});
 
   // Effect hook to fetch initial data and subscribe to real-time updates.
   useEffect(() => {
@@ -69,14 +68,6 @@ export default function DashboardClient({ volunteerEmail }: { volunteerEmail: st
     const unsubscribeRequests = getVolunteerRequests(volunteerId, (assigned, history) => {
         setAssignedRequests(assigned);
         setHistoryRequests(history);
-        // Initialize reportTexts state for any history requests that have a report
-        const initialReports = history.reduce((acc, req) => {
-            if (req.report) {
-                acc[req.id] = req.report;
-            }
-            return acc;
-        }, {} as Record<string, string>);
-        setReportTexts(prev => ({...prev, ...initialReports}));
     });
 
     // Cleanup subscriptions on component unmount.
@@ -104,6 +95,7 @@ export default function DashboardClient({ volunteerEmail }: { volunteerEmail: st
    /**
    * Handles denying a request. Unassigns the volunteer and sets status to 'Pending'.
    * @param {string} requestId - The ID of the request to deny.
+   * @param {string} volunteerName - The name of the volunteer.
    */
   const handleDenyRequest = async (requestId: string) => {
     await updateRequest(requestId, {
@@ -147,9 +139,9 @@ export default function DashboardClient({ volunteerEmail }: { volunteerEmail: st
   /**
    * Submits a report for a completed request.
    * @param {string} requestId - The ID of the request to add the report to.
+   * @param {string} reportText - The text of the report.
    */
-  const handleReportSubmit = async (requestId: string) => {
-    const reportText = reportTexts[requestId];
+  const handleReportSubmit = async (requestId: string, reportText: string) => {
     if (!reportText || !reportText.trim()) {
         toast({variant: 'destructive', title: 'لا يمكن أن تكون الملاحظة فارغة'});
         return;
@@ -157,13 +149,6 @@ export default function DashboardClient({ volunteerEmail }: { volunteerEmail: st
     await updateRequest(requestId, { report: reportText });
     toast({title: "تم إرسال الملاحظة بنجاح"});
   }
-  
-  const handleReportTextChange = (requestId: string, text: string) => {
-    setReportTexts(prev => ({
-        ...prev,
-        [requestId]: text
-    }));
-  };
 
   const handleLogout = () => {
     router.push('/login');
@@ -238,12 +223,13 @@ export default function DashboardClient({ volunteerEmail }: { volunteerEmail: st
   )};
 
   const HistoryRequestCard = ({ request }: { request: EmergencyRequest }) => {
-    const reportText = reportTexts[request.id] || '';
     const isReported = !!request.report;
     const [dialogOpen, setDialogOpen] = useState(false);
+    // Local state for the report text inside the dialog
+    const [reportText, setReportText] = useState(request.report || '');
 
     const handleDialogSubmit = async () => {
-        await handleReportSubmit(request.id);
+        await handleReportSubmit(request.id, reportText);
         setDialogOpen(false); // Close dialog on successful submission
     }
 
@@ -286,7 +272,7 @@ export default function DashboardClient({ volunteerEmail }: { volunteerEmail: st
                         <Textarea 
                             placeholder="اكتب ملاحظتك هنا..."
                             value={reportText}
-                            onChange={(e) => handleReportTextChange(request.id, e.target.value)}
+                            onChange={(e) => setReportText(e.target.value)}
                             className="min-h-[120px]"
                         />
                     )}
@@ -464,3 +450,5 @@ export default function DashboardClient({ volunteerEmail }: { volunteerEmail: st
     </>
   );
 }
+
+    
