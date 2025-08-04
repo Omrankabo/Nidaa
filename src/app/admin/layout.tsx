@@ -8,12 +8,28 @@ import { LayoutDashboard, Users, LogOut, ArrowLeft, UserPlus } from 'lucide-reac
 import Logo from '@/components/logo';
 import { ThemeToggle } from '@/components/theme-toggle';
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { useEffect, useState } from 'react';
+import type { Volunteer } from '@/lib/types';
+import { getVolunteers } from '@/lib/firebase/firestore';
+import { Badge } from '@/components/ui/badge';
 
 
 export default function AdminLayout({ children }: { children: React.ReactNode }) {
   const router = useRouter();
   const pathname = usePathname();
+  const [pendingCount, setPendingCount] = useState(0);
   
+  useEffect(() => {
+    // Subscribe to volunteer data to get the count of pending requests.
+    const unsubscribe = getVolunteers((volunteers: Volunteer[]) => {
+      const pending = volunteers.filter(v => v.status === 'قيد الانتظار').length;
+      setPendingCount(pending);
+    });
+
+    // Cleanup subscription on component unmount.
+    return () => unsubscribe();
+  }, []);
+
   const handleLogout = () => {
     // Since we are not using Firebase auth, just redirect to login
     router.push('/login');
@@ -57,7 +73,11 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
                         <Link href="/admin/dashboard"><LayoutDashboard className="ml-2 h-4 w-4"/>لوحة التحكم</Link>
                     </TabsTrigger>
                      <TabsTrigger value="pending" asChild>
-                        <Link href="/admin/pending"><UserPlus className="ml-2 h-4 w-4"/>الطلبات المعلقة</Link>
+                        <Link href="/admin/pending" className="flex items-center">
+                            <UserPlus className="ml-2 h-4 w-4"/>
+                            <span>الطلبات المعلقة</span>
+                            {pendingCount > 0 && <Badge className="mr-2">{pendingCount}</Badge>}
+                        </Link>
                     </TabsTrigger>
                     <TabsTrigger value="volunteers" asChild>
                         <Link href="/admin/volunteers"><Users className="ml-2 h-4 w-4"/>المتطوعين</Link>
