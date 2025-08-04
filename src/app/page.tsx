@@ -128,9 +128,9 @@ export default function Home() {
             <div className="container px-4 md:px-6">
                  <div className="flex flex-col items-center justify-center space-y-4 text-center mb-12">
                     <div className="space-y-2">
-                        <h1 className="text-3xl font-bold tracking-tighter sm:text-5xl font-headline">هل تحتاج إلى مساعدة طارئة؟</h1>
+                        <h1 className="text-3xl font-bold tracking-tighter sm:text-5xl font-headline">نحن هنا لمساعدتك. في أوقات الشدة، لا تتردد في طلب العون.</h1>
                         <p className="max-w-[900px] text-foreground/80 md:text-xl/relaxed lg:text-base/relaxed xl:text-xl/relaxed">
-                            إذا كنت في حالة طارئة، قم بتعبئة النموذج أدناه. سيتم تحليل طلبك وتوجيهه فوراً إلى أقرب متطوع معتمد للمساعدة.
+                           يرجى ملء النموذج بهدوء وتقديم أكبر قدر من التفاصيل. كل معلومة تساعدنا في الوصول إليك بشكل أسرع وتقديم الدعم المناسب. فريقنا جاهز للاستجابة.
                         </p>
                     </div>
                 </div>
