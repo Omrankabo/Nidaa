@@ -2,7 +2,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { useSearchParams, useRouter } from 'next/navigation';
+import { useRouter } from 'next/navigation';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -23,12 +23,10 @@ import Logo from '@/components/logo';
 const regions = ['الخرطوم', 'شمال كردفان', 'البحر الأحمر', 'الجزيرة', 'كسلا', 'النيل الأزرق'];
 
 
-export default function DashboardClient() {
-  const searchParams = useSearchParams();
+export default function DashboardClient({ volunteerEmail }: { volunteerEmail: string | null }) {
   const router = useRouter();
   const { toast } = useToast();
   // We get the email from the search params and then derive the ID
-  const volunteerEmail = searchParams.get('email');
   const volunteerId = volunteerEmail ? volunteerEmail.replace(/[.#$[\]]/g, "_") : null;
   
   const [volunteer, setVolunteer] = useState<Volunteer | null>(null);
