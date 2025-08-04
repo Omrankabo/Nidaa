@@ -345,12 +345,27 @@ export default function DashboardClient({ volunteerEmail }: { volunteerEmail: st
                         </div>
                     </form>
                  ) : (
-                    <div className="space-y-2 text-right">
-                        <p><strong>البريد الإلكتروني:</strong> {volunteer.email}</p>
-                        <p><strong>المهنة:</strong> {volunteer.profession}</p>
-                        <p><strong>رقم الهاتف:</strong> {volunteer.phoneNumber}</p>
-                        <p><strong>الحالة:</strong> <Badge variant={volunteer.status === 'تم التحقق' ? 'default' : 'destructive'} className={volunteer.status === 'تم التحقق' ? 'bg-green-500' : ''}>{volunteer.status}</Badge></p>
-                         <p><strong>الطلبات التي تم حلها:</strong> {historyRequests.filter(r => r.status === 'اتحلت').length}</p>
+                    <div className="space-y-4">
+                        <div className="flex justify-between items-center">
+                            <span>{volunteer.email}</span>
+                            <strong>:البريد الإلكتروني</strong>
+                        </div>
+                         <div className="flex justify-between items-center">
+                            <span>{volunteer.profession}</span>
+                             <strong>:المهنة</strong>
+                        </div>
+                        <div className="flex justify-between items-center">
+                            <span>{volunteer.phoneNumber}</span>
+                            <strong>:رقم الهاتف</strong>
+                        </div>
+                        <div className="flex justify-between items-center">
+                           <Badge variant={volunteer.status === 'تم التحقق' ? 'default' : 'destructive'} className={volunteer.status === 'تم التحقق' ? 'bg-green-500' : ''}>{volunteer.status}</Badge>
+                           <strong>:الحالة</strong>
+                        </div>
+                        <div className="flex justify-between items-center">
+                            <span>{historyRequests.filter(r => r.status === 'اتحلت').length}</span>
+                             <strong>:الطلبات التي تم حلها</strong>
+                        </div>
                     </div>
                  )}
                 </CardContent>
