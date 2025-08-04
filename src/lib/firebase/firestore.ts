@@ -228,8 +228,8 @@ export function getVolunteerRequests(
             });
         }
         // Separate requests into currently assigned vs historical.
-        const assigned = allRequests.filter(r => r.status === 'تم التعيين').reverse();
-        const history = allRequests.filter(r => r.status !== 'تم التعيين').reverse();
+        const assigned = allRequests.filter(r => r.status === 'تم التعيين' || r.status === 'قيد التنفيذ').reverse();
+        const history = allRequests.filter(r => r.status !== 'تم التعيين' && r.status !== 'قيد التنفيذ').reverse();
         callback(assigned, history);
     }, (error) => {
         console.error("Error fetching volunteer requests:", error);

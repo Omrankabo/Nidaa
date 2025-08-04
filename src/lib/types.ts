@@ -22,7 +22,7 @@ export interface EmergencyRequest {
   location: string;
   contactPhone: string;
   timestamp: number | string;
-  status: 'في الانتظار' | 'تم التعيين' | 'اتحلت' | 'ملغية';
+  status: 'في الانتظار' | 'تم التعيين' | 'قيد التنفيذ' | 'اتحلت' | 'ملغية';
   assignedVolunteer?: string;
   volunteerId?: string;
   eta?: string; // Estimated Time of Arrival

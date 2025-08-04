@@ -92,6 +92,20 @@ export default function DashboardClient({ volunteerEmail }: { volunteerEmail: st
     toast({ title: `تم تغيير حالة الطلب إلى "${status}"`});
   };
   
+   /**
+   * Handles denying a request. Unassigns the volunteer and sets status to 'Pending'.
+   * @param {string} requestId - The ID of the request to deny.
+   */
+  const handleDenyRequest = async (requestId: string) => {
+    await updateRequest(requestId, {
+      status: 'في الانتظار',
+      assignedVolunteer: '', // Remove volunteer name
+      volunteerId: '',       // Remove volunteer ID
+      eta: '',               // Clear ETA
+    });
+    toast({ title: 'تم رفض الطلب بنجاح', description: 'سيعاد تعيين الطلب لمتطوع آخر.' });
+  };
+  
   /**
    * Handles the submission of the profile edit form.
    * @param {React.FormEvent} e - The form event.
@@ -162,7 +176,23 @@ export default function DashboardClient({ volunteerEmail }: { volunteerEmail: st
             <p className="flex items-center gap-2"><MapPin className="h-4 w-4 text-primary"/> <strong>الموقع:</strong> {request.location}</p>
             <p className="flex items-center gap-2"><Phone className="h-4 w-4 text-primary"/> <strong>هاتف التواصل:</strong> {request.contactPhone}</p>
         </div>
-        <div className="flex gap-2">
+
+        {/* Conditional buttons based on request status */}
+        {request.status === 'تم التعيين' && (
+          <div className="flex gap-2">
+            <Button className="w-full bg-green-600 hover:bg-green-700" onClick={() => handleStatusUpdate(request.id, 'قيد التنفيذ')}>
+                <Check className="ml-2 h-4 w-4" />
+                قبول
+            </Button>
+            <Button className="w-full" variant="destructive" onClick={() => handleDenyRequest(request.id)}>
+                <X className="ml-2 h-4 w-4" />
+                رفض
+            </Button>
+          </div>
+        )}
+        
+        {request.status === 'قيد التنفيذ' && (
+           <div className="flex gap-2">
             <Button className="w-full bg-green-600 hover:bg-green-700" onClick={() => handleStatusUpdate(request.id, 'اتحلت')}>
                 <Check className="ml-2 h-4 w-4" />
                 تم الحل
@@ -171,7 +201,8 @@ export default function DashboardClient({ volunteerEmail }: { volunteerEmail: st
                 <X className="ml-2 h-4 w-4" />
                 إلغاء
             </Button>
-        </div>
+          </div>
+        )}
       </CardContent>
     </Card>
   )};

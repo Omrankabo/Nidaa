@@ -6,7 +6,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Badge } from '@/components/ui/badge';
 import type { EmergencyRequest, Volunteer } from '@/lib/types';
-import { AlertCircle, UserPlus, CheckCircle, Clock, Trash2, Info, UserCheck } from 'lucide-react';
+import { AlertCircle, UserPlus, CheckCircle, Clock, Trash2, Info, UserCheck, PlayCircle } from 'lucide-react';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { getRequests, getVolunteers, updateRequest, deleteRequest } from '@/lib/firebase/firestore';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
@@ -125,6 +125,7 @@ export default function DashboardPage() {
     switch (status) {
       case 'تم التعيين': return <Badge className="bg-blue-500 hover:bg-blue-500"><CheckCircle className="ml-1 h-3 w-3" />تم التعيين</Badge>;
       case 'في الانتظار': return <Badge variant="secondary"><Clock className="ml-1 h-3 w-3" />في الانتظار</Badge>;
+      case 'قيد التنفيذ': return <Badge className="bg-yellow-500 hover:bg-yellow-500"><PlayCircle className="ml-1 h-3 w-3" />قيد التنفيذ</Badge>;
       case 'اتحلت': return <Badge className="bg-green-500 hover:bg-green-500"><CheckCircle className="ml-1 h-3 w-3" />تم الحل</Badge>;
       case 'ملغية': return <Badge variant="destructive"><AlertCircle className="ml-1 h-3 w-3" />ملغية</Badge>;
       default: return <Badge variant="outline">{status}</Badge>;
@@ -242,6 +243,7 @@ export default function DashboardPage() {
                                 <DropdownMenuContent>
                                     <DropdownMenuItem onClick={() => handleStatusChange(req.id, 'في الانتظار')}>في الانتظار</DropdownMenuItem>
                                     <DropdownMenuItem onClick={() => handleStatusChange(req.id, 'تم التعيين')}>تم التعيين</DropdownMenuItem>
+                                    <DropdownMenuItem onClick={() => handleStatusChange(req.id, 'قيد التنفيذ')}>قيد التنفيذ</DropdownMenuItem>
                                     <DropdownMenuItem onClick={() => handleStatusChange(req.id, 'اتحلت')}>تم الحل</DropdownMenuItem>
                                     <DropdownMenuItem onClick={() => handleStatusChange(req.id, 'ملغية')}>ملغية</DropdownMenuItem>
                                 </DropdownMenuContent>
