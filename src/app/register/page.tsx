@@ -18,14 +18,14 @@ import { createVolunteerAction } from '@/lib/actions';
 import { ThemeToggle } from '@/components/theme-toggle';
 
 const registrationSchema = z.object({
-  fullName: z.string().min(2, { message: 'يجب أن يتكون الاسم الكامل من حرفين على الأقل.' }),
-  email: z.string().email({ message: 'الرجاء إدخال بريد إلكتروني صحيح.' }),
-  password: z.string().min(6, { message: 'يجب أن تكون كلمة المرور 6 أحرف على الأقل.' }),
-  gender: z.enum(['male', 'female', 'other'], { errorMap: () => ({ message: "الرجاء اختيار النوع" }) }),
-  region: z.string().min(1, { message: 'الرجاء اختيار منطقة.' }),
-  city: z.string().min(1, { message: 'الرجاء إدخال مدينة.' }),
-  profession: z.string().min(2, { message: 'يجب أن تكون المهنة من حرفين على الأقل.' }),
-  phoneNumber: z.string().regex(/^\+?[0-9\s-]{7,20}$/, { message: 'الرجاء إدخال رقم هاتف صحيح.' }),
+  fullName: z.string().min(2, { message: 'يجب أن يتكون الاسم من حرفين على الأقل.' }),
+  email: z.string().email({ message: 'يرجى إدخال بريد إلكتروني صحيح.' }),
+  password: z.string().min(6, { message: 'يجب أن تتكون كلمة المرور من 6 أحرف على الأقل.' }),
+  gender: z.enum(['male', 'female', 'other'], { errorMap: () => ({ message: "يرجى تحديد الجنس" }) }),
+  region: z.string().min(1, { message: 'يرجى تحديد منطقتك.' }),
+  city: z.string().min(1, { message: 'يرجى إدخال مدينتك.' }),
+  profession: z.string().min(2, { message: 'يجب أن تتكون المهنة من حرفين على الأقل.' }),
+  phoneNumber: z.string().regex(/^\+?[0-9\s-]{7,20}$/, { message: 'يرجى إدخال رقم هاتف صحيح.' }),
 });
 
 export type RegistrationFormValues = z.infer<typeof registrationSchema>;
@@ -58,12 +58,12 @@ export default function RegisterPage() {
 
     if (result.success) {
       toast({
-        title: 'تم تقديم طلب التسجيل بنجاح!',
-        description: 'سيقوم المسؤول بمراجعة طلبك قريبًا.',
+        title: 'تم إرسال طلبك بنجاح!',
+        description: 'سيقوم المسؤول بمراجعة طلبك والموافقة عليه قريبًا.',
       });
       router.push('/login');
     } else {
-        let description = result.error || 'فشل إرسال طلب التسجيل. الرجاء المحاولة مرة أخرى.';
+        let description = result.error || 'فشل إرسال طلب التسجيل. يرجى المحاولة مرة أخرى.';
         
         toast({
             variant: 'destructive',
@@ -88,9 +88,9 @@ export default function RegisterPage() {
         </div>
       <Card className="w-full max-w-2xl my-12">
         <CardHeader>
-          <CardTitle className="text-2xl font-headline">كن مستجيباً معتمداً</CardTitle>
+          <CardTitle className="text-2xl font-headline">انضم إلينا</CardTitle>
           <CardDescription>
-            انضم إلى شبكتنا من المتطوعين والمهنيين الطبيين الموثوق بهم. مساعدتك يمكن أن تنقذ الأرواح.
+            انضم إلى شبكتنا من المتطوعين والخبراء الطبيين الموثوقين. مساعدتك يمكن أن تنقذ حياة.
           </CardDescription>
         </CardHeader>
         <CardContent>
@@ -104,7 +104,7 @@ export default function RegisterPage() {
                     <FormItem>
                       <FormLabel>الاسم الكامل</FormLabel>
                       <FormControl>
-                        <Input placeholder="أدخل اسمك الكامل" {...field} />
+                        <Input placeholder="اكتب اسمك الكامل" {...field} />
                       </FormControl>
                       <FormMessage />
                     </FormItem>
@@ -115,11 +115,11 @@ export default function RegisterPage() {
                   name="gender"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>النوع</FormLabel>
+                      <FormLabel>الجنس</FormLabel>
                       <Select onValueChange={field.onChange} defaultValue={field.value}>
                         <FormControl>
                           <SelectTrigger>
-                            <SelectValue placeholder="اختر النوع" />
+                            <SelectValue placeholder="اختر الجنس" />
                           </SelectTrigger>
                         </FormControl>
                         <SelectContent>
@@ -189,9 +189,9 @@ export default function RegisterPage() {
                   name="city"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>المدينة / البلدة</FormLabel>
+                      <FormLabel>المدينة / الحي</FormLabel>
                       <FormControl>
-                        <Input placeholder="مثال: أم درمان" {...field} />
+                        <Input placeholder="مثال: أمدرمان" {...field} />
                       </FormControl>
                       <FormMessage />
                     </FormItem>
@@ -204,7 +204,7 @@ export default function RegisterPage() {
                   name="profession"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>المهنة</FormLabel>
+                      <FormLabel>ما هي مهنتك؟</FormLabel>
                       <FormControl>
                         <Input placeholder="مثال: طبيب، ممرض، سائق" {...field} />
                       </FormControl>
@@ -228,7 +228,7 @@ export default function RegisterPage() {
               </div>
               <Button type="submit" className="w-full" size="lg" disabled={isSubmitting}>
                 {isSubmitting && <Loader2 className="ml-2 h-4 w-4 animate-spin" />}
-                إرسال للتحقق
+                إرسال للمراجعة
               </Button>
             </form>
           </Form>

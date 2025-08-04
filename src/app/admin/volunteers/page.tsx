@@ -7,11 +7,13 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Badge } from '@/components/ui/badge';
 import type { Volunteer, EmergencyRequest } from '@/lib/types';
-import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
-import { CheckCircle, MoreHorizontal, XCircle, Clock, AlertCircle, Trash2, Bell } from 'lucide-react';
-import { getVolunteers, updateVolunteerStatus, deleteVolunteer, getRequests, sendNotificationToVolunteer } from '@/lib/firebase/firestore';
+import { CheckCircle, XCircle, Clock, AlertCircle, Trash2, Bell, Info } from 'lucide-react';
+import { getVolunteers, deleteVolunteer, getRequests, sendNotificationToVolunteer } from '@/lib/firebase/firestore';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { useToast } from '@/hooks/use-toast';
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
+import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from '@/components/ui/alert-dialog';
+
 
 export default function VolunteersPage() {
     const [volunteers, setVolunteers] = useState<Volunteer[]>([]);
@@ -35,29 +37,28 @@ export default function VolunteersPage() {
     }, []);
 
     const handleDelete = async (id: string) => {
-        if (window.confirm('هل أنت متأكد أنك تريد حذف هذا المتطوع؟')) {
-            await deleteVolunteer(id);
-        }
+        await deleteVolunteer(id);
+        toast({ title: 'تم حذف المتطوع بنجاح.' });
     };
     
     const handleSendNotification = async (volunteerId: string) => {
-        const message = prompt("أدخل رسالة الإشعار:");
+        const message = prompt("اكتب رسالة الإشعار:");
         if (message) {
-            await sendNotificationToVolunteer(volunteerId, 'رسالة من المسؤول', message);
+            await sendNotificationToVolunteer(volunteerId, 'رسالة من الإدارة', message);
             toast({title: "تم إرسال الإشعار بنجاح"});
         }
     };
 
     const getHandledRequestsCount = (volunteerId: string) => {
-        return requests.filter(req => req.volunteerId === volunteerId && req.status === 'تم الحل').length;
+        return requests.filter(req => req.volunteerId === volunteerId && req.status === 'اتحلت').length;
     };
 
     const getStatusBadge = (status: Volunteer['status']) => {
         switch (status) {
             case 'تم التحقق':
-                return <Badge variant="default" className="bg-green-500 hover:bg-green-600"><CheckCircle className="ml-1 h-3 w-3" />تم التحقق</Badge>;
+                return <Badge variant="default" className="bg-green-500 hover:bg-green-600"><CheckCircle className="ml-1 h-3 w-3" />مقبول</Badge>;
             case 'قيد الانتظار':
-                return <Badge variant="secondary"><Clock className="ml-1 h-3 w-3" />قيد الانتظار</Badge>;
+                return <Badge variant="secondary"><Clock className="ml-1 h-3 w-3" />قيد المراجعة</Badge>;
             case 'مرفوض':
                 return <Badge variant="destructive"><XCircle className="ml-1 h-3 w-3" />مرفوض</Badge>;
             default:
@@ -86,11 +87,11 @@ export default function VolunteersPage() {
                 <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
                     <div>
                         <CardTitle className="font-headline">إدارة المتطوعين</CardTitle>
-                        <CardDescription>عرض وإدارة جميع المستجيبين المعتمدين في النظام.</CardDescription>
+                        <CardDescription>هنا يمكنك عرض وإدارة جميع المتطوعين المعتمدين في النظام.</CardDescription>
                     </div>
                     <Select value={regionFilter} onValueChange={setRegionFilter}>
                         <SelectTrigger className="w-full sm:w-[180px]">
-                            <SelectValue placeholder="تصفية حسب المنطقة" />
+                            <SelectValue placeholder="فلتر حسب المنطقة" />
                         </SelectTrigger>
                         <SelectContent>
                             <SelectItem value="all">كل المناطق</SelectItem>
@@ -100,45 +101,79 @@ export default function VolunteersPage() {
                 </div>
             </CardHeader>
             <CardContent>
-                <div className="border rounded-md">
+                <div className="border rounded-md overflow-x-auto">
                     <Table>
                         <TableHeader>
                             <TableRow>
                                 <TableHead>الاسم الكامل</TableHead>
-                                <TableHead className="hidden sm:table-cell">الحالة</TableHead>
-                                <TableHead className="hidden lg:table-cell">المنطقة</TableHead>
-                                <TableHead className="hidden md:table-cell">الطلبات المكتملة</TableHead>
-                                <TableHead className="text-left">الإجراءات</TableHead>
+                                <TableHead className="hidden sm:table-cell text-center">الحالة</TableHead>
+                                <TableHead className="hidden lg:table-cell text-center">المنطقة</TableHead>
+                                <TableHead className="hidden md:table-cell text-center">الطلبات المكتملة</TableHead>
+                                <TableHead className="text-center">الإجراءات</TableHead>
                             </TableRow>
                         </TableHeader>
                         <TableBody>
-                            {verifiedVolunteers.map((volunteer) => (
-                                <TableRow key={volunteer.id}>
-                                    <TableCell className="font-medium">{volunteer.fullName}</TableCell>
-                                    <TableCell className="hidden sm:table-cell">{getStatusBadge(volunteer.status)}</TableCell>
-                                    <TableCell className="hidden lg:table-cell">{volunteer.region}</TableCell>
-                                    <TableCell className="hidden md:table-cell text-center">{getHandledRequestsCount(volunteer.id)}</TableCell>
-                                    <TableCell className="text-left">
-                                        <DropdownMenu>
-                                            <DropdownMenuTrigger asChild>
-                                                <Button variant="ghost" size="icon">
-                                                    <MoreHorizontal className="h-4 w-4" />
+                            {verifiedVolunteers.length > 0 ? (
+                                verifiedVolunteers.map((volunteer) => (
+                                    <TableRow key={volunteer.id}>
+                                        <TableCell className="font-medium whitespace-nowrap">{volunteer.fullName}</TableCell>
+                                        <TableCell className="hidden sm:table-cell text-center">{getStatusBadge(volunteer.status)}</TableCell>
+                                        <TableCell className="hidden lg:table-cell text-center">{volunteer.region}</TableCell>
+                                        <TableCell className="hidden md:table-cell text-center">{getHandledRequestsCount(volunteer.id)}</TableCell>
+                                        <TableCell className="text-center">
+                                             <div className="flex justify-center items-center gap-1">
+                                                 <Dialog>
+                                                    <DialogTrigger asChild>
+                                                        <Button variant="outline" size="icon"><Info className="h-4 w-4" /></Button>
+                                                    </DialogTrigger>
+                                                    <DialogContent className="sm:max-w-md">
+                                                        <DialogHeader>
+                                                            <DialogTitle>تفاصيل المتطوع</DialogTitle>
+                                                            <DialogDescription>
+                                                                المعرف: {volunteer.id}
+                                                            </DialogDescription>
+                                                        </DialogHeader>
+                                                        <div className="space-y-2">
+                                                            <p><strong>الاسم:</strong> {volunteer.fullName}</p>
+                                                            <p><strong>البريد الإلكتروني:</strong> {volunteer.email}</p>
+                                                            <p><strong>الهاتف:</strong> {volunteer.phoneNumber}</p>
+                                                            <p><strong>المنطقة:</strong> {volunteer.region}</p>
+                                                            <p><strong>المدينة:</strong> {volunteer.city}</p>
+                                                            <p><strong>المهنة:</strong> {volunteer.profession}</p>
+                                                        </div>
+                                                    </DialogContent>
+                                                </Dialog>
+                                                <Button variant="outline" size="icon" onClick={() => handleSendNotification(volunteer.id)}>
+                                                    <Bell className="h-4 w-4" />
                                                 </Button>
-                                            </DropdownMenuTrigger>
-                                            <DropdownMenuContent align="end">
-                                                <DropdownMenuItem onClick={() => handleSendNotification(volunteer.id)}>
-                                                    <Bell className="ml-2 h-4 w-4 text-blue-500" />
-                                                    <span>إرسال إشعار</span>
-                                                </DropdownMenuItem>
-                                                <DropdownMenuItem onClick={() => handleDelete(volunteer.id)}>
-                                                    <Trash2 className="ml-2 h-4 w-4 text-red-500" />
-                                                    <span>حذف</span>
-                                                </DropdownMenuItem>
-                                            </DropdownMenuContent>
-                                        </DropdownMenu>
+                                                 <AlertDialog>
+                                                    <AlertDialogTrigger asChild>
+                                                        <Button variant="destructive" size="icon"><Trash2 className="h-4 w-4" /></Button>
+                                                    </AlertDialogTrigger>
+                                                    <AlertDialogContent>
+                                                        <AlertDialogHeader>
+                                                            <AlertDialogTitle>هل أنت متأكد؟</AlertDialogTitle>
+                                                            <AlertDialogDescription>
+                                                            هذا الإجراء سيحذف المتطوع نهائيًا.
+                                                            </AlertDialogDescription>
+                                                        </AlertDialogHeader>
+                                                        <AlertDialogFooter>
+                                                            <AlertDialogCancel>إلغاء</AlertDialogCancel>
+                                                            <AlertDialogAction onClick={() => handleDelete(volunteer.id)}>حذف</AlertDialogAction>
+                                                        </AlertDialogFooter>
+                                                    </AlertDialogContent>
+                                                </AlertDialog>
+                                             </div>
+                                        </TableCell>
+                                    </TableRow>
+                                ))
+                             ) : (
+                                <TableRow>
+                                    <TableCell colSpan={5} className="text-center py-8">
+                                        لا يوجد متطوعون معتمدون يطابقون الفلتر الحالي.
                                     </TableCell>
                                 </TableRow>
-                            ))}
+                            )}
                         </TableBody>
                     </Table>
                 </div>

@@ -16,7 +16,7 @@ import Logo from '@/components/logo';
 import { ThemeToggle } from '@/components/theme-toggle';
 import { getVolunteerByEmail } from '@/lib/firebase/firestore';
 
-
+// Define the schema for the login form using Zod for validation.
 const loginSchema = z.object({
   email: z.string().email({ message: 'الرجاء إدخال بريد إلكتروني صحيح.' }),
   password: z.string().min(1, { message: 'الرجاء إدخال كلمة المرور.' }),
@@ -27,40 +27,50 @@ export default function LoginPage() {
   const router = useRouter();
   const { toast } = useToast();
 
+  // Initialize the form with react-hook-form and Zod resolver.
   const form = useForm<z.infer<typeof loginSchema>>({
     resolver: zodResolver(loginSchema),
     defaultValues: { email: '', password: '' },
   });
 
+  /**
+   * Handles the form submission for logging in.
+   * It checks for admin credentials first, then checks for volunteer credentials.
+   * @param {z.infer<typeof loginSchema>} values - The validated form values.
+   */
   const onSubmit = async (values: z.infer<typeof loginSchema>) => {
     setIsSubmitting(true);
     
-    // Hardcoded credentials for admin
+    // --- Hardcoded Admin Login ---
+    // For testing purposes, we bypass Firebase Auth and check for static credentials.
+    // In a production app, this should be replaced with a secure authentication call.
     if (values.email === 'admin@awni.sd' && values.password === 'password') {
-      toast({ title: 'تم تسجيل الدخول بنجاح' });
+      toast({ title: 'أهلاً بك أيها المدير' });
       router.push('/admin/dashboard');
+      setIsSubmitting(false);
       return;
     }
 
-    // Volunteer login check
+    // --- Volunteer Login ---
     try {
+        // Fetch volunteer data from Firestore using their email.
         const volunteer = await getVolunteerByEmail(values.email);
         if (volunteer) {
-            // NOTE: We are not checking password here because we disabled Firebase Auth
-            // In a real app, you would validate the password.
+            // IMPORTANT: Password is not being checked here because Firebase Auth is disabled.
+            // In a real application, you MUST validate the password hash.
             if (volunteer.status === 'تم التحقق') {
-                toast({ title: 'تم تسجيل الدخول بنجاح' });
-                // Pass volunteer email to the dashboard to derive the ID
+                toast({ title: `أهلاً بك يا ${volunteer.fullName}` });
+                // Navigate to the volunteer dashboard, passing the email as a query parameter.
                 router.push(`/volunteer/dashboard?email=${volunteer.email}`);
             } else {
-                 toast({ variant: 'destructive', title: 'فشل تسجيل الدخول', description: 'حسابك قيد المراجعة أو تم رفضه.' });
+                 toast({ variant: 'destructive', title: 'فشل تسجيل الدخول', description: 'حسابك لا يزال قيد المراجعة أو تم رفضه.' });
             }
         } else {
             toast({ variant: 'destructive', title: 'فشل تسجيل الدخول', description: 'البريد الإلكتروني أو كلمة المرور غير صحيحة.' });
         }
     } catch (error) {
         console.error("Login error", error);
-        toast({ variant: 'destructive', title: 'خطأ', description: 'حدث خطأ أثناء محاولة تسجيل الدخول.' });
+        toast({ variant: 'destructive', title: 'حدث خطأ', description: 'حدث خطأ أثناء محاولة تسجيل الدخول.' });
     }
 
     setIsSubmitting(false);
@@ -69,7 +79,7 @@ export default function LoginPage() {
   return (
     <div className="flex flex-col items-center justify-center min-h-screen p-4 bg-background/50">
        <div className="absolute top-4 left-4 flex gap-4">
-            <Button variant="outline" size="icon" onClick={() => router.back()}>
+            <Button variant="outline" size="icon" onClick={() => router.push('/')}>
                 <ArrowLeft />
             </Button>
             <ThemeToggle />
@@ -113,7 +123,7 @@ export default function LoginPage() {
               />
               <Button type="submit" className="w-full" disabled={isSubmitting}>
                 {isSubmitting && <Loader2 className="ml-2 h-4 w-4 animate-spin" />}
-                تسجيل الدخول
+                دخول
               </Button>
             </form>
           </Form>

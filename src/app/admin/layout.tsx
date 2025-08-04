@@ -4,16 +4,32 @@
 import { useRouter, usePathname } from 'next/navigation';
 import Link from 'next/link';
 import { Button } from '@/components/ui/button';
-import { LayoutDashboard, Users, LogOut, ArrowLeft } from 'lucide-react';
+import { LayoutDashboard, Users, LogOut, ArrowLeft, UserPlus } from 'lucide-react';
 import Logo from '@/components/logo';
 import { ThemeToggle } from '@/components/theme-toggle';
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { useEffect, useState } from 'react';
+import type { Volunteer } from '@/lib/types';
+import { getVolunteers } from '@/lib/firebase/firestore';
+import { Badge } from '@/components/ui/badge';
 
 
 export default function AdminLayout({ children }: { children: React.ReactNode }) {
   const router = useRouter();
   const pathname = usePathname();
+  const [pendingCount, setPendingCount] = useState(0);
   
+  useEffect(() => {
+    // Subscribe to volunteer data to get the count of pending requests.
+    const unsubscribe = getVolunteers((volunteers: Volunteer[]) => {
+      const pending = volunteers.filter(v => v.status === 'قيد الانتظار').length;
+      setPendingCount(pending);
+    });
+
+    // Cleanup subscription on component unmount.
+    return () => unsubscribe();
+  }, []);
+
   const handleLogout = () => {
     // Since we are not using Firebase auth, just redirect to login
     router.push('/login');
@@ -22,6 +38,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
   const getActiveTab = () => {
     if (pathname.includes('/dashboard')) return 'dashboard';
     if (pathname.includes('/volunteers')) return 'volunteers';
+    if (pathname.includes('/pending')) return 'pending';
     return 'dashboard';
   }
 
@@ -33,7 +50,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
                 <Logo />
             </div>
             <div className="flex items-center gap-2 md:hidden">
-                 <Button variant="ghost" size="icon" onClick={() => router.back()}>
+                 <Button variant="ghost" size="icon" onClick={() => router.push('/login')}>
                     <ArrowLeft />
                 </Button>
             </div>
@@ -51,12 +68,19 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
       <main className="flex-1">
         <div className="container py-8">
             <Tabs value={getActiveTab()} className="mb-6">
-                <TabsList className="grid w-full grid-cols-2">
+                <TabsList className="grid w-full grid-cols-3">
                     <TabsTrigger value="dashboard" asChild>
                         <Link href="/admin/dashboard"><LayoutDashboard className="ml-2 h-4 w-4"/>لوحة التحكم</Link>
                     </TabsTrigger>
+                     <TabsTrigger value="pending" asChild>
+                        <Link href="/admin/pending" className="flex items-center">
+                            <UserPlus className="ml-2 h-4 w-4"/>
+                            <span>الطلبات المعلقة</span>
+                            {pendingCount > 0 && <Badge className="mr-2">{pendingCount}</Badge>}
+                        </Link>
+                    </TabsTrigger>
                     <TabsTrigger value="volunteers" asChild>
-                        <Link href="/admin/volunteers"><Users className="ml-2 h-4 w-4"/>المتطوعون</Link>
+                        <Link href="/admin/volunteers"><Users className="ml-2 h-4 w-4"/>المتطوعين</Link>
                     </TabsTrigger>
                 </TabsList>
             </Tabs>

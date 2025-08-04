@@ -35,14 +35,14 @@ export default function TrackRequestPage() {
       <Card className="w-full max-w-md">
         <CardHeader>
           <CardTitle className="text-2xl font-headline">تتبع حالة طلبك</CardTitle>
-          <CardDescription>أدخل معرف الطلب الخاص بك أدناه لعرض حالته وتفاصيله.</CardDescription>
+          <CardDescription>أدخل رقم طلبك أدناه لعرض حالته وتفاصيله.</CardDescription>
         </CardHeader>
         <CardContent>
           <form onSubmit={handleTrack} className="flex gap-2">
             <Input
               value={requestId}
               onChange={(e) => setRequestId(e.target.value)}
-              placeholder="أدخل معرف الطلب هنا..."
+              placeholder="أدخل رقم الطلب هنا..."
               required
             />
             <Button type="submit" size="icon">

@@ -31,7 +31,7 @@ export default function TrackRequestPage({ params }: { params: { id: string } })
         setRequest(data);
         setEditedText(data.requestText);
       } else {
-        setError('لم يتم العثور على الطلب. يرجى التحقق من المعرف والمحاولة مرة أخرى.');
+        setError('لم يتم العثور على هذا الطلب. يرجى التأكد من الرقم والمحاولة مرة أخرى.');
       }
       setLoading(false);
     });
@@ -57,13 +57,13 @@ export default function TrackRequestPage({ params }: { params: { id: string } })
   
   const getStatusInfo = (status: EmergencyRequest['status']) => {
     switch (status) {
-      case 'قيد الانتظار':
-        return { icon: <Clock className="h-6 w-6 text-yellow-500" />, text: 'طلبك قيد الانتظار. نحن نبحث عن أقرب متطوع.', color: 'text-yellow-500' };
+      case 'في الانتظار':
+        return { icon: <Clock className="h-6 w-6 text-yellow-500" />, text: 'طلبك لا يزال قيد الانتظار. نحن نبحث لك عن أقرب شخص للمساعدة.', color: 'text-yellow-500' };
       case 'تم التعيين':
-        return { icon: <UserCheck className="h-6 w-6 text-blue-500" />, text: 'تم تعيين متطوع! المساعدة في الطريق.', color: 'text-blue-500' };
-      case 'تم الحل':
-        return { icon: <CheckCircle className="h-6 w-6 text-green-500" />, text: 'تم حل طلبك. نتمنى لك السلامة.', color: 'text-green-500' };
-      case 'تم الإلغاء':
+        return { icon: <UserCheck className="h-6 w-6 text-blue-500" />, text: 'لقد وجدنا لك متطوعًا! المساعدة في طريقها إليك.', color: 'text-blue-500' };
+      case 'اتحلت':
+        return { icon: <CheckCircle className="h-6 w-6 text-green-500" />, text: 'تم حل مشكلتك. الحمد لله على سلامتك.', color: 'text-green-500' };
+      case 'ملغية':
         return { icon: <AlertCircle className="h-6 w-6 text-red-500" />, text: 'تم إلغاء هذا الطلب.', color: 'text-red-500' };
       default:
         return { icon: <Clock className="h-6 w-6" />, text: status, color: ''};
@@ -102,8 +102,8 @@ export default function TrackRequestPage({ params }: { params: { id: string } })
         </div>
       <Card className="w-full max-w-3xl">
         <CardHeader>
-          <CardTitle className="font-headline text-2xl">تتبع طلب الطوارئ</CardTitle>
-          <CardDescription>معرف الطلب: <span className="font-mono">{id}</span></CardDescription>
+          <CardTitle className="font-headline text-2xl">متابعة طلب الطوارئ</CardTitle>
+          <CardDescription>رقم الطلب: <span className="font-mono">{id}</span></CardDescription>
         </CardHeader>
         <CardContent className="space-y-6">
             <div className={`p-4 rounded-lg border flex items-center gap-4 bg-background`}>
@@ -118,25 +118,25 @@ export default function TrackRequestPage({ params }: { params: { id: string } })
                  <Card>
                     <CardHeader className="flex flex-row items-center gap-4 pb-2">
                         <UserCheck className="h-6 w-6 text-primary" />
-                        <CardTitle className="text-xl">المستجيب المعين</CardTitle>
+                        <CardTitle className="text-xl">المستجيب القادم إليك</CardTitle>
                     </CardHeader>
                     <CardContent>
                         <p><strong>الاسم:</strong> {request.assignedVolunteer}</p>
                         <p className="mt-2 flex items-center gap-2">
                             <Timer className="h-5 w-5" />
-                            <strong>الوقت المقدر للوصول:</strong> {request.eta || 'جارِ التحديد...'}
+                            <strong>الوقت المتوقع للوصول:</strong> {request.eta || 'جاري الحساب...'}
                         </p>
                     </CardContent>
                 </Card>
             )}
 
           <div>
-            <h3 className="font-semibold mb-2">تفاصيل الطلب الأصلي:</h3>
+            <h3 className="font-semibold mb-2">تفاصيل طلبك الأصلي:</h3>
             {isEditing ? (
               <div className="space-y-2">
                 <Textarea value={editedText} onChange={(e) => setEditedText(e.target.value)} className="min-h-[120px]" />
                 <div className="flex gap-2">
-                  <Button onClick={handleUpdate}>حفظ التغييرات</Button>
+                  <Button onClick={handleUpdate}>حفظ التعديلات</Button>
                   <Button variant="outline" onClick={() => setIsEditing(false)}>إلغاء</Button>
                 </div>
               </div>
@@ -145,7 +145,7 @@ export default function TrackRequestPage({ params }: { params: { id: string } })
             )}
           </div>
           
-          {request?.status === 'قيد الانتظار' && !isEditing && (
+          {request?.status === 'في الانتظار' && !isEditing && (
             <div className="flex flex-col sm:flex-row gap-2 pt-4 border-t">
               <Button onClick={() => setIsEditing(true)}>
                 <Edit className="ml-2 h-4 w-4" />
@@ -162,7 +162,7 @@ export default function TrackRequestPage({ params }: { params: { id: string } })
                   <AlertDialogHeader>
                     <AlertDialogTitle>هل أنت متأكد؟</AlertDialogTitle>
                     <AlertDialogDescription>
-                      سيؤدي هذا إلى حذف طلبك نهائيًا. لا يمكن التراجع عن هذا الإجراء.
+                      هذا الإجراء سيحذف طلبك نهائيًا. لا يمكن التراجع عن هذا الإجراء.
                     </AlertDialogDescription>
                   </AlertDialogHeader>
                   <AlertDialogFooter>
