@@ -3,14 +3,14 @@
 
 import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { updateRequest, deleteRequest, getRequestById } from '@/lib/firebase/firestore';
-import type { EmergencyRequest } from '@/lib/types';
+import { updateRequest, deleteRequest, getRequestById, getVolunteerById } from '@/lib/firebase/firestore';
+import type { EmergencyRequest, Volunteer } from '@/lib/types';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from '@/components/ui/alert-dialog';
-import { Loader2, AlertCircle, CheckCircle, Clock, Edit, Trash2, UserCheck, Timer, ArrowLeft } from 'lucide-react';
+import { Loader2, AlertCircle, CheckCircle, Clock, Edit, Trash2, UserCheck, Timer, ArrowLeft, Phone } from 'lucide-react';
 import Logo from '@/components/logo';
 import { ThemeToggle } from '@/components/theme-toggle';
 
@@ -19,6 +19,7 @@ export default function TrackRequestPage({ params }: { params: { id: string } })
   const id = params.id;
   
   const [request, setRequest] = useState<EmergencyRequest | null>(null);
+  const [assignedVolunteer, setAssignedVolunteer] = useState<Volunteer | null>(null);
   const [loading, setLoading] = useState(true);
   const [isEditing, setIsEditing] = useState(false);
   const [editedText, setEditedText] = useState('');
@@ -26,19 +27,36 @@ export default function TrackRequestPage({ params }: { params: { id: string } })
 
   useEffect(() => {
     if (!id) return;
-    const unsubscribe = getRequestById(id, (data) => {
+
+    let volunteerUnsubscribe: (() => void) | null = null;
+
+    const requestUnsubscribe = getRequestById(id, (data) => {
       if (data) {
         setRequest(data);
         setEditedText(data.requestText);
+
+        // If there's a new volunteer ID, unsubscribe from the old one and subscribe to the new one.
+        if (data.volunteerId) {
+            if (volunteerUnsubscribe) volunteerUnsubscribe(); // Clean up previous listener
+            volunteerUnsubscribe = getVolunteerById(data.volunteerId, (volunteerData) => {
+                setAssignedVolunteer(volunteerData);
+            });
+        } else {
+             if (volunteerUnsubscribe) volunteerUnsubscribe();
+             setAssignedVolunteer(null); // No volunteer assigned
+        }
+
       } else {
         setError('لم يتم العثور على هذا الطلب. يرجى التأكد من الرقم والمحاولة مرة أخرى.');
       }
       setLoading(false);
     });
 
+    // Cleanup both listeners on component unmount
     return () => {
-        if(typeof unsubscribe === 'function') {
-            unsubscribe();
+        requestUnsubscribe();
+        if (volunteerUnsubscribe) {
+            volunteerUnsubscribe();
         }
     }
   }, [id]);
@@ -61,6 +79,8 @@ export default function TrackRequestPage({ params }: { params: { id: string } })
         return { icon: <Clock className="h-6 w-6 text-yellow-500" />, text: 'طلبك لا يزال قيد الانتظار. نحن نبحث لك عن أقرب شخص للمساعدة.', color: 'text-yellow-500' };
       case 'تم التعيين':
         return { icon: <UserCheck className="h-6 w-6 text-blue-500" />, text: 'لقد وجدنا لك متطوعًا! المساعدة في طريقها إليك.', color: 'text-blue-500' };
+      case 'قيد التنفيذ':
+        return { icon: <UserCheck className="h-6 w-6 text-blue-500" />, text: 'المتطوع قبل طلبك وهو في طريقه لمساعدتك.', color: 'text-blue-500' };
       case 'اتحلت':
         return { icon: <CheckCircle className="h-6 w-6 text-green-500" />, text: 'تم حل مشكلتك. الحمد لله على سلامتك.', color: 'text-green-500' };
       case 'ملغية':
@@ -114,15 +134,19 @@ export default function TrackRequestPage({ params }: { params: { id: string } })
                 </div>
             </div>
 
-            {request?.status === 'تم التعيين' && request.assignedVolunteer && (
+            {(request?.status === 'تم التعيين' || request?.status === 'قيد التنفيذ') && assignedVolunteer && (
                  <Card>
                     <CardHeader className="flex flex-row items-center gap-4 pb-2">
                         <UserCheck className="h-6 w-6 text-primary" />
                         <CardTitle className="text-xl">المستجيب القادم إليك</CardTitle>
                     </CardHeader>
-                    <CardContent>
-                        <p><strong>الاسم:</strong> {request.assignedVolunteer}</p>
-                        <p className="mt-2 flex items-center gap-2">
+                    <CardContent className="space-y-3">
+                        <p><strong>الاسم:</strong> {assignedVolunteer.fullName}</p>
+                         <p className="flex items-center gap-2">
+                            <Phone className="h-5 w-5" />
+                            <strong>هاتف التواصل:</strong> {assignedVolunteer.phoneNumber}
+                        </p>
+                        <p className="flex items-center gap-2">
                             <Timer className="h-5 w-5" />
                             <strong>الوقت المتوقع للوصول:</strong> {request.eta || 'جاري الحساب...'}
                         </p>

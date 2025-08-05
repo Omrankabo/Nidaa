@@ -6,6 +6,20 @@ import { ThemeProvider } from '@/components/theme-provider';
 export const metadata: Metadata = {
   title: 'نداء',
   description: 'نظام استجابة للطوارئ عشان نوصل المحتاجين بمساعدة طبية موثوقة وسريعة.',
+  openGraph: {
+    title: 'نداء',
+    description: 'نظام استجابة للطوارئ للمساعدة الطبية العاجلة.',
+    images: [
+      {
+        url: 'https://placehold.co/1200x630.png',
+        width: 1200,
+        height: 630,
+        alt: 'صورة تطبيق نداء',
+      },
+    ],
+    locale: 'ar_EG',
+    type: 'website',
+  },
 };
 
 export default function RootLayout({

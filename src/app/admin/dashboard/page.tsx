@@ -6,7 +6,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Badge } from '@/components/ui/badge';
 import type { EmergencyRequest, Volunteer } from '@/lib/types';
-import { AlertCircle, UserPlus, CheckCircle, Clock, Trash2, Info, UserCheck, PlayCircle } from 'lucide-react';
+import { AlertCircle, UserPlus, CheckCircle, Clock, Trash2, Info, UserCheck, PlayCircle, XCircle } from 'lucide-react';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { getRequests, getVolunteers, updateRequest, deleteRequest } from '@/lib/firebase/firestore';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
@@ -90,7 +90,7 @@ export default function DashboardPage() {
   };
   
   /**
-   * Updates the status of a request.
+   * Updates the status of a request, typically to cancel it.
    * @param {string} requestId - The ID of the request.
    * @param {EmergencyRequest['status']} status - The new status.
    */
@@ -132,7 +132,7 @@ export default function DashboardPage() {
       case 'في الانتظار': return <Badge variant="secondary"><Clock className="ml-1 h-3 w-3" />في الانتظار</Badge>;
       case 'قيد التنفيذ': return <Badge className="bg-yellow-500"><PlayCircle className="ml-1 h-3 w-3" />قيد التنفيذ</Badge>;
       case 'اتحلت': return <Badge className="bg-green-500"><CheckCircle className="ml-1 h-3 w-3" />تم الحل</Badge>;
-      case 'ملغية': return <Badge variant="destructive"><AlertCircle className="ml-1 h-3 w-3" />ملغية</Badge>;
+      case 'ملغية': return <Badge variant="destructive"><XCircle className="ml-1 h-3 w-3" />ملغية</Badge>;
       default: return <Badge variant="outline">{status}</Badge>;
     }
   };
@@ -239,31 +239,21 @@ export default function DashboardPage() {
                             </DropdownMenu>
                         </TableCell>
                         <TableCell className="text-center hidden sm:table-cell">
-                             <DropdownMenu>
-                                <DropdownMenuTrigger asChild>
-                                    <div className="inline-flex">
-                                         {getStatusBadge(req.status)}
-                                    </div>
-                                </DropdownMenuTrigger>
-                                <DropdownMenuContent>
-                                    <DropdownMenuItem onClick={() => handleStatusChange(req.id, 'في الانتظار')}>في الانتظار</DropdownMenuItem>
-                                    <DropdownMenuItem onClick={() => handleStatusChange(req.id, 'تم التعيين')}>تم التعيين</DropdownMenuItem>
-                                    <DropdownMenuItem onClick={() => handleStatusChange(req.id, 'قيد التنفيذ')}>قيد التنفيذ</DropdownMenuItem>
-                                    <DropdownMenuItem onClick={() => handleStatusChange(req.id, 'اتحلت')}>تم الحل</DropdownMenuItem>
-                                    <DropdownMenuItem onClick={() => handleStatusChange(req.id, 'ملغية')}>ملغية</DropdownMenuItem>
-                                </DropdownMenuContent>
-                            </DropdownMenu>
+                           {getStatusBadge(req.status)}
                         </TableCell>
                          <TableCell className="text-center hidden md:table-cell">{req.assignedVolunteer || 'لم يتم التعيين بعد'}</TableCell>
                         <TableCell className="text-center">
                             <div className="flex justify-center items-center gap-1">
-                                {/* Dialog for assigning a volunteer */}
+                                {/* Actions for pending requests */}
                                 {req.status === 'في الانتظار' && (
                                     <Button size="sm" onClick={() => openAssignDialog(req.id)}><UserPlus className="ml-2 h-4 w-4" />تعيين</Button>
                                 )}
-                                {/* Dialog for re-assigning a volunteer */}
-                                {req.status === 'تم التعيين' && (
+                                {/* Actions for assigned or in-progress requests */}
+                                {(req.status === 'تم التعيين' || req.status === 'قيد التنفيذ') && (
+                                    <>
                                      <Button size="sm" variant="outline" onClick={() => openAssignDialog(req.id)}><UserCheck className="ml-2 h-4 w-4" />إعادة تعيين</Button>
+                                     <Button size="sm" variant="destructive" onClick={() => handleStatusChange(req.id, 'ملغية')}><XCircle className="ml-2 h-4 w-4" />إلغاء</Button>
+                                    </>
                                 )}
                                 {/* Dialog for viewing full request details */}
                                 <Dialog>

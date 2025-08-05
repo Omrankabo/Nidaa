@@ -95,7 +95,6 @@ export default function DashboardClient({ volunteerEmail }: { volunteerEmail: st
    /**
    * Handles denying a request. Unassigns the volunteer and sets status to 'Pending'.
    * @param {string} requestId - The ID of the request to deny.
-   * @param {string} volunteerName - The name of the volunteer.
    */
   const handleDenyRequest = async (requestId: string) => {
     await updateRequest(requestId, {
@@ -450,5 +449,3 @@ export default function DashboardClient({ volunteerEmail }: { volunteerEmail: st
     </>
   );
 }
-
-    

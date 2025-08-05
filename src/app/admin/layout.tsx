@@ -4,7 +4,7 @@
 import { useRouter, usePathname } from 'next/navigation';
 import Link from 'next/link';
 import { Button } from '@/components/ui/button';
-import { LayoutDashboard, Users, LogOut, ArrowLeft, UserPlus } from 'lucide-react';
+import { LayoutDashboard, Users, LogOut, ArrowLeft, UserPlus, Archive } from 'lucide-react';
 import Logo from '@/components/logo';
 import { ThemeToggle } from '@/components/theme-toggle';
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -39,6 +39,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
     if (pathname.includes('/dashboard')) return 'dashboard';
     if (pathname.includes('/volunteers')) return 'volunteers';
     if (pathname.includes('/pending')) return 'pending';
+    if (pathname.includes('/archive')) return 'archive';
     return 'dashboard';
   }
 
@@ -68,7 +69,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
       <main className="flex-1">
         <div className="container py-8">
             <Tabs value={getActiveTab()} className="mb-6">
-                <TabsList className="grid w-full grid-cols-3">
+                <TabsList className="grid w-full grid-cols-4">
                     <TabsTrigger value="dashboard" asChild>
                         <Link href="/admin/dashboard"><LayoutDashboard className="ml-2 h-4 w-4"/>لوحة التحكم</Link>
                     </TabsTrigger>
@@ -81,6 +82,9 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
                     </TabsTrigger>
                     <TabsTrigger value="volunteers" asChild>
                         <Link href="/admin/volunteers"><Users className="ml-2 h-4 w-4"/>المتطوعين</Link>
+                    </TabsTrigger>
+                    <TabsTrigger value="archive" asChild>
+                        <Link href="/admin/archive"><Archive className="ml-2 h-4 w-4"/>الأرشيف</Link>
                     </TabsTrigger>
                 </TabsList>
             </Tabs>
